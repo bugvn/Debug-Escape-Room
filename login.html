@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cosmic Hearth: Code Escape - Login &amp; Registration</title>
+<!-- Tailwind CSS CDN with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            space: {
+              950: '#070913',
+              900: '#0a0d1a',
+              850: '#0f1426',
+              800: '#151c33',
+              700: '#1d2747',
+              600: '#2b3964',
+            },
+            pixel: {
+              cyan: '#5ce1e6',
+              glow: '#38bdf8',
+              lavender: '#b8c0ff',
+              periwinkle: '#8ea7e9',
+              pink: '#ff9ebb',
+              amber: '#ffd166',
+              emerald: '#06d6a0',
+            }
+          },
+          fontFamily: {
+            pixel: ['"Press Start 2P"', 'monospace'],
+            retro: ['"VT323"', 'monospace'],
+            sans: ['"Inter"', 'sans-serif'],
+          },
+          animation: {
+            'twinkle-slow': 'twinkle 4s ease-in-out infinite',
+            'twinkle-fast': 'twinkle 2s ease-in-out infinite',
+            'float-slow': 'float 6s ease-in-out infinite',
+            'pulse-glow': 'pulseGlow 2.5s ease-in-out infinite',
+          },
+          keyframes: {
+            twinkle: {
+              '0%, 100%': { opacity: '0.2', transform: 'scale(0.8)' },
+              '50%': { opacity: '1', transform: 'scale(1.2)' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-8px)' },
+            },
+            pulseGlow: {
+              '0%, 100%': { boxShadow: '0 0 12px rgba(92, 225, 230, 0.4), inset 0 0 8px rgba(92, 225, 230, 0.2)' },
+              '50%': { boxShadow: '0 0 24px rgba(92, 225, 230, 0.7), inset 0 0 14px rgba(92, 225, 230, 0.4)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- Google Fonts for Retro Pixel Aesthetic -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Custom Pixel UI Styles -->
+<style data-purpose="pixel-borders-and-ui">
+    /* Pixelated borders mimicking classic 90s RPG dialogue boxes */
+    .pixel-box {
+      box-shadow: 
+        0 0 0 2px #0a0d1a,
+        0 0 0 4px #2b3964,
+        0 0 0 6px #5ce1e6,
+        0 12px 30px rgba(0, 0, 0, 0.85);
+    }
+    .pixel-box-inner {
+      box-shadow: inset 0 0 0 2px #1d2747;
+    }
+    .pixel-btn-border {
+      box-shadow: 
+        inset -3px -3px 0px 0px rgba(0,0,0,0.5),
+        inset 3px 3px 0px 0px rgba(255,255,255,0.25);
+    }
+    .pixel-btn-border:active {
+      box-shadow: 
+        inset 3px 3px 0px 0px rgba(0,0,0,0.6),
+        inset -2px -2px 0px 0px rgba(255,255,255,0.15);
+      transform: translateY(2px);
+    }
+    .pixel-input-border {
+      box-shadow: 
+        inset 2px 2px 0px 0px #070913,
+        0 0 0 2px #2b3964;
+    }
+    .pixel-input-border:focus-within {
+      box-shadow: 
+        inset 2px 2px 0px 0px #070913,
+        0 0 0 2px #5ce1e6,
+        0 0 10px rgba(92, 225, 230, 0.4);
+    }
+    /* Pixel art crisp rendering */
+    .pixel-art-img {
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+    }
+  </style>
+</head>
+<body class="bg-[#0a0d1a] text-slate-200 min-h-screen relative overflow-x-hidden flex flex-col font-sans select-none selection:bg-pixel-cyan selection:text-space-950">
+<!-- BEGIN: AmbientCosmicBackground -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" data-purpose="ambient-space-stars">
+<!-- Star Canvas Background for shimmering starry void -->
+<canvas class="absolute inset-0 w-full h-full opacity-70" id="starfield-canvas"></canvas>
+<!-- Ambient Floating Nebulae / Light Gradients -->
+<div class="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-cyan-900/20 blur-3xl"></div>
+<div class="absolute bottom-10 -right-24 w-[30rem] h-[30rem] rounded-full bg-indigo-900/20 blur-3xl"></div>
+<div class="absolute top-1/2 right-1/4 w-80 h-80 rounded-full bg-purple-950/25 blur-3xl"></div>
+<!-- Decorative Pixel Stars and Cross-Sparkles matching reference aesthetic -->
+<div class="absolute top-12 left-16 text-cyan-200 animate-twinkle-slow text-sm select-none font-pixel">✦</div>
+<div class="absolute top-36 left-[30%] text-white animate-twinkle-fast text-xs select-none font-pixel">★</div>
+<div class="absolute bottom-28 left-20 text-cyan-300 animate-twinkle-slow text-xs select-none font-pixel">✦</div>
+<div class="absolute top-20 right-24 text-pixel-lavender animate-twinkle-fast text-sm select-none font-pixel">✦</div>
+<div class="absolute bottom-36 right-32 text-white animate-twinkle-slow text-xs select-none font-pixel">★</div>
+<div class="absolute top-[60%] left-10 text-periwinkle animate-twinkle-fast text-xs select-none font-pixel">✦</div>
+<div class="absolute top-[45%] right-12 text-cyan-200 animate-twinkle-slow text-sm select-none font-pixel">★</div>
+</div>
+<!-- END: AmbientCosmicBackground -->
+<!-- BEGIN: TopBarNavigation -->
+<header class="relative z-10 w-full px-4 sm:px-8 py-3 border-b-2 border-space-700/60 bg-space-900/80 backdrop-blur-md" data-purpose="main-header">
+<div class="max-w-6xl mx-auto flex items-center justify-between">
+<!-- Brand & Title Badge -->
+<div class="flex items-center gap-3">
+<div class="w-7 h-7 bg-pixel-cyan/20 border-2 border-pixel-cyan flex items-center justify-center text-pixel-cyan text-xs font-pixel shadow-[0_0_8px_rgba(92,225,230,0.6)]">
+          &lt;&gt;
+        </div>
+<div>
+<span class="font-pixel text-[10px] sm:text-xs tracking-wider text-pixel-cyan uppercase drop-shadow-[0_0_5px_rgba(92,225,230,0.5)]">
+            Cosmic Hearth
+          </span>
+<span class="hidden sm:inline text-xs text-space-600 font-pixel mx-2">/</span>
+<span class="hidden sm:inline font-pixel text-[9px] text-pixel-lavender uppercase tracking-wide">
+            Escape Room v1.0.4
+          </span>
+</div>
+</div>
+<!-- Controls & Status Bar (Audio, Avatar status, Room info) -->
+<div class="flex items-center gap-3 sm:gap-5 text-xs font-mono">
+<!-- Room coordinates badge -->
+<div class="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-space-850 border border-space-700 text-slate-300 rounded text-[11px]">
+<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+<span>POD #042 : DOCKED</span>
+</div>
+<!-- Audio Mute Toggle Button -->
+<button aria-label="Toggle Cosmic Lo-Fi Music" class="flex items-center gap-1.5 px-2.5 py-1 bg-space-800 hover:bg-space-700 border border-space-600 text-pixel-cyan text-xs transition duration-150 active:scale-95" id="audio-toggle-btn" title="Toggle BGM" type="button">
+<svg class="w-3.5 h-3.5 fill-current" id="audio-icon-on" viewbox="0 0 24 24">
+<path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-2.5-2.23l-5.5 5h-4v12h4l5.5 5v-22z"></path>
+</svg>
+<span class="font-pixel text-[8px] uppercase tracking-wider">BGM ON</span>
+</button>
+<!-- Player Avatar Quick Slot -->
+<div class="flex items-center gap-2 pl-2 border-l border-space-700">
+<div class="w-7 h-7 bg-space-800 border border-pixel-lavender/60 p-0.5 relative group">
+<div class="w-full h-full bg-pixel-glow/20 flex items-center justify-center text-pixel-lavender font-pixel text-[10px]">
+              ?
+            </div>
+<div class="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-yellow-400 rounded-none"></div>
+</div>
+<span class="hidden sm:inline font-pixel text-[9px] text-slate-400">GUEST</span>
+</div>
+</div>
+</div>
+</header>
+<!-- END: TopBarNavigation -->
+<!-- BEGIN: MainContentRegistration -->
+<main class="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8" data-purpose="registration-section">
+<div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+<!-- Left Column: Visual Room Preview & Cozy Companion Card -->
+<section class="lg:col-span-5 flex flex-col items-center" data-purpose="room-preview-showcase">
+<div class="w-full bg-space-850 border-2 border-space-700 p-2 relative group shadow-2xl">
+<!-- Pixel Frame Header Bar -->
+<div class="bg-space-900 border-b border-space-700 px-3 py-1.5 flex items-center justify-between mb-2">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 bg-rose-500 inline-block"></span>
+<span class="w-2.5 h-2.5 bg-amber-400 inline-block"></span>
+<span class="w-2.5 h-2.5 bg-emerald-400 inline-block"></span>
+</div>
+<span class="font-pixel text-[8px] text-slate-400 tracking-wider uppercase">SECTOR_KITCHEN.PIX</span>
+</div>
+<!-- Scene Snapshot with Cozy Pixel Art Room -->
+<div class="relative overflow-hidden border border-space-700/80 aspect-[16/9] sm:aspect-[16/9] w-full bg-space-950">
+<img alt="Cozy Pixel Kitchen in Deep Space" class="w-full h-full object-cover pixel-art-img hover:scale-105 transition-transform duration-500 ease-out" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyut1vB-e4pWfh7X1kLSWs5aMbBcEogjOZprkxayT_Gwp_H96P9IQ2QLWMFMDS2SPBUBa_OD7HXnu5-W1SM9RvFouaI_iC34qYw6KyPZeHIy8IxbA2HPFeMzVKTjVdeSvp6UekznXTS9A_1y2NDXnGfAyrIcmck_xwAgeT6POSWlF7zZknizNZGHL8LYEO28uPpXQH16DFfo0ZaqlW5Hb_XD9efx3_YVGFmxxfToXyjZN-ipdI6wDurwQoP4UhGPjgfQ"/>
+<!-- Atmospheric scanline overlay for retro CRT effect -->
+<div class="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/[0.03] to-indigo-950/40 pointer-events-none"></div>
+<div class="absolute bottom-2 left-2 bg-space-950/90 border border-pixel-cyan/40 px-2 py-0.5 text-[8px] font-pixel text-pixel-cyan">
+              ROOM: THE MIDNIGHT DORM
+            </div>
+</div>
+<!-- Dialog Box below Preview -->
+<div class="mt-3 p-3 bg-space-900/90 border border-space-700 text-xs">
+<div class="flex items-center gap-2 mb-1.5">
+<span class="font-pixel text-[9px] text-pixel-pink uppercase">A.I. COMPANION (MIMI):</span>
+</div>
+<p class="font-retro text-lg leading-snug text-slate-300">
+              "Power grid is offline and door terminal is locked in byte-mode. Configure your terminal credentials to begin puzzle override!"
+            </p>
+</div>
+</div>
+</section>
+<!-- Right Column: Registration / Login Terminal Card -->
+<section class="lg:col-span-7" data-purpose="registration-card">
+<div class="pixel-box bg-space-850/95 border-2 border-space-700 p-5 sm:p-7 relative backdrop-blur-md">
+<!-- Card Decorative Corner Accents -->
+<div class="absolute top-1 left-1 w-2 h-2 bg-pixel-cyan"></div>
+<div class="absolute top-1 right-1 w-2 h-2 bg-pixel-cyan"></div>
+<div class="absolute bottom-1 left-1 w-2 h-2 bg-pixel-cyan"></div>
+<div class="absolute bottom-1 right-1 w-2 h-2 bg-pixel-cyan"></div>
+<!-- Registration Header -->
+<div class="mb-6 border-b-2 border-space-700/80 pb-4">
+<div class="flex items-center justify-between flex-wrap gap-2">
+<div>
+<span class="font-pixel text-[9px] uppercase tracking-widest text-pixel-cyan block mb-1">
+                  PLAYER TERMINAL CHECK-IN
+                </span>
+<h1 class="font-pixel text-base sm:text-lg text-white tracking-wide">
+                  JOIN ESCAPE SEQUENCE
+                </h1>
+</div>
+<div class="px-2 py-1 bg-space-950 border border-pixel-cyan/30 text-right">
+<span class="font-mono text-[10px] text-pixel-lavender block">SESSION ID</span>
+<span class="font-pixel text-[8px] text-emerald-400">#CS-2049</span>
+</div>
+</div>
+</div>
+<!-- Registration Form -->
+<form action="#" class="space-y-5" id="escape-login-form" method="POST" onsubmit="event.preventDefault();">
+<!-- Requirement 1: PLAYER NAME input field -->
+<div data-purpose="form-group-player-name">
+<label class="block font-pixel text-[10px] text-pixel-lavender uppercase mb-2" for="player-name">
+                PLAYER NAME / HANDLE <span class="text-rose-400">*</span>
+</label>
+<div class="relative">
+<div class="pixel-input-border flex items-center bg-space-950 px-3 py-2.5 transition">
+<span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">&gt;</span>
+<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-600 focus:ring-0 focus:outline-none" id="player-name" maxlength="20" name="playerName" placeholder="e.g. PixelHacker99" required="" type="text"/>
+<div class="hidden sm:block text-[9px] font-pixel text-slate-500 ml-2 uppercase select-none">
+                    MAX 20 CHR
+                  </div>
+</div>
+</div>
+<p class="mt-1 text-[11px] font-mono text-slate-400">This moniker will be displayed on the high-score escape terminal.</p>
+</div>
+<!-- Requirement 2: DIFFICULTY LEVEL selection buttons -->
+<div data-purpose="form-group-difficulty">
+<label class="block font-pixel text-[10px] text-pixel-lavender uppercase mb-2">
+                DIFFICULTY LEVEL <span class="text-rose-400">*</span>
+</label>
+<!-- Responsive Grid for Difficulty Buttons -->
+<div aria-label="Difficulty Level Selection" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5" id="difficulty-group" role="radiogroup">
+<!-- BEGINNER Option -->
+<label class="relative flex flex-col p-3 bg-space-900 border-2 border-space-600 hover:border-pixel-cyan cursor-pointer transition select-none group has-[:checked]:border-pixel-cyan has-[:checked]:bg-space-800 has-[:checked]:shadow-[0_0_12px_rgba(92,225,230,0.3)]">
+<input checked="" class="sr-only" name="difficulty" type="radio" value="BEGINNER"/>
+<div class="flex items-center justify-between mb-1">
+<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">BEGINNER</span>
+<span class="w-2 h-2 rounded-none bg-emerald-400"></span>
+</div>
+<span class="font-mono text-[11px] text-slate-400 leading-tight">Guided syntax clues, basic loops &amp; logic.</span>
+<span class="mt-2 text-[9px] font-pixel text-emerald-400/90">★ 1X SCORE</span>
+</label>
+<!-- INTERMEDIATE Option -->
+<label class="relative flex flex-col p-3 bg-space-900 border-2 border-space-600 hover:border-pixel-cyan cursor-pointer transition select-none group has-[:checked]:border-pixel-cyan has-[:checked]:bg-space-800 has-[:checked]:shadow-[0_0_12px_rgba(92,225,230,0.3)]">
+<input class="sr-only" name="difficulty" type="radio" value="INTERMEDIATE"/>
+<div class="flex items-center justify-between mb-1">
+<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">INTERMEDIATE</span>
+<span class="w-2 h-2 rounded-none bg-amber-400"></span>
+</div>
+<span class="font-mono text-[11px] text-slate-400 leading-tight">Data structures, recursion &amp; time limit.</span>
+<span class="mt-2 text-[9px] font-pixel text-amber-400/90">★★ 2X SCORE</span>
+</label>
+<!-- HARD Option -->
+<label class="relative flex flex-col p-3 bg-space-900 border-2 border-space-600 hover:border-pixel-cyan cursor-pointer transition select-none group has-[:checked]:border-pixel-cyan has-[:checked]:bg-space-800 has-[:checked]:shadow-[0_0_12px_rgba(92,225,230,0.3)]">
+<input class="sr-only" name="difficulty" type="radio" value="HARD"/>
+<div class="flex items-center justify-between mb-1">
+<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">HARD</span>
+<span class="w-2 h-2 rounded-none bg-rose-500"></span>
+</div>
+<span class="font-mono text-[11px] text-slate-400 leading-tight">Complex algorithms, bitwise &amp; no hints.</span>
+<span class="mt-2 text-[9px] font-pixel text-rose-400/90">★★★ 3X SCORE</span>
+</label>
+</div>
+</div>
+<!-- Requirement 3: PREFERRED PROGRAMMING LANGUAGES selection chips -->
+<div data-purpose="form-group-languages">
+<div class="flex items-center justify-between mb-2">
+<label class="block font-pixel text-[10px] text-pixel-lavender uppercase">
+                  PREFERRED PROGRAMMING LANGUAGES
+                </label>
+<span class="text-[10px] font-mono text-slate-400">PICK 1 OR MORE</span>
+</div>
+<!-- Language selectable chips with retro badge styling -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="language-chips-group">
+<!-- PYTHON -->
+<label class="cursor-pointer">
+<input checked="" class="sr-only peer" name="languages" type="checkbox" value="PYTHON"/>
+<div class="p-2.5 text-center bg-space-950 border border-space-700 hover:border-pixel-cyan peer-checked:border-pixel-cyan peer-checked:bg-pixel-cyan/15 peer-checked:shadow-[0_0_8px_rgba(92,225,230,0.4)] transition">
+<div class="font-pixel text-[9px] text-slate-300 peer-checked:text-pixel-cyan">PYTHON</div>
+<div class="text-[10px] font-mono text-slate-500 peer-checked:text-slate-300 mt-0.5">.py</div>
+</div>
+</label>
+<!-- JAVA -->
+<label class="cursor-pointer">
+<input class="sr-only peer" name="languages" type="checkbox" value="JAVA"/>
+<div class="p-2.5 text-center bg-space-950 border border-space-700 hover:border-pixel-cyan peer-checked:border-pixel-cyan peer-checked:bg-pixel-cyan/15 peer-checked:shadow-[0_0_8px_rgba(92,225,230,0.4)] transition">
+<div class="font-pixel text-[9px] text-slate-300 peer-checked:text-pixel-cyan">JAVA</div>
+<div class="text-[10px] font-mono text-slate-500 peer-checked:text-slate-300 mt-0.5">.java</div>
+</div>
+</label>
+<!-- C++ -->
+<label class="cursor-pointer">
+<input class="sr-only peer" name="languages" type="checkbox" value="CPP"/>
+<div class="p-2.5 text-center bg-space-950 border border-space-700 hover:border-pixel-cyan peer-checked:border-pixel-cyan peer-checked:bg-pixel-cyan/15 peer-checked:shadow-[0_0_8px_rgba(92,225,230,0.4)] transition">
+<div class="font-pixel text-[9px] text-slate-300 peer-checked:text-pixel-cyan">C++</div>
+<div class="text-[10px] font-mono text-slate-500 peer-checked:text-slate-300 mt-0.5">.cpp</div>
+</div>
+</label>
+<!-- JAVASCRIPT -->
+<label class="cursor-pointer">
+<input class="sr-only peer" name="languages" type="checkbox" value="JAVASCRIPT"/>
+<div class="p-2.5 text-center bg-space-950 border border-space-700 hover:border-pixel-cyan peer-checked:border-pixel-cyan peer-checked:bg-pixel-cyan/15 peer-checked:shadow-[0_0_8px_rgba(92,225,230,0.4)] transition">
+<div class="font-pixel text-[9px] text-slate-300 peer-checked:text-pixel-cyan">JAVASCRIPT</div>
+<div class="text-[10px] font-mono text-slate-500 peer-checked:text-slate-300 mt-0.5">.js</div>
+</div>
+</label>
+</div>
+</div>
+<!-- Requirement 4: 'ENTER ESCAPE ROOM' / 'START ADVENTURE' Primary Button -->
+<div class="pt-2" data-purpose="form-submit-action">
+<button class="w-full pixel-btn-border py-3.5 sm:py-4 px-6 bg-gradient-to-r from-pixel-cyan via-[#6ae4e9] to-sky-400 hover:from-cyan-300 hover:to-sky-300 text-space-950 font-pixel text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-150 transform active:scale-[0.99] flex items-center justify-center gap-3 cursor-pointer shadow-[0_0_18px_rgba(92,225,230,0.6)]" id="start-game-btn" type="submit">
+<span>ENTER ESCAPE ROOM</span>
+<span class="text-base font-bold animate-pulse">▶</span>
+</button>
+<!-- Secondary action options -->
+<div class="flex items-center justify-between mt-3 text-[11px] font-mono text-slate-400 px-1">
+<a class="hover:text-pixel-cyan transition underline underline-offset-4" href="#quick-demo">Run Tutorial Code Sandbox</a>
+<a class="hover:text-pixel-pink transition underline underline-offset-4" href="#resume-save">Load Save Capsule (F6)</a>
+</div>
+</div>
+</form>
+<!-- End Form -->
+</div>
+</section>
+</div>
+</main>
+<!-- END: MainContentRegistration -->
+<!-- BEGIN: PageFooter -->
+<footer class="relative z-10 border-t border-space-700/60 bg-space-950/80 py-3 px-4 text-center" data-purpose="site-footer">
+<div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] font-mono text-slate-500">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-emerald-400"></span>
+<span>SERVER ENGINE: ONLINE (PING 14ms)</span>
+</div>
+<div>
+<span>COSMIC HEARTH © 2025 • PIXEL ESCAPE LABS</span>
+</div>
+<div class="font-pixel text-[8px] text-space-600">
+        PRESS [ENTER] TO SUBMIT
+      </div>
+</div>
+</footer>
+<!-- END: PageFooter -->
+<!-- Starfield Canvas Script -->
+<script data-purpose="starfield-generator">
+    document.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('starfield-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      let width = (canvas.width = window.innerWidth);
+      let height = (canvas.height = window.innerHeight);
+
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        initStars();
+      });
+
+      const stars = [];
+      const STAR_COUNT = 140;
+
+      function initStars() {
+        stars.length = 0;
+        for (let i = 0; i < STAR_COUNT; i++) {
+          stars.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            size: Math.random() > 0.85 ? 3 : (Math.random() > 0.5 ? 2 : 1),
+            color: ['#ffffff', '#5ce1e6', '#b8c0ff', '#8ea7e9', '#ffd166'][Math.floor(Math.random() * 5)],
+            alpha: Math.random() * 0.9 + 0.1,
+            speed: Math.random() * 0.02 + 0.005,
+            direction: Math.random() > 0.5 ? 1 : -1
+          });
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, width, height);
+
+        for (let i = 0; i < stars.length; i++) {
+          const s = stars[i];
+          s.alpha += s.speed * s.direction;
+          if (s.alpha > 0.95 || s.alpha < 0.15) {
+            s.direction *= -1;
+          }
+
+          ctx.save();
+          ctx.globalAlpha = Math.max(0.1, Math.min(1, s.alpha));
+          ctx.fillStyle = s.color;
+          // Render crisp pixel stars
+          ctx.fillRect(Math.floor(s.x), Math.floor(s.y), s.size, s.size);
+          ctx.restore();
+        }
+
+        requestAnimationFrame(draw);
+      }
+
+      initStars();
+      draw();
+    });
+  </script>
+<!-- Audio Toggle and Form Handler Interactions -->
+<script data-purpose="ui-interactions">
+    document.addEventListener('DOMContentLoaded', () => {
+      // Audio toggle button handler
+      const audioBtn = document.getElementById('audio-toggle-btn');
+      let isMuted = false;
+
+      if (audioBtn) {
+        audioBtn.addEventListener('click', () => {
+          isMuted = !isMuted;
+          const textSpan = audioBtn.querySelector('span');
+          if (isMuted) {
+            textSpan.textContent = 'BGM OFF';
+            audioBtn.classList.remove('text-pixel-cyan');
+            audioBtn.classList.add('text-slate-500');
+          } else {
+            textSpan.textContent = 'BGM ON';
+            audioBtn.classList.remove('text-slate-500');
+            audioBtn.classList.add('text-pixel-cyan');
+          }
+        });
+      }
+
+      // Enter Adventure Button handler
+      const form = document.getElementById('escape-login-form');
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const nameInput = document.getElementById('player-name');
+          const playerName = nameInput ? nameInput.value.trim() : '';
+
+          if (!playerName) {
+            nameInput.focus();
+            return;
+          }
+
+          const btn = document.getElementById('start-game-btn');
+          const originalText = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = `
+            <span class="animate-spin text-sm">◆</span>
+            <span>INITIALIZING POD TRANSLATOR...</span>
+          `;
+
+          setTimeout(() => {
+            alert(`Welcome aboard, Operator ${playerName}! Calibrating kitchen airlocks...`);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }, 1000);
+        });
+      }
+    });
+  </script>
+</body></html>
