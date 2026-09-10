@@ -3,7 +3,7 @@
 <html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Cosmic Hearth: Code Escape - Login &amp; Registration</title>
+<title>BugScape: Code Escape - Login &amp; Registration</title>
 <!-- Tailwind CSS CDN with Plugins -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Tailwind Configuration -->
@@ -135,21 +135,17 @@
         </div>
 <div>
 <span class="font-pixel text-[10px] sm:text-xs tracking-wider text-pixel-cyan uppercase drop-shadow-[0_0_5px_rgba(92,225,230,0.5)]">
-            Cosmic Hearth
+            BugScape
           </span>
 <span class="hidden sm:inline text-xs text-space-600 font-pixel mx-2">/</span>
 <span class="hidden sm:inline font-pixel text-[9px] text-pixel-lavender uppercase tracking-wide">
-            Escape Room v1.0.4
+            Escape Room v1.0
           </span>
 </div>
 </div>
 <!-- Controls & Status Bar (Audio, Avatar status, Room info) -->
 <div class="flex items-center gap-3 sm:gap-5 text-xs font-mono">
-<!-- Room coordinates badge -->
-<div class="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-space-850 border border-space-700 text-slate-300 rounded text-[11px]">
-<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-<span>POD #042 : DOCKED</span>
-</div>
+
 <!-- Audio Mute Toggle Button -->
 <button aria-label="Toggle Cosmic Lo-Fi Music" class="flex items-center gap-1.5 px-2.5 py-1 bg-space-800 hover:bg-space-700 border border-space-600 text-pixel-cyan text-xs transition duration-150 active:scale-95" id="audio-toggle-btn" title="Toggle BGM" type="button">
 <svg class="w-3.5 h-3.5 fill-current" id="audio-icon-on" viewbox="0 0 24 24">
@@ -157,33 +153,18 @@
 </svg>
 <span class="font-pixel text-[8px] uppercase tracking-wider">BGM ON</span>
 </button>
-<!-- Player Avatar Quick Slot -->
-<div class="flex items-center gap-2 pl-2 border-l border-space-700">
-<div class="w-7 h-7 bg-space-800 border border-pixel-lavender/60 p-0.5 relative group">
-<div class="w-full h-full bg-pixel-glow/20 flex items-center justify-center text-pixel-lavender font-pixel text-[10px]">
-              ?
-            </div>
-<div class="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-yellow-400 rounded-none"></div>
-</div>
-<span class="hidden sm:inline font-pixel text-[9px] text-slate-400">GUEST</span>
-</div>
 </div>
 </div>
 </header>
 <!-- END: TopBarNavigation -->
 <!-- BEGIN: MainContentRegistration -->
 <main class="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8" data-purpose="registration-section">
-<div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+<div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
 <!-- Left Column: Visual Room Preview & Cozy Companion Card -->
-<section class="lg:col-span-5 flex flex-col items-center" data-purpose="room-preview-showcase">
-<div class="w-full bg-space-850 border-2 border-space-700 p-2 relative group shadow-2xl">
+<section class="lg:col-span-4 flex flex-col items-center" data-purpose="room-preview-showcase">
+<div class="w-full flex flex-col bg-space-850 border-2 border-space-700 p-2 relative group shadow-2xl">
 <!-- Pixel Frame Header Bar -->
-<div class="bg-space-900 border-b border-space-700 px-3 py-1.5 flex items-center justify-between mb-2">
-<div class="flex items-center gap-1.5">
-<span class="w-2.5 h-2.5 bg-rose-500 inline-block"></span>
-<span class="w-2.5 h-2.5 bg-amber-400 inline-block"></span>
-<span class="w-2.5 h-2.5 bg-emerald-400 inline-block"></span>
-</div>
+<div class="bg-space-900 border-b border-space-700 px-3 py-1.5 flex items-center mb-2">
 <span class="font-pixel text-[8px] text-slate-400 tracking-wider uppercase">SECTOR_KITCHEN.PIX</span>
 </div>
 <!-- Scene Snapshot with Cozy Pixel Art Room -->
@@ -198,151 +179,156 @@
 <!-- Dialog Box below Preview -->
 <div class="mt-3 p-3 bg-space-900/90 border border-space-700 text-xs">
 <div class="flex items-center gap-2 mb-1.5">
-<span class="font-pixel text-[9px] text-pixel-pink uppercase">A.I. COMPANION (MIMI):</span>
+<span class="font-pixel text-[9px] text-pixel-pink uppercase">COMPANION MIMI:</span>
 </div>
 <p class="font-retro text-lg leading-snug text-slate-300">
-              "Power grid is offline and door terminal is locked in byte-mode. Configure your terminal credentials to begin puzzle override!"
+              "Fill in your details and I'll walk you through the room."
             </p>
 </div>
 </div>
 </section>
 <!-- Right Column: Registration / Login Terminal Card -->
-<section class="lg:col-span-7" data-purpose="registration-card">
-<div class="pixel-box bg-space-850/95 border-2 border-space-700 p-5 sm:p-7 relative backdrop-blur-md">
+<section class="lg:col-span-8" data-purpose="registration-card">
+<div class="pixel-box bg-space-850/95 border-2 border-space-700 p-4 sm:p-5 relative backdrop-blur-md">
 <!-- Card Decorative Corner Accents -->
 <div class="absolute top-1 left-1 w-2 h-2 bg-pixel-cyan"></div>
 <div class="absolute top-1 right-1 w-2 h-2 bg-pixel-cyan"></div>
 <div class="absolute bottom-1 left-1 w-2 h-2 bg-pixel-cyan"></div>
 <div class="absolute bottom-1 right-1 w-2 h-2 bg-pixel-cyan"></div>
 <!-- Registration Header -->
-<div class="mb-6 border-b-2 border-space-700/80 pb-4">
-<div class="flex items-center justify-between flex-wrap gap-2">
-<div>
+<div class="mb-3 border-b-2 border-space-700/80 pb-2.5">
 <span class="font-pixel text-[9px] uppercase tracking-widest text-pixel-cyan block mb-1">
-                  PLAYER TERMINAL CHECK-IN
-                </span>
+                ACCOUNT + PLAYER SETUP
+              </span>
 <h1 class="font-pixel text-base sm:text-lg text-white tracking-wide">
-                  JOIN ESCAPE SEQUENCE
-                </h1>
-</div>
-<div class="px-2 py-1 bg-space-950 border border-pixel-cyan/30 text-right">
-<span class="font-mono text-[10px] text-pixel-lavender block">SESSION ID</span>
-<span class="font-pixel text-[8px] text-emerald-400">#CS-2049</span>
-</div>
-</div>
+                JOIN ESCAPE SEQUENCE
+              </h1>
 </div>
 <!-- Registration Form -->
-<form action="#" class="space-y-5" id="escape-login-form" method="POST" onsubmit="event.preventDefault();">
+<form action="#" class="space-y-3" id="escape-login-form" method="POST" novalidate="" onsubmit="event.preventDefault();">
+<!-- Alternate sign-in moved ABOVE the manual fields: a shortcut path should sit before the form it bypasses, not inside it -->
+<button class="w-full flex items-center justify-center gap-2 py-2 bg-space-900 border border-space-600 hover:border-slate-400 text-slate-300 text-xs font-mono transition" id="google-signin-btn" type="button">
+<svg class="w-4 h-4" id="google-icon" viewbox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path></svg>
+<span id="google-btn-label">CONTINUE WITH GOOGLE</span>
+              </button>
+<div class="flex items-center gap-3 py-0.5" id="email-divider">
+<div class="flex-1 border-t border-space-700/80"></div>
+<span class="font-pixel text-[9px] text-slate-500 uppercase">or sign in with email</span>
+<div class="flex-1 border-t border-space-700/80"></div>
+</div>
+<!-- Requirement 0: ACCOUNT CREDENTIALS - email + password, required so mistake-pattern history can persist across sessions -->
+<div data-purpose="form-group-account" id="account-fields-group">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-1">
+<div>
+<label class="block font-pixel text-[10px] text-pixel-lavender uppercase mb-1.5" for="account-email">
+                ACCOUNT EMAIL <span class="text-rose-400">*</span>
+</label>
+<div class="pixel-input-border flex items-center bg-space-950 px-3 py-2 transition" id="email-field-wrap">
+<span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">@</span>
+<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-600 focus:ring-0 focus:outline-none" id="account-email" name="accountEmail" placeholder="you@school.edu.ph" required type="email"/>
+</div>
+<p class="hidden mt-1.5 text-[11px] font-mono text-rose-400" id="email-error">Enter a valid email address.</p>
+</div>
+<div>
+<div class="flex items-center justify-between mb-1.5">
+<label class="block font-pixel text-[10px] text-pixel-lavender uppercase" for="account-password">
+                  PASSWORD <span class="text-rose-400">*</span>
+</label>
+<button class="font-pixel text-[8px] text-slate-500 hover:text-pixel-cyan uppercase transition" id="forgot-password-btn" type="button">Forgot?</button>
+</div>
+<div class="pixel-input-border flex items-center bg-space-950 px-3 py-2 transition" id="password-field-wrap">
+<span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">*</span>
+<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-600 focus:ring-0 focus:outline-none" id="account-password" minlength="8" name="accountPassword" placeholder="••••••••••••" required type="password"/>
+<button aria-label="Show password" class="text-slate-500 hover:text-pixel-cyan ml-2 select-none" id="toggle-password-btn" type="button">👁</button>
+</div>
+<p class="hidden mt-1.5 text-[11px] font-mono text-rose-400" id="password-error">Must be at least 8 characters.</p>
+</div>
+</div>
+<p class="mt-1 text-[11px] font-mono text-slate-400">Remembers which bugs you've struggled with.</p>
+</div>
+<!-- Section divider: everything below applies no matter which sign-in method you picked above -->
+<div class="flex items-center gap-3 pt-1 pb-0.5">
+<div class="flex-1 border-t border-space-700/80"></div>
+<span class="font-pixel text-[9px] text-pixel-cyan uppercase">player setup</span>
+<div class="flex-1 border-t border-space-700/80"></div>
+</div>
 <!-- Requirement 1: PLAYER NAME input field -->
 <div data-purpose="form-group-player-name">
-<label class="block font-pixel text-[10px] text-pixel-lavender uppercase mb-2" for="player-name">
+<label class="block font-pixel text-[10px] text-pixel-lavender uppercase mb-1.5" for="player-name">
                 PLAYER NAME / HANDLE <span class="text-rose-400">*</span>
 </label>
 <div class="relative">
-<div class="pixel-input-border flex items-center bg-space-950 px-3 py-2.5 transition">
+<div class="pixel-input-border flex items-center bg-space-950 px-3 py-2 transition">
 <span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">&gt;</span>
-<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-600 focus:ring-0 focus:outline-none" id="player-name" maxlength="20" name="playerName" placeholder="e.g. PixelHacker99" required="" type="text"/>
-<div class="hidden sm:block text-[9px] font-pixel text-slate-500 ml-2 uppercase select-none">
-                    MAX 20 CHR
-                  </div>
+<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-600 focus:ring-0 focus:outline-none" id="player-name" maxlength="20" name="playerName" placeholder="e.g. YourName99" required="" type="text"/>
 </div>
 </div>
-<p class="mt-1 text-[11px] font-mono text-slate-400">This moniker will be displayed on the high-score escape terminal.</p>
 </div>
-<!-- Requirement 2: DIFFICULTY LEVEL selection buttons -->
-<div data-purpose="form-group-difficulty">
-<label class="block font-pixel text-[10px] text-pixel-lavender uppercase mb-2">
-                DIFFICULTY LEVEL <span class="text-rose-400">*</span>
-</label>
-<!-- Responsive Grid for Difficulty Buttons -->
-<div aria-label="Difficulty Level Selection" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5" id="difficulty-group" role="radiogroup">
-<!-- BEGINNER Option -->
-<label class="relative flex flex-col p-3 bg-space-900 border-2 border-space-600 hover:border-pixel-cyan cursor-pointer transition select-none group has-[:checked]:border-pixel-cyan has-[:checked]:bg-space-800 has-[:checked]:shadow-[0_0_12px_rgba(92,225,230,0.3)]">
-<input checked="" class="sr-only" name="difficulty" type="radio" value="BEGINNER"/>
-<div class="flex items-center justify-between mb-1">
-<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">BEGINNER</span>
-<span class="w-2 h-2 rounded-none bg-emerald-400"></span>
-</div>
-<span class="font-mono text-[11px] text-slate-400 leading-tight">Guided syntax clues, basic loops &amp; logic.</span>
-<span class="mt-2 text-[9px] font-pixel text-emerald-400/90">★ 1X SCORE</span>
-</label>
-<!-- INTERMEDIATE Option -->
-<label class="relative flex flex-col p-3 bg-space-900 border-2 border-space-600 hover:border-pixel-cyan cursor-pointer transition select-none group has-[:checked]:border-pixel-cyan has-[:checked]:bg-space-800 has-[:checked]:shadow-[0_0_12px_rgba(92,225,230,0.3)]">
-<input class="sr-only" name="difficulty" type="radio" value="INTERMEDIATE"/>
-<div class="flex items-center justify-between mb-1">
-<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">INTERMEDIATE</span>
-<span class="w-2 h-2 rounded-none bg-amber-400"></span>
-</div>
-<span class="font-mono text-[11px] text-slate-400 leading-tight">Data structures, recursion &amp; time limit.</span>
-<span class="mt-2 text-[9px] font-pixel text-amber-400/90">★★ 2X SCORE</span>
-</label>
-<!-- HARD Option -->
-<label class="relative flex flex-col p-3 bg-space-900 border-2 border-space-600 hover:border-pixel-cyan cursor-pointer transition select-none group has-[:checked]:border-pixel-cyan has-[:checked]:bg-space-800 has-[:checked]:shadow-[0_0_12px_rgba(92,225,230,0.3)]">
-<input class="sr-only" name="difficulty" type="radio" value="HARD"/>
-<div class="flex items-center justify-between mb-1">
-<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">HARD</span>
-<span class="w-2 h-2 rounded-none bg-rose-500"></span>
-</div>
-<span class="font-mono text-[11px] text-slate-400 leading-tight">Complex algorithms, bitwise &amp; no hints.</span>
-<span class="mt-2 text-[9px] font-pixel text-rose-400/90">★★★ 3X SCORE</span>
-</label>
-</div>
-</div>
-<!-- Requirement 3: PREFERRED PROGRAMMING LANGUAGES selection chips -->
-<div data-purpose="form-group-languages">
+
+<!-- Requirement 3: PREFERRED PROGRAMMING LANGUAGES - grouped with the rest of the required fields -->
+<div class="!mt-5" data-purpose="form-group-languages">
 <div class="flex items-center justify-between mb-2">
-<label class="block font-pixel text-[10px] text-pixel-lavender uppercase">
-                  PREFERRED PROGRAMMING LANGUAGES
-                </label>
-<span class="text-[10px] font-mono text-slate-400">PICK 1 OR MORE</span>
+<label class="block font-pixel text-[10px] text-pixel-lavender uppercase mb-0">
+                LANGUAGES <span class="text-rose-400">*</span>
+</label>
+<span class="text-[9px] font-mono text-slate-400">SELECT 1+</span>
 </div>
-<!-- Language selectable chips with retro badge styling -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="language-chips-group">
-<!-- PYTHON -->
 <label class="cursor-pointer">
 <input checked="" class="sr-only peer" name="languages" type="checkbox" value="PYTHON"/>
-<div class="p-2.5 text-center bg-space-950 border border-space-700 hover:border-pixel-cyan peer-checked:border-pixel-cyan peer-checked:bg-pixel-cyan/15 peer-checked:shadow-[0_0_8px_rgba(92,225,230,0.4)] transition">
+<div class="pixel-input-border flex items-center justify-center text-center bg-space-950 px-2 py-2 peer-checked:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] peer-checked:bg-pixel-cyan/15 transition">
 <div class="font-pixel text-[9px] text-slate-300 peer-checked:text-pixel-cyan">PYTHON</div>
-<div class="text-[10px] font-mono text-slate-500 peer-checked:text-slate-300 mt-0.5">.py</div>
 </div>
 </label>
-<!-- JAVA -->
 <label class="cursor-pointer">
 <input class="sr-only peer" name="languages" type="checkbox" value="JAVA"/>
-<div class="p-2.5 text-center bg-space-950 border border-space-700 hover:border-pixel-cyan peer-checked:border-pixel-cyan peer-checked:bg-pixel-cyan/15 peer-checked:shadow-[0_0_8px_rgba(92,225,230,0.4)] transition">
+<div class="pixel-input-border flex items-center justify-center text-center bg-space-950 px-2 py-2 peer-checked:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] peer-checked:bg-pixel-cyan/15 transition">
 <div class="font-pixel text-[9px] text-slate-300 peer-checked:text-pixel-cyan">JAVA</div>
-<div class="text-[10px] font-mono text-slate-500 peer-checked:text-slate-300 mt-0.5">.java</div>
 </div>
 </label>
-<!-- C++ -->
 <label class="cursor-pointer">
 <input class="sr-only peer" name="languages" type="checkbox" value="CPP"/>
-<div class="p-2.5 text-center bg-space-950 border border-space-700 hover:border-pixel-cyan peer-checked:border-pixel-cyan peer-checked:bg-pixel-cyan/15 peer-checked:shadow-[0_0_8px_rgba(92,225,230,0.4)] transition">
+<div class="pixel-input-border flex items-center justify-center text-center bg-space-950 px-2 py-2 peer-checked:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] peer-checked:bg-pixel-cyan/15 transition">
 <div class="font-pixel text-[9px] text-slate-300 peer-checked:text-pixel-cyan">C++</div>
-<div class="text-[10px] font-mono text-slate-500 peer-checked:text-slate-300 mt-0.5">.cpp</div>
 </div>
 </label>
-<!-- JAVASCRIPT -->
 <label class="cursor-pointer">
 <input class="sr-only peer" name="languages" type="checkbox" value="JAVASCRIPT"/>
-<div class="p-2.5 text-center bg-space-950 border border-space-700 hover:border-pixel-cyan peer-checked:border-pixel-cyan peer-checked:bg-pixel-cyan/15 peer-checked:shadow-[0_0_8px_rgba(92,225,230,0.4)] transition">
-<div class="font-pixel text-[9px] text-slate-300 peer-checked:text-pixel-cyan">JAVASCRIPT</div>
-<div class="text-[10px] font-mono text-slate-500 peer-checked:text-slate-300 mt-0.5">.js</div>
+<div class="pixel-input-border flex items-center justify-center text-center bg-space-950 px-2 py-2 peer-checked:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] peer-checked:bg-pixel-cyan/15 transition">
+<div class="font-pixel text-[9px] text-slate-300 peer-checked:text-pixel-cyan">JS</div>
 </div>
+</label>
+</div>
+</div>
+
+<div class="!mt-5" data-purpose="form-group-difficulty">
+<label class="block font-pixel text-[10px] text-pixel-lavender uppercase mb-1.5">
+                DIFFICULTY LEVEL <span class="text-rose-400">*</span>
+</label>
+<div aria-label="Difficulty Level Selection" class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="difficulty-group" role="radiogroup">
+<label class="pixel-input-border flex items-center justify-between px-3 py-2 bg-space-950 cursor-pointer transition select-none group has-[:checked]:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] has-[:checked]:bg-space-800">
+<input checked="" class="sr-only" name="difficulty" type="radio" value="BEGINNER"/>
+<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">BEGINNER</span>
+<span class="text-[9px] font-pixel text-emerald-400/90">★</span>
+</label>
+<label class="pixel-input-border flex items-center justify-between px-3 py-2 bg-space-950 cursor-pointer transition select-none group has-[:checked]:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] has-[:checked]:bg-space-800">
+<input class="sr-only" name="difficulty" type="radio" value="INTERMEDIATE"/>
+<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">INTERMEDIATE</span>
+<span class="text-[9px] font-pixel text-amber-400/90">★★</span>
+</label>
+<label class="pixel-input-border flex items-center justify-between px-3 py-2 bg-space-950 cursor-pointer transition select-none group has-[:checked]:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] has-[:checked]:bg-space-800">
+<input class="sr-only" name="difficulty" type="radio" value="HARD"/>
+<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">HARD</span>
+<span class="text-[9px] font-pixel text-rose-400/90">★★★</span>
 </label>
 </div>
 </div>
 <!-- Requirement 4: 'ENTER ESCAPE ROOM' / 'START ADVENTURE' Primary Button -->
-<div class="pt-2" data-purpose="form-submit-action">
-<button class="w-full pixel-btn-border py-3.5 sm:py-4 px-6 bg-gradient-to-r from-pixel-cyan via-[#6ae4e9] to-sky-400 hover:from-cyan-300 hover:to-sky-300 text-space-950 font-pixel text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-150 transform active:scale-[0.99] flex items-center justify-center gap-3 cursor-pointer shadow-[0_0_18px_rgba(92,225,230,0.6)]" id="start-game-btn" type="submit">
+<div class="pt-1" data-purpose="form-submit-action">
+<button class="w-full pixel-btn-border py-3 sm:py-3.5 px-6 bg-gradient-to-r from-pixel-cyan via-[#6ae4e9] to-sky-400 hover:from-cyan-300 hover:to-sky-300 text-space-950 font-pixel text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-150 transform active:scale-[0.99] flex items-center justify-center gap-3 cursor-pointer shadow-[0_0_18px_rgba(92,225,230,0.6)]" id="start-game-btn" type="submit">
 <span>ENTER ESCAPE ROOM</span>
 <span class="text-base font-bold animate-pulse">▶</span>
 </button>
-<!-- Secondary action options -->
-<div class="flex items-center justify-between mt-3 text-[11px] font-mono text-slate-400 px-1">
-<a class="hover:text-pixel-cyan transition underline underline-offset-4" href="#quick-demo">Run Tutorial Code Sandbox</a>
-<a class="hover:text-pixel-pink transition underline underline-offset-4" href="#resume-save">Load Save Capsule (F6)</a>
-</div>
 </div>
 </form>
 <!-- End Form -->
@@ -351,22 +337,7 @@
 </div>
 </main>
 <!-- END: MainContentRegistration -->
-<!-- BEGIN: PageFooter -->
-<footer class="relative z-10 border-t border-space-700/60 bg-space-950/80 py-3 px-4 text-center" data-purpose="site-footer">
-<div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] font-mono text-slate-500">
-<div class="flex items-center gap-2">
-<span class="w-2 h-2 bg-emerald-400"></span>
-<span>SERVER ENGINE: ONLINE (PING 14ms)</span>
-</div>
-<div>
-<span>COSMIC HEARTH © 2025 • PIXEL ESCAPE LABS</span>
-</div>
-<div class="font-pixel text-[8px] text-space-600">
-        PRESS [ENTER] TO SUBMIT
-      </div>
-</div>
-</footer>
-<!-- END: PageFooter -->
+
 <!-- Starfield Canvas Script -->
 <script data-purpose="starfield-generator">
     document.addEventListener('DOMContentLoaded', () => {
@@ -449,16 +420,110 @@
         });
       }
 
+      // Password show/hide toggle
+      const toggleBtn = document.getElementById('toggle-password-btn');
+      const passwordField = document.getElementById('account-password');
+      if (toggleBtn && passwordField) {
+        toggleBtn.addEventListener('click', () => {
+          const showing = passwordField.type === 'text';
+          passwordField.type = showing ? 'password' : 'text';
+          toggleBtn.textContent = showing ? '👁' : '🙈';
+        });
+      }
+
+      // Google sign-in placeholder — in the real app this authenticates via Google.
+      // Once signed in this way, email/password are no longer needed, so the account
+      // fields are locked and the submit handler below skips validating them.
+      let googleSignedIn = false;
+      const googleBtn = document.getElementById('google-signin-btn');
+      const googleLabel = document.getElementById('google-btn-label');
+      const googleIcon = document.getElementById('google-icon');
+      const accountFieldsGroup = document.getElementById('account-fields-group');
+      const emailDivider = document.getElementById('email-divider');
+      const forgotBtnEl = document.getElementById('forgot-password-btn');
+      const emailInputEl = document.getElementById('account-email');
+      const passwordInputEl = document.getElementById('account-password');
+      const togglePasswordBtnEl = document.getElementById('toggle-password-btn');
+
+      if (googleBtn) {
+        googleBtn.addEventListener('click', () => {
+          googleSignedIn = true;
+
+          // Gray out the button itself so it visibly reads as "done"
+          googleBtn.disabled = true;
+          googleBtn.classList.remove('bg-space-900', 'border-space-600', 'hover:border-slate-400', 'text-slate-300');
+          googleBtn.classList.add('bg-space-950', 'border-emerald-500/60', 'text-emerald-400', 'cursor-default', 'opacity-80');
+          if (googleIcon) googleIcon.classList.add('grayscale', 'opacity-60');
+          if (googleLabel) googleLabel.textContent = '✓ SIGNED IN WITH GOOGLE';
+
+          // Now that email/password are no longer needed, visibly dim and lock them
+          if (emailInputEl) { emailInputEl.disabled = true; emailInputEl.required = false; }
+          if (passwordInputEl) { passwordInputEl.disabled = true; passwordInputEl.required = false; }
+          if (togglePasswordBtnEl) togglePasswordBtnEl.disabled = true;
+          if (accountFieldsGroup) {
+            accountFieldsGroup.classList.add('opacity-40', 'pointer-events-none', 'grayscale-[0.3]');
+          }
+
+          // The "or sign in with email" choice and "Forgot?" link no longer apply
+          if (emailDivider) emailDivider.classList.add('hidden');
+          if (forgotBtnEl) forgotBtnEl.classList.add('hidden');
+
+          alert('Signed in with Google! Please continue filling in your Player Setup below.');
+          const nameInput = document.getElementById('player-name');
+          if (nameInput) nameInput.focus();
+        });
+      }
+
+      // Forgot password placeholder
+      const forgotBtn = document.getElementById('forgot-password-btn');
+      if (forgotBtn) {
+        forgotBtn.addEventListener('click', () => {
+          alert('A password reset link would be sent to your account email.');
+        });
+      }
+
       // Enter Adventure Button handler
       const form = document.getElementById('escape-login-form');
       if (form) {
         form.addEventListener('submit', (e) => {
           e.preventDefault();
+          const emailInput = document.getElementById('account-email');
+          const passwordInput = document.getElementById('account-password');
+          const emailWrap = document.getElementById('email-field-wrap');
+          const passwordWrap = document.getElementById('password-field-wrap');
+          const emailError = document.getElementById('email-error');
+          const passwordError = document.getElementById('password-error');
           const nameInput = document.getElementById('player-name');
           const playerName = nameInput ? nameInput.value.trim() : '';
+          const languageChecks = document.querySelectorAll('#language-chips-group input[name="languages"]:checked');
+
+          // Skip email/password checks entirely once the player has signed in with Google
+          if (!googleSignedIn) {
+            const emailValid = emailInput.checkValidity() && emailInput.value.trim();
+            const passwordValid = passwordInput.value.length >= 8;
+
+            emailWrap.classList.toggle('!shadow-[inset_2px_2px_0px_0px_#070913,0_0_0_2px_#fb7185]', !emailValid);
+            emailError.classList.toggle('hidden', emailValid);
+            passwordWrap.classList.toggle('!shadow-[inset_2px_2px_0px_0px_#070913,0_0_0_2px_#fb7185]', !passwordValid);
+            passwordError.classList.toggle('hidden', passwordValid);
+
+            if (!emailValid || !passwordValid) {
+              (!emailValid ? emailInput : passwordInput).focus();
+              return;
+            }
+          }
 
           if (!playerName) {
             nameInput.focus();
+            return;
+          }
+
+          if (languageChecks.length === 0) {
+            const languageGroup = document.getElementById('language-chips-group');
+            if (languageGroup) {
+              languageGroup.classList.add('ring-2', 'ring-rose-400');
+              languageGroup.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
             return;
           }
 
