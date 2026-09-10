@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cosmic Hearth: Code Escape</title>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Pixelated & Cozy Modern Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            pixel: ['"Press Start 2P"', 'monospace'],
+            retro: ['"VT323"', 'monospace'],
+            sans: ['"Nunito"', 'sans-serif'],
+          },
+          colors: {
+            space: {
+              950: '#060714',
+              900: '#0c0e24',
+              800: '#141838',
+              700: '#1f2552',
+            },
+            hearth: {
+              amber: '#f6ad55',
+              cyan: '#38bdf8',
+              purple: '#a855f7',
+              pink: '#ec4899',
+            }
+          },
+          boxShadow: {
+            'pixel-glow': '0 0 25px rgba(56, 189, 248, 0.6), inset 0 0 15px rgba(168, 85, 247, 0.4)',
+            'pixel-gold': '0 0 30px rgba(246, 173, 85, 0.8), 0 0 60px rgba(236, 72, 153, 0.3)',
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom Styles: Keyframe Animations & Pixel Borders -->
+<style data-purpose="custom-animations">
+    @keyframes pulse-glow {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 25px rgba(246, 173, 85, 0.8), 0 0 50px rgba(56, 189, 248, 0.5);
+      }
+      50% {
+        transform: scale(1.04);
+        box-shadow: 0 0 40px rgba(246, 173, 85, 1), 0 0 70px rgba(236, 72, 153, 0.8);
+      }
+    }
+
+    @keyframes subtle-float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(0.4deg); }
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
+
+    .animate-pixel-pulse {
+      animation: pulse-glow 2.5s infinite ease-in-out;
+    }
+
+    .animate-float-island {
+      animation: subtle-float 6s infinite ease-in-out;
+    }
+
+    .pixelated-border {
+      box-shadow: 
+        -4px 0 0 0 #38bdf8,
+        4px 0 0 0 #38bdf8,
+        0 -4px 0 0 #38bdf8,
+        0 4px 0 0 #38bdf8;
+    }
+
+    .pixel-btn-border {
+      box-shadow: 
+        -3px 0 0 0 #1f2552,
+        3px 0 0 0 #1f2552,
+        0 -3px 0 0 #1f2552,
+        0 3px 0 0 #1f2552;
+    }
+  </style>
+</head>
+<body class="bg-space-950 text-white min-h-screen overflow-x-hidden font-sans relative flex flex-col justify-between selection:bg-pink-500 selection:text-white">
+<!-- BEGIN: Starfield & Room Background -->
+<!-- Layered ambient background utilizing image and procedural cosmic stars -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" data-purpose="background-ambient">
+<!-- Starfield particles canvas/elements -->
+<div class="absolute inset-0 bg-[#050713]">
+<div class="absolute w-1 h-1 bg-white rounded-full top-[10%] left-[15%] animate-[twinkle_3s_infinite]"></div>
+<div class="absolute w-1.5 h-1.5 bg-blue-300 rounded-full top-[25%] left-[80%] animate-[twinkle_4s_infinite_1s]"></div>
+<div class="absolute w-1 h-1 bg-purple-300 rounded-full top-[65%] left-[10%] animate-[twinkle_3.5s_infinite_0.5s]"></div>
+<div class="absolute w-2 h-2 bg-yellow-200 rounded-full top-[75%] left-[88%] animate-[twinkle_5s_infinite_2s]"></div>
+<div class="absolute w-1 h-1 bg-white rounded-full top-[40%] left-[92%] animate-[twinkle_2.5s_infinite_1.5s]"></div>
+<div class="absolute w-1 h-1 bg-pink-300 rounded-full top-[85%] left-[30%] animate-[twinkle_4.2s_infinite]"></div>
+<div class="absolute w-1.5 h-1.5 bg-cyan-200 rounded-full top-[18%] left-[45%] animate-[twinkle_3.8s_infinite_0.8s]"></div>
+</div>
+<!-- Central Floating Cosmic Hearth Diorama Art -->
+<div class="absolute inset-0 flex items-center justify-center opacity-40 md:opacity-50 pointer-events-none">
+<div class="relative w-full max-w-4xl px-4 animate-float-island">
+<img alt="Cosmic Hearth Cozy Pixel Room" class="w-full h-auto rounded-2xl shadow-2xl border border-indigo-900/60 object-cover filter contrast-110 drop-shadow-[0_0_35px_rgba(56,189,248,0.25)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDX0bjdTyqixfR6kE3wCkY_9i5vXbFWoeASg605K_0GiYSc-W5h6LpX69rlqCHGLnh-QiiBz2AHvGbOISRrXxcC2VZJotLALuD5JlRPtMxtHY-HGpEM2xzEN_WF4caslaAWTBZYC7DQm5u5svkJo24Mvk-uLp4QhLOZER0BA05jhsLfALOe6dRQwjSUlShFUWH4P8YhvcbklFnXPebwv4o9mMQDUdjSYj-8FSytvdCfDIn6iL2oPFQWV6mDUnwBX6X0ag"/>
+<!-- Radial darkening overlay so typography pops crisp & clear -->
+<div class="absolute inset-0 bg-gradient-to-t from-space-950 via-space-950/70 to-transparent"></div>
+</div>
+</div>
+<!-- Ambient Vignette & Gradients -->
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(15,23,42,0)_20%,rgba(6,7,20,0.85)_100%)]"></div>
+</div>
+<!-- END: Starfield & Room Background -->
+<!-- BEGIN: Navigation Header -->
+<!-- Top navigation bar: Brand logo on the upper left, Rules & Settings on the upper right -->
+<header class="relative z-30 w-full px-6 py-6 md:px-12 flex items-center justify-between" data-purpose="page-header">
+<!-- Top Left: Retro Game Logo Mark -->
+<div class="flex items-center space-x-3 group cursor-pointer" data-purpose="game-logo">
+<div class="w-10 h-10 rounded bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-400 p-[2px] shadow-[0_0_15px_rgba(56,189,248,0.5)]">
+<div class="w-full h-full bg-space-950 flex items-center justify-center">
+<span class="text-hearth-amber font-pixel text-base">★</span>
+</div>
+</div>
+<div>
+<span class="font-pixel text-xs sm:text-sm tracking-wider text-cyan-300 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)] block">COSMIC HEARTH</span>
+<span class="text-[10px] font-mono text-purple-300 tracking-widest uppercase">Room Escaper v1.0</span>
+</div>
+</div>
+<!-- Top Right: GAME RULES & SETTINGS -->
+<nav class="flex items-center space-x-3 sm:space-x-5" data-purpose="top-right-controls">
+<!-- Game Rules Button -->
+<button class="flex items-center space-x-2 px-4 py-2.5 rounded-lg bg-space-900/80 hover:bg-space-800 text-cyan-300 border border-cyan-500/40 hover:border-cyan-400 font-pixel text-xs tracking-wide transition-all duration-200 hover:shadow-[0_0_15px_rgba(56,189,248,0.4)] backdrop-blur-md" data-purpose="rules-button" id="rulesBtn" onclick="toggleModal('rulesModal')" type="button">
+<!-- Book Icon -->
+<svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="hidden sm:inline">GAME RULES</span>
+</button>
+<!-- Settings Button -->
+<button class="flex items-center space-x-2 px-3.5 sm:px-4 py-2.5 rounded-lg bg-space-900/80 hover:bg-space-800 text-purple-300 border border-purple-500/40 hover:border-purple-400 font-pixel text-xs tracking-wide transition-all duration-200 hover:shadow-[0_0_15px_rgba(168,85,247,0.4)] backdrop-blur-md" data-purpose="settings-button" id="settingsBtn" onclick="toggleModal('settingsModal')" type="button">
+<!-- Gear Icon -->
+<svg class="w-4 h-4 text-purple-400 animate-spin-slow" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="hidden sm:inline">SETTINGS</span>
+</button>
+</nav>
+</header>
+<!-- END: Navigation Header -->
+<!-- BEGIN: Dead Center Hero Content -->
+<!-- Requirements: Big title, tagline, large glowing PLAY NOW button right at dead center -->
+<main class="relative z-20 flex-1 flex flex-col items-center justify-center px-4 py-8 text-center" data-purpose="hero-section">
+<div class="max-w-3xl mx-auto flex flex-col items-center justify-center space-y-6 md:space-y-8">
+<!-- Room Badge / Chapter indicator -->
+<div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-950/80 border border-cyan-400/30 text-[11px] font-mono text-cyan-300 shadow-sm backdrop-blur-sm">
+<span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+<span>ISOMETRIC KITCHEN CHAMBER • SECTOR 07</span>
+</div>
+<!-- Main Prominent Title -->
+<h1 class="font-pixel text-2xl sm:text-4xl md:text-5xl lg:text-6xl tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-400 drop-shadow-[0_4px_16px_rgba(56,189,248,0.7)] leading-relaxed">
+        COSMIC HEARTH:<br/>
+<span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-400 to-purple-400 drop-shadow-[0_4px_20px_rgba(246,173,85,0.8)]">
+          CODE ESCAPE
+        </span>
+</h1>
+<!-- Tagline -->
+<p class="font-sans text-base sm:text-xl md:text-2xl text-slate-200 font-semibold max-w-2xl leading-relaxed drop-shadow-md px-2">
+        A 2D cozy pixel escape room where algorithms illuminate the cosmos.
+      </p>
+<!-- Dead Center: Large Glowing PLAY NOW Button -->
+<div class="pt-4 md:pt-6 flex flex-col items-center space-y-3" data-purpose="play-action-area">
+<button class="animate-pixel-pulse relative group px-10 py-5 sm:px-14 sm:py-6 rounded-xl font-pixel text-base sm:text-xl md:text-2xl tracking-widest text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-300 hover:from-white hover:via-cyan-300 hover:to-cyan-400 cursor-pointer transition-all duration-300 border-4 border-amber-200 shadow-pixel-gold active:scale-95" id="playNowBtn" onclick="handlePlayGame()" type="button">
+<span class="flex items-center space-x-3">
+<svg class="w-6 h-6 sm:w-8 sm:h-8 fill-current inline-block transform group-hover:translate-x-1 transition-transform" viewbox="0 0 24 24">
+<polygon points="5 3 19 12 5 21 5 3"></polygon>
+</svg>
+<span class="font-bold">PLAY NOW</span>
+</span>
+</button>
+<!-- Subtle interactive cue -->
+<span class="text-xs font-mono text-cyan-200/80 tracking-widest uppercase">
+          [ Press Space or Click to Launch ]
+        </span>
+</div>
+</div>
+</main>
+<!-- END: Dead Center Hero Content -->
+<!-- BEGIN: Footer Elements -->
+<!-- Footer status bar and hints -->
+<footer class="relative z-20 w-full px-6 py-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 font-mono border-t border-indigo-950/70 bg-space-950/60 backdrop-blur-sm" data-purpose="page-footer">
+<div class="flex items-center space-x-4 mb-2 sm:mb-0">
+<span class="flex items-center space-x-1.5">
+<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+<span class="text-slate-300">Room Status: Sealed</span>
+</span>
+<span class="text-slate-600">|</span>
+<span>Terminal Puzzles: 4 Remaining</span>
+</div>
+<div class="text-center sm:text-right">
+<span class="text-slate-500">© 2025 Cosmic Hearth Studio. Built for web explorers.</span>
+</div>
+</footer>
+<!-- END: Footer Elements -->
+<!-- BEGIN: Game Rules Modal -->
+<div class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-md flex items-center justify-center p-4" data-purpose="rules-modal" id="rulesModal">
+<div class="bg-space-900 border-2 border-cyan-500 rounded-xl max-w-lg w-full p-6 sm:p-8 shadow-[0_0_30px_rgba(56,189,248,0.3)] relative">
+<!-- Close button -->
+<button aria-label="Close Rules Modal" class="absolute top-4 right-4 text-cyan-400 hover:text-white font-pixel text-sm p-1" onclick="toggleModal('rulesModal')">
+        ✕
+      </button>
+<div class="flex items-center space-x-3 mb-4">
+<span class="text-cyan-400 text-xl font-pixel">📜</span>
+<h2 class="font-pixel text-lg text-cyan-300">GAME RULES</h2>
+</div>
+<div class="space-y-4 text-sm text-slate-300 font-sans leading-relaxed">
+<p><strong class="text-white">1. Explore the Cozy Quarters:</strong> Click and inspect kitchen cupboards, the kettle, celestial clocks, and starry windows to gather hidden clues.</p>
+<p><strong class="text-white">2. Solve Algorithmic Terminals:</strong> Execute logic puzzles and short coding sequences to power up the escape gateway portal.</p>
+<p><strong class="text-white">3. Collect Constellation Shards:</strong> Find secret memory tiles scattered across the kitchen floor to reveal the secret exit passage.</p>
+</div>
+<div class="mt-6 pt-4 border-t border-slate-700 flex justify-end">
+<button class="px-5 py-2 font-pixel text-xs bg-cyan-500 text-space-950 font-bold rounded hover:bg-cyan-400 transition-colors" onclick="toggleModal('rulesModal')">
+          GOT IT
+        </button>
+</div>
+</div>
+</div>
+<!-- END: Game Rules Modal -->
+<!-- BEGIN: Settings Modal -->
+<div class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-md flex items-center justify-center p-4" data-purpose="settings-modal" id="settingsModal">
+<div class="bg-space-900 border-2 border-purple-500 rounded-xl max-w-md w-full p-6 sm:p-8 shadow-[0_0_30px_rgba(168,85,247,0.3)] relative">
+<!-- Close button -->
+<button aria-label="Close Settings Modal" class="absolute top-4 right-4 text-purple-400 hover:text-white font-pixel text-sm p-1" onclick="toggleModal('settingsModal')">
+        ✕
+      </button>
+<div class="flex items-center space-x-3 mb-5">
+<span class="text-purple-400 text-xl font-pixel">⚙️</span>
+<h2 class="font-pixel text-lg text-purple-300">SETTINGS</h2>
+</div>
+<div class="space-y-5 text-sm">
+<!-- BGM Volume Slider -->
+<div>
+<div class="flex justify-between text-xs font-mono text-purple-200 mb-1">
+<span>CHILL PIXEL BGM</span>
+<span>80%</span>
+</div>
+<input class="w-full accent-purple-500 cursor-pointer bg-space-800 rounded-lg" max="100" min="0" type="range" value="80"/>
+</div>
+<!-- Sound FX Slider -->
+<div>
+<div class="flex justify-between text-xs font-mono text-purple-200 mb-1">
+<span>SOUND EFFECTS</span>
+<span>95%</span>
+</div>
+<input class="w-full accent-cyan-400 cursor-pointer bg-space-800 rounded-lg" max="100" min="0" type="range" value="95"/>
+</div>
+<!-- CRT Scanline Filter Toggle -->
+<div class="flex items-center justify-between pt-2">
+<span class="text-xs font-mono text-slate-300">RETRO CRT SCANLINES</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+</label>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-slate-700 flex justify-end">
+<button class="px-5 py-2 font-pixel text-xs bg-purple-500 text-white font-bold rounded hover:bg-purple-400 transition-colors" onclick="toggleModal('settingsModal')">
+          SAVE
+        </button>
+</div>
+</div>
+</div>
+<!-- END: Settings Modal -->
+<!-- BEGIN: Interactive Logic Scripts -->
+<script data-purpose="modal-handlers">
+    // Toggle utility for rules and settings modals
+    function toggleModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.toggle('hidden');
+      }
+    }
+
+    // Play button action transition
+    function handlePlayGame() {
+      const btn = document.getElementById('playNowBtn');
+      btn.classList.add('scale-90');
+      setTimeout(() => {
+        btn.classList.remove('scale-90');
+        alert('Entering Cozy Kitchen Chamber: Initializing Code Escape Sequencer...');
+      }, 150);
+    }
+
+    // Allow keyboard spacebar trigger
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && e.target === document.body) {
+        e.preventDefault();
+        handlePlayGame();
+      }
+    });
+  </script>
+<!-- END: Interactive Logic Scripts -->
+</body></html>

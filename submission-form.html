@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Submission Form - Pixel Escape Room</title>
+<!-- Google Fonts: VT323 & Press Start 2P for authentic pixel art aesthetic -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&amp;family=Press+Start+2P&amp;family=VT323&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Custom Pixel Stylesheet -->
+<style data-purpose="pixel-styling">
+    .pixel-font {
+      font-family: 'Press Start 2P', monospace;
+    }
+    .vt-font {
+      font-family: 'VT323', monospace;
+    }
+    .code-font {
+      font-family: 'Fira Code', monospace;
+    }
+    /* Pixel borders styling */
+    .pixel-box {
+      border: 4px solid #1e1b4b;
+      box-shadow: 
+        inset -4px -4px 0px 0px #09090b,
+        inset 4px 4px 0px 0px #4338ca,
+        0px 0px 24px rgba(0, 0, 0, 0.85);
+    }
+    .pixel-inner-box {
+      border: 3px solid #0f172a;
+      box-shadow: inset 2px 2px 0px #312e81;
+    }
+    .pixel-btn-action {
+      box-shadow: inset -3px -3px 0px #065f46, inset 3px 3px 0px #6ee7b7, 0 4px 0 #022c22;
+    }
+    .pixel-btn-action:active {
+      transform: translateY(2px);
+      box-shadow: inset -2px -2px 0px #065f46, inset 2px 2px 0px #6ee7b7, 0 2px 0 #022c22;
+    }
+    .pixel-btn-secondary {
+      box-shadow: inset -3px -3px 0px #1e293b, inset 3px 3px 0px #64748b, 0 4px 0 #0f172a;
+    }
+    .pixel-btn-secondary:active {
+      transform: translateY(2px);
+      box-shadow: inset -2px -2px 0px #1e293b, inset 2px 2px 0px #64748b, 0 2px 0 #0f172a;
+    }
+    /* Custom scrollbar for pixel feel */
+    textarea::-webkit-scrollbar, div::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    textarea::-webkit-scrollbar-track, div::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    textarea::-webkit-scrollbar-thumb, div::-webkit-scrollbar-thumb {
+      background: #3b82f6;
+    }
+  </style>
+</head>
+<body class="bg-black text-slate-100 h-screen w-screen overflow-hidden select-none m-0 p-0 flex items-center justify-center font-sans">
+<!-- BEGIN: GameRoomCanvasContainer -->
+<!-- Underlying Game Room Canvas maintaining exact Game Room UI -->
+<main class="relative w-full h-full flex items-center justify-center overflow-hidden bg-slate-950" data-purpose="game-screen-viewport">
+<!-- Background Game Art: Starlight Room -->
+<div class="absolute inset-0 flex items-center justify-center overflow-hidden z-0" data-purpose="game-background-layer">
+<img alt="Cosmic Pixel Kitchen Game Room" class="w-full h-full object-cover object-center filter brightness-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5nbtXgCxKUhR7Gf8N5q5yTK0cUueFD5I58lHaQejv21VIpSYJNgK3JAtHWTLXLvVzRCMf1D1OGG3n9iNyL0tyToiROrs7ZWJR24Kl2hlfpqZRJTCRZm-e2UsOIKErDAImdMEWTUt4phH4AwsE-Zlaojw6qpAQBcqZthxJtk-e65qY6FKZm5MTcQdy-_ZfOn1wN6qyyMaDNmIsIT3rMly8mcIsMMJ_QwD8-Dw8w_5vCYsE1BZyKy-HxSlJm6faqLSc5w"/>
+<!-- Dimming backdrop overlay to focus attention on modal -->
+<div class="absolute inset-0 bg-indigo-950/60 backdrop-blur-[2px]" data-purpose="modal-backdrop"></div>
+</div>
+<!-- BEGIN: TopBarChrome -->
+<!-- Screen Design UI: Progress, Timer, Status -->
+<header class="absolute top-0 left-0 right-0 p-4 sm:p-6 flex justify-between items-start z-20 pointer-events-none" data-purpose="hud-header">
+<!-- Progress Indicator at Upper Left -->
+<div class="pointer-events-auto bg-slate-900/90 border-2 border-indigo-500/80 px-4 py-2.5 rounded-none shadow-[0_4px_12px_rgba(0,0,0,0.8)] flex items-center gap-3 backdrop-blur-md" data-purpose="progress-indicator">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 bg-emerald-400 inline-block animate-pulse shadow-[0_0_8px_#34d399]"></span>
+<span class="pixel-font text-[10px] text-cyan-300 tracking-wider">ROOM PROGRESS</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="text-xs vt-font text-amber-300 text-base">CHAMBER 02 / 04</span>
+<div class="flex gap-1 ml-2">
+<span class="w-3 h-2 bg-emerald-400 border border-black inline-block"></span>
+<span class="w-3 h-2 bg-emerald-400 border border-black inline-block animate-pulse"></span>
+<span class="w-3 h-2 bg-slate-700 border border-black inline-block"></span>
+<span class="w-3 h-2 bg-slate-700 border border-black inline-block"></span>
+</div>
+</div>
+</div>
+</div>
+<!-- Timer at Upper Center -->
+<div class="pointer-events-auto bg-slate-950/95 border-2 border-rose-500/90 px-6 py-2 rounded-none shadow-[0_0_20px_rgba(244,63,94,0.3)] flex flex-col items-center" data-purpose="timer-display">
+<span class="pixel-font text-[9px] text-rose-400 tracking-widest uppercase mb-0.5">Escape Countdown</span>
+<div class="flex items-center gap-2">
+<span class="text-rose-500 animate-pulse text-xl">⏳</span>
+<span class="vt-font text-3xl sm:text-4xl text-rose-400 tracking-widest font-bold drop-shadow-[0_0_10px_rgba(244,63,94,0.7)]" id="countdown-timer">24:15</span>
+</div>
+</div>
+<!-- Right Chrome Quick Stats -->
+<div class="pointer-events-auto hidden md:flex bg-slate-900/90 border-2 border-indigo-500/80 px-4 py-2.5 rounded-none shadow-lg items-center gap-3 backdrop-blur-md" data-purpose="inventory-status">
+<div class="text-right">
+<div class="pixel-font text-[9px] text-indigo-300">KEYS COLLECTED</div>
+<div class="vt-font text-xl text-yellow-400">🗝️ 1 / 3</div>
+</div>
+</div>
+</header>
+<!-- END: TopBarChrome -->
+<!-- BEGIN: BottomBarChrome -->
+<!-- Screen Design UI: Hints Button at Lower Left -->
+<footer class="absolute bottom-0 left-0 right-0 p-4 sm:p-6 flex justify-between items-end z-20 pointer-events-none" data-purpose="hud-footer">
+<!-- HINTS BUTTON AT LOWER LEFT -->
+<button class="pointer-events-auto pixel-btn-secondary group bg-slate-800 hover:bg-slate-700 text-amber-300 border-2 border-amber-400/80 px-4 py-2.5 flex items-center gap-2.5 transition active:scale-95 cursor-pointer shadow-lg" data-purpose="hints-trigger-button" id="hints-button" type="button">
+<span class="text-lg group-hover:rotate-12 transition-transform duration-200">💡</span>
+<div class="text-left">
+<span class="pixel-font text-[10px] block text-amber-200">HINTS (2 LEFT)</span>
+<span class="vt-font text-xs text-amber-400/80 uppercase">Click to decode logs</span>
+</div>
+</button>
+<!-- Bottom Right Room Navigation Info -->
+<div class="pointer-events-auto bg-slate-900/80 border border-slate-700 px-3 py-1.5 text-slate-400 vt-font text-sm hidden sm:block">
+        PRESS <span class="text-cyan-400 font-bold">[ESC]</span> TO VIEW SCENE
+      </div>
+</footer>
+<!-- END: BottomBarChrome -->
+<!-- BEGIN: CenteredPuzzleModal -->
+<!-- PUZZLE QUESTION IS AT THE CENTER WITHIN A CRISP PIXEL BOX -->
+<div class="relative z-30 w-[95%] max-w-3xl max-h-[88vh] bg-slate-950/95 pixel-box flex flex-col p-4 sm:p-6 rounded-none text-slate-200 shadow-2xl overflow-y-auto my-auto" data-purpose="centered-debugging-puzzle-modal">
+<!-- Puzzle Box Header Banner -->
+<div class="flex items-center justify-between pb-3 mb-3 border-b-2 border-indigo-900/80" data-purpose="puzzle-header">
+<div class="flex items-center gap-3">
+<div class="w-7 h-7 bg-indigo-600 border border-indigo-400 flex items-center justify-center text-white text-xs font-bold shadow-inner">
+            👾
+          </div>
+<div>
+<span class="pixel-font text-[9px] text-cyan-400 tracking-widest block">DEBUGGING TERMINAL // OVERRIDE LOCK</span>
+<h1 class="pixel-font text-xs sm:text-sm text-yellow-300 mt-0.5">PUZZLE 02: RECURSIVE KETTLE LOOP</h1>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="inline-block px-2 py-0.5 text-[9px] pixel-font bg-rose-950 border border-rose-500 text-rose-300 animate-pulse">
+            FAULT DETECTED
+          </span>
+</div>
+</div>
+<!-- SECTION: DEBUGGING QUESTION -->
+<!-- Explains context and displays the buggy code snippet -->
+<section class="mb-4 bg-slate-900/90 pixel-inner-box p-3 sm:p-4 rounded-none" data-purpose="debugging-question-container">
+<div class="flex items-start gap-2 mb-2">
+<span class="text-cyan-400 font-bold text-sm">▶</span>
+<p class="text-xs sm:text-sm text-slate-300 leading-relaxed vt-font sm:text-base">
+<span class="text-amber-300 font-bold">MISSION:</span> The electric kettle on the dining table keeps boiling infinitely, triggering the room containment seal! 
+            Inspect the recursive heating routine below, <span class="text-cyan-300 font-semibold underline decoration-cyan-500">identify the logical recursion bug</span>, and provide the corrected code to stabilize the temperature.
+          </p>
+</div>
+<!-- Buggy Code Display -->
+<div class="relative mt-2 bg-slate-950 border border-indigo-950 p-3 rounded-none">
+<div class="flex justify-between items-center pb-1.5 mb-2 border-b border-slate-800 text-[10px] code-font text-slate-400">
+<span class="text-indigo-400 font-semibold">kettle_controller.py (BUGGY SOURCE)</span>
+<span class="text-rose-400 vt-font text-xs">STATUS: STACK_OVERFLOW_RISK</span>
+</div>
+<pre class="code-font text-xs sm:text-sm leading-relaxed overflow-x-auto text-indigo-200 selection:bg-indigo-700"><span class="text-purple-400">def</span> <span class="text-yellow-300">heat_water</span>(current_temp, target_temp, cycle):
+    <span class="text-slate-500"># Stop condition when reaching target</span>
+    <span class="text-purple-400">if</span> current_temp &gt;= target_temp:
+        <span class="text-purple-400">return</span> <span class="text-emerald-300">"KETTLE_READY: SAFE_TO_POUR"</span>
+
+    <span class="text-slate-500"># BUG: Infinite recursion occurs here! Cycle is not incrementing/stepped properly</span>
+    <span class="text-purple-400">return</span> <span class="text-yellow-300">heat_water</span>(current_temp + <span class="text-amber-400">10</span>, target_temp, cycle)  <span class="text-rose-400 font-bold">&lt;-- CRITICAL LOOP ERROR</span></pre>
+</div>
+</section>
+<!-- SECTION: BOX AREA TO WRITE ANSWERS -->
+<!-- Interactive editable code/solution textarea with visual line markers -->
+<form class="flex flex-col flex-grow" data-purpose="solution-submission-form" id="solution-form" onsubmit="event.preventDefault();">
+<div class="mb-3">
+<div class="flex justify-between items-center mb-1.5">
+<label class="pixel-font text-[10px] text-emerald-400 flex items-center gap-1.5" for="code-editor-input">
+<span>✍️</span> WRITE YOUR ANSWER / CODE FIX HERE:
+            </label>
+<span class="text-slate-400 text-xs vt-font">PYTHON 3.x MONOSPACE MODE</span>
+</div>
+<!-- Code Editor Container -->
+<div class="relative flex border-2 border-emerald-500/70 bg-[#070b14] shadow-inner focus-within:border-cyan-400 transition-colors">
+<!-- Line numbers column -->
+<div class="bg-slate-950 py-3 px-2 text-right border-r border-slate-800 text-slate-600 select-none code-font text-xs leading-5">
+              1<br/>2<br/>3<br/>4<br/>5<br/>6
+            </div>
+<!-- Monospace Answer Box -->
+<textarea class="w-full bg-transparent p-3 text-cyan-200 code-font text-xs sm:text-sm leading-5 resize-none focus:outline-none focus:ring-0 placeholder:text-slate-600" id="code-editor-input" name="user_solution" placeholder="def heat_water(current_temp, target_temp, cycle):
+    # Write your fixed logic here...
+    if current_temp &gt;= target_temp:
+        return 'KETTLE_READY: SAFE_TO_POUR'
+    return heat_water(current_temp + 10, target_temp, cycle + 1)" rows="6" spellcheck="false"></textarea>
+</div>
+<div class="flex justify-between text-[11px] text-slate-400 vt-font mt-1">
+<span>TIP: Make sure the base case or step progression terminates cleanly!</span>
+<span id="char-counter">0 chars entered</span>
+</div>
+</div>
+<!-- SECTION: ACTION BUTTONS (SUBMIT & RUN TEST) -->
+<div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-800/80 mt-auto" data-purpose="action-buttons-group">
+<div class="flex items-center gap-2 text-xs vt-font text-slate-400">
+<span class="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+<span>SYSTEM WAITING FOR USER PATCH...</span>
+</div>
+<div class="flex items-center gap-3 w-full sm:w-auto">
+<!-- Secondary Test Button -->
+<button class="flex-1 sm:flex-none pixel-btn-secondary bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-500 pixel-font text-[10px] py-2.5 px-4 transition active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-1.5" id="run-test-btn" type="button">
+<span>⚙️</span> RUN TEST
+            </button>
+<!-- Prominent Green/Cyan Submit Button -->
+<button class="flex-1 sm:flex-none pixel-btn-action bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold pixel-font text-[10px] sm:text-xs py-2.5 px-6 transition active:translate-y-0.5 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.5)] flex items-center justify-center gap-2" id="submit-solution-btn" type="submit">
+<span>🚀</span> SUBMIT SOLUTION
+            </button>
+</div>
+</div>
+</form>
+</div>
+<!-- END: CenteredPuzzleModal -->
+</main>
+<!-- END: GameRoomCanvasContainer -->
+<!-- JavaScript Handling for minor interactivity -->
+<script data-purpose="hud-and-modal-interactions">
+    // Interactive feedback for character counter and buttons
+    const codeEditor = document.getElementById('code-editor-input');
+    const charCounter = document.getElementById('char-counter');
+    const submitBtn = document.getElementById('submit-solution-btn');
+    const runTestBtn = document.getElementById('run-test-btn');
+    const hintsBtn = document.getElementById('hints-button');
+
+    if (codeEditor && charCounter) {
+      codeEditor.addEventListener('input', (e) => {
+        charCounter.textContent = `${e.target.value.length} chars entered`;
+      });
+    }
+
+    if (runTestBtn) {
+      runTestBtn.addEventListener('click', () => {
+        const val = codeEditor.value.trim();
+        if (!val) {
+          alert("⚡ [SYNTAX TEST]: Answer box is empty! Enter code fix first.");
+        } else {
+          alert("🧪 [TEST BENCH]: Running simulation unit tests... Base case checks: OK.");
+        }
+      });
+    }
+
+    if (submitBtn) {
+      submitBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const code = codeEditor.value.trim();
+        if (!code) {
+          alert("⚠️ Please enter your solution before submitting!");
+          codeEditor.focus();
+        } else {
+          alert("✅ SOLUTION TRANSMITTED! Validating recursive termination sequence...");
+        }
+      });
+    }
+
+    if (hintsBtn) {
+      hintsBtn.addEventListener('click', () => {
+        alert("💡 HINT: Examine the third argument 'cycle' inside the recursive heat_water call. Is it progressing towards a termination bound, or should current_temp check against target_temp correctly?");
+      });
+    }
+  </script>
+</body></html>

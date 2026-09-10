@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cozy Starlight Escape Room</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts for retro pixel game aesthetic -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;display=swap" rel="stylesheet"/>
+<!-- BEGIN: Custom Styles -->
+<style data-purpose="typography">
+    .font-pixel {
+      font-family: 'Press Start 2P', monospace;
+    }
+    .font-digital {
+      font-family: 'VT323', monospace;
+    }
+  </style>
+<style data-purpose="hud-styling">
+    /* Pixel border style for retro HUD */
+    .pixel-box {
+      border: 3px solid #6366f1;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.4), inset 0 0 10px rgba(99, 102, 241, 0.2);
+      backdrop-filter: blur(8px);
+      background: rgba(10, 15, 30, 0.82);
+    }
+    .pixel-btn {
+      border: 2px solid #a855f7;
+      box-shadow: 0 4px 0 #6b21a8;
+      transition: all 0.1s ease-in-out;
+    }
+    .pixel-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #6b21a8;
+    }
+  </style>
+<style data-purpose="hotspots">
+    /* Pulsing hotspot glow animations */
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(0.85);
+        opacity: 0.9;
+      }
+      50% {
+        transform: scale(1.25);
+        opacity: 0.4;
+      }
+      100% {
+        transform: scale(0.85);
+        opacity: 0.9;
+      }
+    }
+    .hotspot-pulse {
+      animation: pulse-ring 2.2s infinite ease-in-out;
+    }
+    .hotspot-tag {
+      opacity: 0;
+      transform: translateY(4px);
+      transition: all 0.2s ease;
+      pointer-events: none;
+    }
+    .hotspot-group:hover .hotspot-tag {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+<!-- END: Custom Styles -->
+</head>
+<body class="bg-black text-slate-100 h-screen w-screen overflow-hidden select-none flex flex-col justify-center items-center">
+<!-- BEGIN: GameRoomContainer -->
+<main class="relative w-full h-full max-w-[1920px] max-h-[1080px] aspect-[16/9] mx-auto overflow-hidden bg-slate-950 flex items-center justify-center">
+<!-- Primary Room Background Image -->
+<!-- Descriptive Comment: Using the exact reference image with contain/cover layout to maintain retro pixel aspect ratio -->
+<img alt="Pixel Escape Room Background" class="w-full h-full object-contain md:object-cover pointer-events-none select-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2Kh6x_fK8efon_ypj7rqDw9WQFjzUkul1gdcIe3sFo9SjLb-XBMX-h58TgmiUORpF7RnRy_YMNv338w5DuRmFf2p0fhjlCCMgLyiFXGEKga-reTq-W7FUm--us6Oz-m6quSOzdNPjsccbHls7ibq0vlknzcWdDKgEvKHMm-gPNigk2jmWBOGdenlP6FDxPe8q9btuKQmO9yz5EWgfIU311jNLBzmJFrzeyewI1HLwmrBBu2NgYBa42TK1vtP3QQ05Xg"/>
+<!-- BEGIN: InteractiveHotspotsLayer -->
+<!-- Hotspots overlay accurately anchored over pixel room objects -->
+<div class="absolute inset-0 z-10 pointer-events-auto" data-purpose="puzzle-hotspots">
+<!-- Hotspot 1: Window [Star Matrix Puzzle] -->
+<button class="hotspot-group absolute top-[16%] left-[49%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer focus:outline-none" data-purpose="hotspot-window" title="Examine Moonlit Window">
+<div class="relative flex items-center justify-center w-9 h-9">
+<span class="absolute inline-flex w-full h-full rounded-full bg-cyan-400/40 hotspot-pulse"></span>
+<span class="relative inline-flex items-center justify-center rounded-full w-6 h-6 bg-cyan-500/90 text-[10px] text-white font-bold border border-cyan-200 shadow-lg shadow-cyan-500/50">✦</span>
+</div>
+<div class="hotspot-tag mt-1 px-2 py-0.5 bg-slate-900/90 border border-cyan-400/80 rounded text-[9px] font-pixel text-cyan-300 tracking-wider shadow">
+          WINDOW [STAR MATRIX]
+        </div>
+</button>
+<!-- Hotspot 2: Fridge [Lock Puzzle] -->
+<button class="hotspot-group absolute top-[43%] left-[43.5%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer focus:outline-none" data-purpose="hotspot-fridge" title="Inspect Fridge Lock">
+<div class="relative flex items-center justify-center w-8 h-8">
+<span class="absolute inline-flex w-full h-full rounded-full bg-amber-400/40 hotspot-pulse"></span>
+<span class="relative inline-flex items-center justify-center rounded-full w-5 h-5 bg-amber-500/90 text-[9px] text-white font-bold border border-amber-200 shadow-lg shadow-amber-500/50">🔒</span>
+</div>
+<div class="hotspot-tag mt-1 px-2 py-0.5 bg-slate-900/90 border border-amber-400/80 rounded text-[9px] font-pixel text-amber-300 tracking-wider shadow">
+          FRIDGE [CODE LOCK]
+        </div>
+</button>
+<!-- Hotspot 3: Tea Table [Cipher Puzzle] -->
+<button class="hotspot-group absolute top-[65%] left-[46.5%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer focus:outline-none" data-purpose="hotspot-teatable" title="Check Tea Set Cipher">
+<div class="relative flex items-center justify-center w-9 h-9">
+<span class="absolute inline-flex w-full h-full rounded-full bg-emerald-400/40 hotspot-pulse"></span>
+<span class="relative inline-flex items-center justify-center rounded-full w-6 h-6 bg-emerald-500/90 text-[11px] text-white font-bold border border-emerald-200 shadow-lg shadow-emerald-500/50">☕</span>
+</div>
+<div class="hotspot-tag mt-1 px-2 py-0.5 bg-slate-900/90 border border-emerald-400/80 rounded text-[9px] font-pixel text-emerald-300 tracking-wider shadow">
+          TABLE [TEA CIPHER]
+        </div>
+</button>
+<!-- Hotspot 4: Exit Door [Keypad Lock] -->
+<button class="hotspot-group absolute top-[47%] left-[75.5%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer focus:outline-none" data-purpose="hotspot-door" title="Door Escape Keypad">
+<div class="relative flex items-center justify-center w-8 h-8">
+<span class="absolute inline-flex w-full h-full rounded-full bg-rose-500/40 hotspot-pulse"></span>
+<span class="relative inline-flex items-center justify-center rounded-full w-5 h-5 bg-rose-600/90 text-[10px] text-white font-bold border border-rose-300 shadow-lg shadow-rose-500/50">🔑</span>
+</div>
+<div class="hotspot-tag mt-1 px-2 py-0.5 bg-slate-900/90 border border-rose-500/80 rounded text-[9px] font-pixel text-rose-300 tracking-wider shadow">
+          DOOR [KEYPAD]
+        </div>
+</button>
+</div>
+<!-- END: InteractiveHotspotsLayer -->
+<!-- BEGIN: UpperLeftProgressIndicator -->
+<!-- EXACT POSITIONAL REQUIREMENT 4: PROGRESS INDICATOR AT THE UPPER LEFT -->
+<header class="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 pixel-box px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-md min-w-[240px] sm:min-w-[280px]" data-purpose="upper-left-progress-indicator">
+<div class="flex items-center justify-between gap-2 mb-1.5">
+<div class="text-[9px] sm:text-[10px] font-pixel text-indigo-300 tracking-wider flex items-center gap-1.5">
+<span class="inline-block w-2 h-2 rounded-full bg-green-400 animate-ping"></span>
+          ROOM PROGRESS
+        </div>
+<span class="font-pixel text-[10px] sm:text-xs text-amber-300 font-bold">2 / 5 SOLVED</span>
+</div>
+<!-- Segmented Puzzle Node Dots -->
+<div class="flex items-center gap-1.5 my-2">
+<!-- Solved puzzle node -->
+<span class="h-2.5 w-5 bg-cyan-400 rounded-xs border border-cyan-200 shadow-sm shadow-cyan-400" title="Solved: Wall Clock"></span>
+<!-- Solved puzzle node -->
+<span class="h-2.5 w-5 bg-cyan-400 rounded-xs border border-cyan-200 shadow-sm shadow-cyan-400" title="Solved: Cat Basket"></span>
+<!-- Unsolved puzzle node (active) -->
+<span class="h-2.5 w-5 bg-amber-400/80 rounded-xs border border-amber-300 animate-pulse" title="In Progress: Star Window"></span>
+<!-- Unsolved puzzle node -->
+<span class="h-2.5 w-5 bg-slate-700/80 rounded-xs border border-slate-600" title="Locked: Tea Cipher"></span>
+<!-- Final door node -->
+<span class="h-2.5 w-5 bg-slate-700/80 rounded-xs border border-slate-600" title="Locked: Final Exit Keypad"></span>
+</div>
+<!-- Linear progress bar fill -->
+<div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-indigo-900/60 mt-1">
+<div class="bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400 h-full w-[40%] rounded-full"></div>
+</div>
+</header>
+<!-- END: UpperLeftProgressIndicator -->
+<!-- BEGIN: UpperCenterTimer -->
+<!-- EXACT POSITIONAL REQUIREMENT 2: TIMER AT THE UPPER CENTER -->
+<div class="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 z-20 pixel-box px-6 py-2 sm:px-8 sm:py-2.5 rounded-lg flex flex-col items-center justify-center border-2 border-red-500/80 shadow-[0_0_20px_rgba(239,68,68,0.35)]" data-purpose="upper-center-timer">
+<div class="text-[8px] sm:text-[9px] font-pixel text-red-400 uppercase tracking-widest mb-0.5">
+        TIME REMAINING
+      </div>
+<!-- Glowing Retro Digital Countdown Display -->
+<div class="flex items-baseline space-x-1 text-red-500 drop-shadow-[0_0_12px_rgba(239,68,68,0.9)]">
+<span class="font-digital text-4xl sm:text-5xl lg:text-6xl font-black tracking-widest leading-none">28:45</span>
+</div>
+</div>
+<!-- END: UpperCenterTimer -->
+<!-- BEGIN: UpperRightActions -->
+<!-- Helper controls for game settings / sound toggling -->
+<aside class="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 flex gap-2" data-purpose="hud-controls">
+<button class="pixel-box px-3 py-2 rounded text-[10px] font-pixel hover:bg-indigo-950/80 text-slate-300 hover:text-cyan-300 transition-colors" title="Room Audio Toggle">
+        🔊 ON
+      </button>
+<button class="pixel-box px-3 py-2 rounded text-[10px] font-pixel hover:bg-indigo-950/80 text-slate-300 hover:text-amber-300 transition-colors" title="Settings &amp; Menu">
+        ⚙️ MENU
+      </button>
+</aside>
+<!-- END: UpperRightActions -->
+<!-- BEGIN: LowerLeftHintsButton -->
+<!-- EXACT POSITIONAL REQUIREMENT 3: HINTS BUTTON AT THE LOWER LEFT -->
+<div class="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-20" data-purpose="lower-left-hints">
+<button class="pixel-btn bg-purple-900/90 hover:bg-purple-800 text-yellow-300 font-pixel text-[10px] sm:text-xs tracking-wider px-4 py-3 sm:px-5 sm:py-3.5 rounded-md flex items-center gap-2 cursor-pointer shadow-lg active:translate-y-0.5" title="Request Puzzle Hint">
+<span class="text-base sm:text-lg animate-bounce">💡</span>
+<span>HINTS [3/3 REMAINING]</span>
+</button>
+</div>
+<!-- END: LowerLeftHintsButton -->
+<!-- BEGIN: LowerRightInventoryBar -->
+<!-- Essential escape room inventory bar aligned with theme -->
+<footer class="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 pixel-box px-4 py-2 sm:py-2.5 rounded-md flex items-center gap-3" data-purpose="inventory-slots">
+<span class="font-pixel text-[9px] sm:text-[10px] text-indigo-300 uppercase tracking-wider mr-1 hidden sm:inline-block">INVENTORY:</span>
+<!-- Item Slot 1 -->
+<div class="w-10 h-10 sm:w-11 sm:h-11 bg-slate-900/90 border-2 border-indigo-500/80 rounded flex items-center justify-center hover:border-cyan-400 cursor-pointer transition shadow-inner" title="Item: Glowing Moon Crystal">
+<span class="text-lg">🌙</span>
+</div>
+<!-- Item Slot 2 -->
+<div class="w-10 h-10 sm:w-11 sm:h-11 bg-slate-900/90 border-2 border-indigo-500/80 rounded flex items-center justify-center hover:border-cyan-400 cursor-pointer transition shadow-inner" title="Item: Kettle Valve Key">
+<span class="text-lg">🗝️</span>
+</div>
+<!-- Item Slot 3: Empty -->
+<div class="w-10 h-10 sm:w-11 sm:h-11 bg-slate-950/60 border-2 border-dashed border-slate-700/80 rounded flex items-center justify-center">
+<span class="text-slate-600 font-pixel text-[9px]">+</span>
+</div>
+<!-- Item Slot 4: Empty -->
+<div class="w-10 h-10 sm:w-11 sm:h-11 bg-slate-950/60 border-2 border-dashed border-slate-700/80 rounded flex items-center justify-center">
+<span class="text-slate-600 font-pixel text-[9px]">+</span>
+</div>
+</footer>
+<!-- END: LowerRightInventoryBar -->
+</main>
+<!-- END: GameRoomContainer -->
+</body></html>
