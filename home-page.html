@@ -3,7 +3,7 @@
 <html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Bugscape: Code Escape</title>
+<title>Bugscape: Escape Room</title>
 <!-- Tailwind CSS v3 with Plugins -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Google Fonts: Pixelated & Cozy Modern Fonts -->
@@ -21,16 +21,16 @@
           },
           colors: {
             space: {
-              950: '#060714',
-              900: '#0c0e24',
-              800: '#141838',
-              700: '#1f2552',
+              950: '#020d16',
+              900: '#051b2a',
+              800: '#0a2334',
+              700: '#163e50',
             },
             hearth: {
-              amber: '#f6ad55',
-              cyan: '#38bdf8',
-              purple: '#a855f7',
-              pink: '#ec4899',
+              amber: '#8bdcf6',
+              cyan: '#7ae8ff',
+              purple: '#95dfff',
+              pink: '#dff9ff',
             }
           },
           boxShadow: {
@@ -74,138 +74,152 @@
 
     .pixelated-border {
       box-shadow: 
-        -4px 0 0 0 #38bdf8,
-        4px 0 0 0 #38bdf8,
-        0 -4px 0 0 #38bdf8,
-        0 4px 0 0 #38bdf8;
+        -4px 0 0 0 #7ef9ff,
+        4px 0 0 0 #7ef9ff,
+        0 -4px 0 0 #7ef9ff,
+        0 4px 0 0 #7ef9ff;
     }
 
     .pixel-btn-border {
       box-shadow: 
-        -3px 0 0 0 #1f2552,
-        3px 0 0 0 #1f2552,
-        0 -3px 0 0 #1f2552,
-        0 3px 0 0 #1f2552;
+        inset -3px -3px 0px 0px rgba(0,0,0,0.5),
+        inset 3px 3px 0px 0px rgba(255,255,255,0.25);
+    }
+
+    .pixel-btn-border:active {
+      box-shadow: 
+        inset 3px 3px 0px 0px rgba(0,0,0,0.6),
+        inset -2px -2px 0px 0px rgba(255,255,255,0.15);
+      transform: translateY(2px);
+    }
+
+    .pixel-box {
+      box-shadow: 
+        0 0 0 2px #071a2b,
+        0 0 0 4px #153f50,
+        0 0 0 6px #62dfff,
+        0 12px 30px rgba(0, 0, 0, 0.85);
+    }
+
+    .pixel-art-img {
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+    }
+
+    .hud-panel {
+      background: rgba(8, 20, 31, 0.96);
+      border: 1px solid rgba(92, 225, 230, 0.5);
+      box-shadow: inset 0 0 0 1px rgba(92, 225, 230, 0.10), 0 0 20px rgba(82, 216, 240, 0.08);
+    }
+
+    .hud-grid {
+      background-image: linear-gradient(rgba(92, 225, 230, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(92, 225, 230, 0.06) 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+
+    .terminal-window {
+      background: rgba(8, 14, 28, 0.96);
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.2), 0 0 25px rgba(56, 189, 248, 0.15);
+    }
+
+    .terminal-window::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(92, 225, 230, 0.04), transparent 40%, rgba(168, 85, 247, 0.04));
+      pointer-events: none;
     }
   </style>
 </head>
-<body class="bg-space-950 text-white min-h-screen overflow-x-hidden font-sans relative flex flex-col justify-between selection:bg-pink-500 selection:text-white">
-<!-- BEGIN: Starfield & Room Background -->
-<!-- Layered ambient background utilizing image and procedural cosmic stars -->
-<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" data-purpose="background-ambient">
-<!-- Starfield particles canvas/elements -->
-<div class="absolute inset-0 bg-[#050713]">
-<div class="absolute w-1 h-1 bg-white rounded-full top-[10%] left-[15%] animate-[twinkle_3s_infinite]"></div>
-<div class="absolute w-1.5 h-1.5 bg-blue-300 rounded-full top-[25%] left-[80%] animate-[twinkle_4s_infinite_1s]"></div>
-<div class="absolute w-1 h-1 bg-purple-300 rounded-full top-[65%] left-[10%] animate-[twinkle_3.5s_infinite_0.5s]"></div>
-<div class="absolute w-2 h-2 bg-yellow-200 rounded-full top-[75%] left-[88%] animate-[twinkle_5s_infinite_2s]"></div>
-<div class="absolute w-1 h-1 bg-white rounded-full top-[40%] left-[92%] animate-[twinkle_2.5s_infinite_1.5s]"></div>
-<div class="absolute w-1 h-1 bg-pink-300 rounded-full top-[85%] left-[30%] animate-[twinkle_4.2s_infinite]"></div>
-<div class="absolute w-1.5 h-1.5 bg-cyan-200 rounded-full top-[18%] left-[45%] animate-[twinkle_3.8s_infinite_0.8s]"></div>
+<body class="bg-[#020d1a] text-slate-200 min-h-screen relative overflow-x-hidden flex flex-col font-sans select-none selection:bg-cyan-300 selection:text-space-950">
+<!-- BEGIN: AmbientCosmicBackground -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" data-purpose="ambient-space-stars">
+<div class="absolute inset-0 bg-[#0a0d1a]"></div>
+<canvas class="absolute inset-0 w-full h-full opacity-70" id="starfield-canvas"></canvas>
+<div class="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-cyan-900/20 blur-3xl"></div>
+<div class="absolute bottom-10 -right-24 w-[30rem] h-[30rem] rounded-full bg-indigo-900/20 blur-3xl"></div>
+<div class="absolute top-12 left-16 text-cyan-200 animate-[twinkle_4s_ease-in-out_infinite] text-sm select-none font-pixel">✦</div>
+<div class="absolute top-36 left-[30%] text-white animate-[twinkle_2s_ease-in-out_infinite] text-xs select-none font-pixel">★</div>
+<div class="absolute bottom-28 left-20 text-cyan-300 animate-[twinkle_4s_ease-in-out_infinite] text-xs select-none font-pixel">✦</div>
+<div class="absolute top-20 right-24 text-purple-200 animate-[twinkle_2s_ease-in-out_infinite] text-sm select-none font-pixel">✦</div>
+<div class="absolute bottom-36 right-32 text-white animate-[twinkle_4s_ease-in-out_infinite] text-xs select-none font-pixel">★</div>
+<div class="absolute top-[60%] left-10 text-cyan-200 animate-[twinkle_2s_ease-in-out_infinite] text-xs select-none font-pixel">✦</div>
+<div class="absolute top-[45%] right-12 text-cyan-200 animate-[twinkle_4s_ease-in-out_infinite] text-sm select-none font-pixel">★</div>
 </div>
-<!-- Central Floating Bugscape Diorama Art -->
-<div class="absolute inset-0 flex items-center justify-center opacity-40 md:opacity-50 pointer-events-none">
-<div class="relative w-full max-w-4xl px-4 animate-float-island">
-<img alt="Bugscape Cozy Pixel Room" class="w-full h-auto rounded-2xl shadow-2xl border border-indigo-900/60 object-cover filter contrast-110 drop-shadow-[0_0_35px_rgba(56,189,248,0.25)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDX0bjdTyqixfR6kE3wCkY_9i5vXbFWoeASg605K_0GiYSc-W5h6LpX69rlqCHGLnh-QiiBz2AHvGbOISRrXxcC2VZJotLALuD5JlRPtMxtHY-HGpEM2xzEN_WF4caslaAWTBZYC7DQm5u5svkJo24Mvk-uLp4QhLOZER0BA05jhsLfALOe6dRQwjSUlShFUWH4P8YhvcbklFnXPebwv4o9mMQDUdjSYj-8FSytvdCfDIn6iL2oPFQWV6mDUnwBX6X0ag"/>
-<!-- Radial darkening overlay so typography pops crisp & clear -->
-<div class="absolute inset-0 bg-gradient-to-t from-space-950 via-space-950/70 to-transparent"></div>
-</div>
-</div>
-<!-- Ambient Vignette & Gradients -->
-<div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(15,23,42,0)_20%,rgba(6,7,20,0.85)_100%)]"></div>
-</div>
-<!-- END: Starfield & Room Background -->
-<!-- BEGIN: Navigation Header -->
-<!-- Top navigation bar: Brand logo on the upper left, Rules & Settings on the upper right -->
-<header class="relative z-30 w-full px-6 py-6 md:px-12 flex items-center justify-between" data-purpose="page-header">
-<!-- Top Left: Retro Game Logo Mark -->
-<div class="flex items-center space-x-3 group cursor-pointer" data-purpose="game-logo">
-<div class="w-10 h-10 rounded bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-400 p-[2px] shadow-[0_0_15px_rgba(56,189,248,0.5)]">
-<div class="w-full h-full bg-space-950 flex items-center justify-center">
-<span class="text-hearth-amber font-pixel text-base">★</span>
-</div>
-</div>
+<!-- END: AmbientCosmicBackground -->
+
+<header class="relative z-10 w-full px-4 sm:px-8 py-3 border-b-2 border-cyan-400/40 bg-[#081b2a]/90 backdrop-blur-md" data-purpose="main-header">
+<div class="max-w-6xl mx-auto flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-7 h-7 bg-cyan-400/20 border-2 border-cyan-400 flex items-center justify-center text-cyan-300 text-xs font-pixel shadow-[0_0_8px_rgba(56,189,248,0.6)]">
+          &lt;&gt;
+        </div>
 <div>
-<span class="font-pixel text-xs sm:text-sm tracking-wider text-cyan-300 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)] block">BUGSCAPE</span>
-<span class="text-[10px] font-mono text-purple-300 tracking-widest uppercase">Room Escaper v1.0</span>
+<span class="font-pixel text-[10px] sm:text-xs tracking-wider text-cyan-300 uppercase drop-shadow-[0_0_5px_rgba(56,189,248,0.5)]">
+            BugScape
+          </span>
+<span class="hidden sm:inline text-xs text-slate-500 font-pixel mx-2">/</span>
+<span class="hidden sm:inline font-pixel text-[9px] text-purple-200 uppercase tracking-wide">
+            Escape Room v1.0
+          </span>
 </div>
 </div>
-<!-- Top Right: GAME RULES & SETTINGS -->
-<nav class="flex items-center space-x-3 sm:space-x-5" data-purpose="top-right-controls">
-<!-- Game Rules Button -->
-<button class="flex items-center space-x-2 px-4 py-2.5 rounded-lg bg-space-900/80 hover:bg-space-800 text-cyan-300 border border-cyan-500/40 hover:border-cyan-400 font-pixel text-xs tracking-wide transition-all duration-200 hover:shadow-[0_0_15px_rgba(56,189,248,0.4)] backdrop-blur-md" data-purpose="rules-button" id="rulesBtn" onclick="toggleModal('rulesModal')" type="button">
-<!-- Book Icon -->
-<svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+
+<div class="flex items-center gap-3 sm:gap-5 text-xs font-mono">
+<button class="flex items-center gap-1.5 px-2.5 py-1 bg-[#0b2335] hover:bg-[#112d42] border border-cyan-400/40 text-cyan-200 text-xs transition duration-150 active:scale-95" data-purpose="rules-button" id="rulesBtn" onclick="toggleModal('rulesModal')" type="button">
+<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24">
+<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" fill="none"></path>
 </svg>
-<span class="hidden sm:inline">GAME RULES</span>
+<span class="font-pixel text-[8px] uppercase tracking-wider">Rules</span>
 </button>
-<!-- Settings Button -->
-<button class="flex items-center space-x-2 px-3.5 sm:px-4 py-2.5 rounded-lg bg-space-900/80 hover:bg-space-800 text-purple-300 border border-purple-500/40 hover:border-purple-400 font-pixel text-xs tracking-wide transition-all duration-200 hover:shadow-[0_0_15px_rgba(168,85,247,0.4)] backdrop-blur-md" data-purpose="settings-button" id="settingsBtn" onclick="toggleModal('settingsModal')" type="button">
-<!-- Gear Icon -->
-<svg class="w-4 h-4 text-purple-400 animate-spin-slow" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<button class="flex items-center gap-1.5 px-2.5 py-1 bg-[#0b2335] hover:bg-[#112d42] border border-cyan-400/40 text-cyan-100 text-xs transition duration-150 active:scale-95" data-purpose="settings-button" id="settingsBtn" onclick="toggleModal('settingsModal')" type="button">
+<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24">
+<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" fill="none"></path>
+<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" fill="none"></path>
 </svg>
-<span class="hidden sm:inline">SETTINGS</span>
+<span class="font-pixel text-[8px] uppercase tracking-wider">Settings</span>
 </button>
-</nav>
+</div>
+</div>
 </header>
-<!-- END: Navigation Header -->
-<!-- BEGIN: Dead Center Hero Content -->
-<!-- Requirements: Big title, tagline, large glowing PLAY NOW button right at dead center -->
-<main class="relative z-20 flex-1 flex flex-col items-center justify-center px-4 py-8 text-center" data-purpose="hero-section">
-<div class="max-w-3xl mx-auto flex flex-col items-center justify-center space-y-6 md:space-y-8">
-<!-- Room Badge / Chapter indicator -->
-<div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-950/80 border border-cyan-400/30 text-[11px] font-mono text-cyan-300 shadow-sm backdrop-blur-sm">
-<span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-<span>ISOMETRIC KITCHEN CHAMBER • SECTOR 07</span>
-</div>
-<!-- Main Prominent Title -->
-<h1 class="font-pixel text-2xl sm:text-4xl md:text-5xl lg:text-6xl tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-400 drop-shadow-[0_4px_16px_rgba(56,189,248,0.7)] leading-relaxed">
-        BUGSCAPE:<br/>
-<span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-pink-400 to-purple-400 drop-shadow-[0_4px_20px_rgba(246,173,85,0.8)]">
-          CODE ESCAPE
+
+<main class="relative z-10 flex-1 flex items-center justify-center px-4 py-12 sm:px-6 md:px-8" data-purpose="hero-section">
+  <div class="w-full max-w-5xl">
+    <div class="mx-auto max-w-4xl rounded-none border-2 border-cyan-400/60 bg-[#081b2b]/80 px-4 py-8 shadow-[0_0_0_2px_rgba(122,232,255,0.12),0_0_28px_rgba(122,232,255,0.1)] backdrop-blur-sm sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+      <div class="mb-5 text-center text-[8px] font-pixel uppercase tracking-[0.35em] text-[#7ef9ff]">
+        Isometric Kitchen Chamber · Sector 07
+      </div>
+
+      <h1 class="text-center font-pixel text-3xl sm:text-4xl md:text-5xl lg:text-[4rem] leading-[1.15] tracking-tight text-white">
+        <span class="block text-[#dffcff]" style="text-shadow: 0 0 12px rgba(223, 252, 255, 0.9), 0 0 24px rgba(122, 232, 255, 0.55);">BUGSCAPE:</span>
+        <span class="mt-2 block text-[#7ae8ff]" style="text-shadow: 0 0 12px rgba(122, 232, 255, 0.9), 0 0 26px rgba(122, 232, 255, 0.65);">
+          ESCAPE ROOM
         </span>
-</h1>
-<!-- Tagline -->
-<p class="font-sans text-base sm:text-xl md:text-2xl text-slate-200 font-semibold max-w-2xl leading-relaxed drop-shadow-md px-2">
-        A 2D cozy pixel escape room where algorithms illuminate the cosmos.
+      </h1>
+
+      <p class="mx-auto mt-5 max-w-2xl text-center text-sm sm:text-base text-slate-200/90 leading-relaxed">
+        A 2D cozy pixel escape room where your algorithmic instincts illuminate the cosmos.
       </p>
-<!-- Dead Center: Large Glowing PLAY NOW Button -->
-<div class="pt-4 md:pt-6 flex flex-col items-center space-y-3" data-purpose="play-action-area">
-<button class="animate-pixel-pulse relative group px-10 py-5 sm:px-14 sm:py-6 rounded-xl font-pixel text-base sm:text-xl md:text-2xl tracking-widest text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-300 hover:from-white hover:via-cyan-300 hover:to-cyan-400 cursor-pointer transition-all duration-300 border-4 border-amber-200 shadow-pixel-gold active:scale-95" id="playNowBtn" onclick="handlePlayGame()" type="button">
-<span class="flex items-center space-x-3">
-<svg class="w-6 h-6 sm:w-8 sm:h-8 fill-current inline-block transform group-hover:translate-x-1 transition-transform" viewbox="0 0 24 24">
-<polygon points="5 3 19 12 5 21 5 3"></polygon>
-</svg>
-<span class="font-bold">PLAY NOW</span>
-</span>
-</button>
-<!-- Subtle interactive cue -->
-<span class="text-xs font-mono text-cyan-200/80 tracking-widest uppercase">
-          [ Press Space or Click to Launch ]
-        </span>
-</div>
-</div>
+
+      <div class="mt-8 flex justify-center">
+        <button class="pixel-btn-border relative group px-8 py-4 sm:px-10 sm:py-5 bg-[#7ae8ff] text-[#061d29] font-pixel text-sm sm:text-base tracking-[0.18em] shadow-[0_0_25px_rgba(122,232,255,0.45)] hover:brightness-110 transition-all duration-200 active:scale-95" id="playNowBtn" onclick="handlePlayGame()" type="button">
+          <span class="flex items-center gap-3">
+            <svg class="w-5 h-5 fill-current inline-block" viewbox="0 0 24 24">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span>PLAY NOW</span>
+          </span>
+        </button>
+      </div>
+
+      <div class="mt-5 text-center text-[8px] font-pixel uppercase tracking-[0.3em] text-[#7ef9ff]/80">
+        [ Press Space or Click to Launch ]
+      </div>
+    </div>
+  </div>
 </main>
-<!-- END: Dead Center Hero Content -->
-<!-- BEGIN: Footer Elements -->
-<!-- Footer status bar and hints -->
-<footer class="relative z-20 w-full px-6 py-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 font-mono border-t border-indigo-950/70 bg-space-950/60 backdrop-blur-sm" data-purpose="page-footer">
-<div class="flex items-center space-x-4 mb-2 sm:mb-0">
-<span class="flex items-center space-x-1.5">
-<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-<span class="text-slate-300">Room Status: Sealed</span>
-</span>
-<span class="text-slate-600">|</span>
-<span>Terminal Puzzles: 4 Remaining</span>
-</div>
-<div class="text-center sm:text-right">
-<span class="text-slate-500">© 2025 Bugscape Studio. Built for web explorers.</span>
-</div>
-</footer>
-<!-- END: Footer Elements -->
 <!-- BEGIN: Game Rules Modal -->
 <div class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-md flex items-center justify-center p-4" data-purpose="rules-modal" id="rulesModal">
 <div class="bg-space-900 border-2 border-cyan-500 rounded-xl max-w-lg w-full p-6 sm:p-8 shadow-[0_0_30px_rgba(56,189,248,0.3)] relative">
@@ -275,6 +289,65 @@
 </div>
 </div>
 <!-- END: Settings Modal -->
+<!-- Starfield Canvas Script -->
+<script data-purpose="starfield-generator">
+    document.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('starfield-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      let width = (canvas.width = window.innerWidth);
+      let height = (canvas.height = window.innerHeight);
+
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        initStars();
+      });
+
+      const stars = [];
+      const STAR_COUNT = 140;
+
+      function initStars() {
+        stars.length = 0;
+        for (let i = 0; i < STAR_COUNT; i++) {
+          stars.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            size: Math.random() > 0.85 ? 3 : (Math.random() > 0.5 ? 2 : 1),
+            color: ['#ffffff', '#5ce1e6', '#b8c0ff', '#8ea7e9', '#ffd166'][Math.floor(Math.random() * 5)],
+            alpha: Math.random() * 0.9 + 0.1,
+            speed: Math.random() * 0.02 + 0.005,
+            direction: Math.random() > 0.5 ? 1 : -1
+          });
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, width, height);
+
+        for (let i = 0; i < stars.length; i++) {
+          const s = stars[i];
+          s.alpha += s.speed * s.direction;
+          if (s.alpha > 0.95 || s.alpha < 0.15) {
+            s.direction *= -1;
+          }
+
+          ctx.save();
+          ctx.globalAlpha = Math.max(0.1, Math.min(1, s.alpha));
+          ctx.fillStyle = s.color;
+          ctx.fillRect(Math.floor(s.x), Math.floor(s.y), s.size, s.size);
+          ctx.restore();
+        }
+
+        requestAnimationFrame(draw);
+      }
+
+      initStars();
+      draw();
+    });
+  </script>
+
 <!-- BEGIN: Interactive Logic Scripts -->
 <script data-purpose="modal-handlers">
     // Toggle utility for rules and settings modals
