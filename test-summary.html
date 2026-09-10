@@ -3,7 +3,7 @@
 <html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Test Summary - Cosmic Hearth Escape Room</title>
+<title>Test Summary</title>
 <!-- Tailwind CSS v3 -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Google Fonts: Press Start 2P & Silkscreen / Inter for pixel aesthetic -->
@@ -106,86 +106,81 @@
 <!-- Logo and Room Identity -->
 <div class="flex items-center space-x-4">
 <div class="w-12 h-12 bg-space-900 border-2 border-hearth-cyan flex items-center justify-center shadow-pixel-cyan">
-<span class="text-hearth-cyan text-xl font-pixel">✦</span>
+<svg width="16" height="16" viewBox="0 0 16 16" class="text-hearth-cyan" fill="currentColor">
+<path d="M8 0 L9.5 6.5 L16 8 L9.5 9.5 L8 16 L6.5 9.5 L0 8 L6.5 6.5 Z"/>
+</svg>
 </div>
 <div>
-<div class="flex items-center gap-2">
-<span class="text-xs font-pixel text-hearth-peach tracking-wider uppercase">Mission Complete</span>
-<span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span>
-</div>
-<h1 class="text-2xl sm:text-3xl font-pixel tracking-wide text-white mt-1">
-              COSMIC HEARTH <span class="text-hearth-cyan text-sm sm:text-base">[TEST SUMMARY]</span>
+<h1 class="text-2xl sm:text-3xl font-pixel tracking-wide text-white">
+              Test Summary
 </h1>
 </div>
 </div>
-<!-- Terminal Status Metadata -->
-<div class="flex items-center gap-3 text-xs font-retro bg-space-900/90 border border-space-700 px-4 py-2 text-slate-300">
-<span class="text-hearth-lavender">SYSTEM: KITCHEN_MODULE_01</span>
-<span class="text-slate-600">|</span>
-<span class="text-hearth-cyan">STATUS: VERIFIED</span>
-<span class="inline-block w-2 h-3 bg-hearth-cyan blink-cursor ml-1"></span>
+<!-- Profile Menu -->
+<div class="flex items-center gap-3 text-xs font-retro">
+<div class="flex items-center gap-2 bg-space-900/90 border border-space-700 px-3 py-2 text-slate-300 hover:border-hearth-lavender transition-colors cursor-pointer">
+<div class="relative w-5 h-5 bg-space-800 border border-hearth-lavender flex items-center justify-center font-pixel text-[10px] text-hearth-lavender">
+                ?
+                <span class="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 bg-hearth-gold border border-space-950"></span>
+</div>
+<span>GUEST</span>
+<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4 L6 8 L10 4"/></svg>
+</div>
 </div>
 </div>
 </header>
 <!-- END: MainHeader -->
 <!-- BEGIN: PrimaryDashboardContent -->
 <main class="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-grow" data-purpose="dashboard-grid">
-<!-- LEFT COLUMN: Snapshot & Score Metrics (5 Cols) -->
-<div class="lg:col-span-5 flex flex-col gap-6" data-purpose="score-metrics-panel">
-<!-- Level Snapshot Card -->
-<div class="nes-box p-3 rounded-none bg-space-900/95 border-space-700">
+<!-- LEFT COLUMN: single unified box, divided into 3 sections by horizontal rules -->
+<div class="lg:col-span-5 flex flex-col" data-purpose="score-metrics-panel">
+<div class="nes-box bg-space-900/95 border-hearth-cyan/60 shadow-pixel-cyan flex flex-col h-full">
+
+<!-- SECTION A: Room Snapshot -->
+<div class="p-4 pb-3">
 <div class="flex items-center justify-between pb-2 mb-2 border-b border-space-800 text-xs font-retro text-hearth-lavender">
-<span>TERMINAL CAMERA FEED // SECTOR_02</span>
-<span class="text-hearth-peach">LIVE RECORDING</span>
+<span>ROOM 1: Midnight Room</span>
+<span class="text-hearth-peach">SNAPSHOT</span>
 </div>
-<!-- Room Snapshot Image -->
 <div class="relative overflow-hidden border border-space-700 group">
-<img alt="Cosmic Hearth Kitchen Escape Room pixel interior" class="w-full h-56 sm:h-64 object-cover pixelated transform group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxpXR3hhvxx7SdTEOSNcykPkgxuHHPkDYobj0aC88aStcwwIYDHEokMsL8tiuOJcBU0cn3tNlKp0FE-jkXUfACBCUgmC0Xdu7HlTuGekMLYj30n86f0Ktiukofm5hmhUJvDGqYhxaViWrnL1fQ_eg0AA4U0zOD2heH9L5-Cguxan8AFel2Ca9HNwYpr4VrBM2mo9PLsEBhqYq6ttDP4xheljB8FBLPjf_doLA0CQfmjgle6acrYH9dXp0W3DXsQ3ejpQ"/>
+<img alt="Cosmic Hearth Kitchen Escape Room pixel interior" class="w-full h-48 sm:h-56 object-cover pixelated transform group-hover:scale-105 transition-transform duration-500" src="media/background.jpg"/>
 <div class="absolute inset-0 bg-gradient-to-t from-space-950 via-transparent to-transparent opacity-80"></div>
-<!-- Starry Pixel HUD Marker -->
 <div class="absolute bottom-3 left-3 flex items-center gap-2 font-pixel text-[10px] text-hearth-cyan bg-space-950/80 px-2 py-1 border border-hearth-cyan/40">
-<span class="text-hearth-peachBright">★</span> ESCAPE SUCCESSFUL
+</span> ESCAPE SUCCESSFUL!
             </div>
 </div>
 </div>
-<!-- SCORE METRICS CARD -->
-<div class="nes-box p-6 bg-space-900/95 border-hearth-cyan/60 shadow-pixel-cyan relative overflow-hidden">
-<!-- Ambient decorative corner lights -->
-<div class="absolute top-0 right-0 w-16 h-16 bg-hearth-cyan/15 rounded-bl-full pointer-events-none"></div>
-<div class="flex justify-between items-start mb-4">
-<div>
+
+<!-- Divider -->
+<div class="border-t-2 border-space-700 mx-4"></div>
+
+<!-- SECTION B: Score -->
+<div class="p-4 relative overflow-hidden">
+<div class="absolute top-8 -right-14 w-36 h-36 rounded-full bg-hearth-cyan/15 blur-md pointer-events-none"></div>
+<div class="absolute top-8 -left-14 w-36 h-36 rounded-full bg-hearth-lavender/15 blur-md pointer-events-none"></div>
+<div class="mt-3 mb-6 relative text-center">
 <p class="font-retro text-xs tracking-widest text-slate-400 uppercase">Evaluation Report</p>
-<h2 class="text-xl sm:text-2xl font-pixel text-white mt-1 tracking-tight">
-                FINAL SCORE: <span class="text-hearth-cyan drop-shadow-[0_0_8px_rgba(56,225,255,0.7)]">8,750 PTS</span>
-</h2>
-</div>
-<!-- Grade Badge -->
-<div class="text-right">
-<div class="bg-gradient-to-b from-hearth-peach to-hearth-lavender text-space-950 px-3 py-1 font-pixel font-bold text-xs tracking-wide shadow-md">
-                GRADE
-              </div>
-</div>
+<p class="font-pixel text-sm sm:text-base text-white tracking-widest mt-3">FINAL</p>
+<div class="font-pixel text-5xl sm:text-6xl text-hearth-cyan tracking-tight drop-shadow-[0_0_12px_rgba(56,225,255,0.8)] my-1">100</div>
+<p class="font-pixel text-sm sm:text-base text-white tracking-widest">SCORE</p>
 </div>
 <!-- Prominent Rank Banner -->
-<div class="bg-space-850/90 border-2 border-hearth-lavender/50 p-4 mb-5 flex items-center justify-between">
+<div class="bg-space-850/90 border-2 border-hearth-lavender/50 p-4 mb-5 flex items-center relative">
 <div class="flex items-center space-x-3">
 <span class="text-3xl font-pixel text-hearth-gold">S</span>
 <div>
 <p class="font-pixel text-sm text-hearth-lavender font-bold">RANK S - MASTER CODER</p>
-<p class="text-xs text-slate-400 font-retro">Top 3.8% of Interstellar Explorers</p>
+<p class="text-xs text-slate-400 font-retro">Top 3.8% of Players</p>
 </div>
 </div>
-<span class="text-hearth-cyan text-xl font-pixel animate-pulse">✦✦✦</span>
 </div>
 <!-- Secondary Metrics Grid -->
-<div class="grid grid-cols-2 gap-4 pt-2">
-<!-- Time Taken -->
+<div class="grid grid-cols-2 gap-4">
 <div class="bg-space-800/80 border border-space-700 p-3">
 <div class="text-[11px] font-retro text-slate-400 mb-1">TIME TAKEN</div>
 <div class="font-pixel text-lg sm:text-xl text-hearth-peach">21m 15s</div>
-<div class="text-[10px] font-retro text-emerald-400 mt-1">▲ 02m 45s faster than avg</div>
+<div class="text-[10px] font-retro text-emerald-400 mt-1">faster than avg</div>
 </div>
-<!-- Accuracy -->
 <div class="bg-space-800/80 border border-space-700 p-3">
 <div class="text-[11px] font-retro text-slate-400 mb-1">ACCURACY</div>
 <div class="font-pixel text-lg sm:text-xl text-hearth-cyan">92%</div>
@@ -193,21 +188,51 @@
 </div>
 </div>
 </div>
+
+<!-- Divider -->
+<div class="border-t-2 border-space-700 mx-4"></div>
+
+<!-- SECTION C: Mistake Pattern Log -->
+<div class="p-6 flex-grow flex flex-col justify-center" data-purpose="mistake-pattern-panel">
+<p class="font-pixel text-[11px] tracking-widest text-hearth-lavender uppercase mb-5">Mistake Pattern Log</p>
+<div class="space-y-5">
+<div>
+<div class="flex items-center justify-between font-retro text-[11px] mb-1.5">
+<span class="text-slate-300 uppercase">Boundary / Off-by-One</span>
+<span class="text-hearth-crimson">2 HITS</span>
+</div>
+<div class="w-full h-3 bg-space-950 border border-space-700">
+<div class="h-full bg-hearth-crimson" style="width: 66%"></div>
+</div>
+</div>
+<div>
+<div class="flex items-center justify-between font-retro text-[11px] mb-1.5">
+<span class="text-slate-300 uppercase">Null / Undefined Checks</span>
+<span class="text-hearth-lavender">1 HIT</span>
+</div>
+<div class="w-full h-3 bg-space-950 border border-space-700">
+<div class="h-full bg-hearth-lavender" style="width: 33%"></div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
 </div>
 <!-- END: Left Column -->
 <!-- RIGHT COLUMN: Mistakes, Recommendations & Actions (7 Cols) -->
-<div class="lg:col-span-7 flex flex-col gap-6" data-purpose="analysis-and-actions">
+<div class="lg:col-span-7 flex flex-col gap-6 h-full" data-purpose="analysis-and-actions">
 <!-- SECTION 2: COMMON MISTAKES -->
 <div class="nes-box p-6 bg-space-900/90 border-hearth-crimson/50" data-purpose="common-mistakes-section">
 <div class="flex items-center justify-between mb-4 border-b border-space-700/80 pb-3">
 <div class="flex items-center space-x-2">
 <span class="w-3 h-3 bg-hearth-crimson inline-block"></span>
 <h3 class="font-pixel text-sm sm:text-base text-hearth-peach tracking-wide">
-                ANOMALIES DETECTED (COMMON MISTAKES)
+                COMMON MISTAKES
               </h3>
 </div>
 <span class="text-xs font-retro text-hearth-crimson bg-hearth-crimson/10 px-2 py-0.5 border border-hearth-crimson/30">
-              3 LOGS FOUND
+              3 FOUND
             </span>
 </div>
 <div class="space-y-3 font-body">
@@ -262,16 +287,16 @@
 </div>
 </div>
 <!-- SECTION 3: RECOMMENDATIONS -->
-<div class="nes-box p-6 bg-space-900/90 border-hearth-lavender/50 shadow-pixel-lavender" data-purpose="recommendations-section">
+<div class="nes-box p-6 bg-space-900/90 border-hearth-lavender/50 shadow-pixel-lavender flex-grow flex flex-col" data-purpose="recommendations-section">
 <div class="flex items-center justify-between mb-4 border-b border-space-700/80 pb-3">
 <div class="flex items-center space-x-2">
 <span class="w-3 h-3 bg-hearth-lavender inline-block"></span>
 <h3 class="font-pixel text-sm sm:text-base text-hearth-lavender tracking-wide">
-                FLIGHT INSTRUCTOR RECOMMENDATIONS
+                RECOMMENDATIONS
               </h3>
 </div>
 <span class="text-xs font-retro text-hearth-cyan bg-hearth-cyan/10 px-2 py-0.5 border border-hearth-cyan/30">
-              OPTIMIZATION PATH
+              3 SUGGESTIONS
             </span>
 </div>
 <div class="space-y-3 font-body">
@@ -325,30 +350,30 @@
 </div>
 </div>
 </div>
-<!-- SECTION 4: ACTIONS -->
-<div class="pt-2" data-purpose="actions-footer">
-<div class="flex flex-col sm:flex-row items-stretch gap-4">
-<!-- Play Next Room -->
-<button class="flex-1 py-4 px-6 bg-hearth-cyan hover:bg-hearth-cyanGlow text-space-950 font-pixel text-xs uppercase tracking-wider font-bold transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-pixel-cyan border-2 border-white flex items-center justify-center gap-2">
-<span>▶</span> PLAY NEXT ROOM
-            </button>
-<!-- Review Replay -->
-<button class="flex-1 py-4 px-6 bg-space-850 hover:bg-space-800 text-hearth-lavender hover:text-white font-pixel text-xs uppercase tracking-wider transition-all border-2 border-hearth-lavender/60 hover:border-hearth-lavender shadow-pixel-lavender flex items-center justify-center gap-2">
-<span>⟲</span> REVIEW REPLAY
-            </button>
-<!-- Share Score -->
-<button class="sm:flex-none py-4 px-6 bg-space-850 hover:bg-space-800 text-hearth-peach hover:text-white font-pixel text-xs uppercase tracking-wider transition-all border-2 border-hearth-peach/60 hover:border-hearth-peach shadow-pixel-peach flex items-center justify-center gap-2">
-<span>▲</span> SHARE SCORE
-            </button>
-</div>
-</div>
 </div>
 <!-- END: Right Column -->
 </main>
 <!-- END: PrimaryDashboardContent -->
+<!-- SECTION 4: ACTIONS (now full-width, spans both columns) -->
+<div class="pt-8 mt-2 border-t border-space-800/60" data-purpose="actions-footer">
+<div class="flex flex-col sm:flex-row items-stretch gap-4">
+<!-- Play Next Room -->
+<button class="flex-1 py-4 px-6 bg-hearth-cyan hover:bg-hearth-cyanGlow text-space-950 font-pixel text-xs uppercase tracking-wider font-bold transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-pixel-cyan border-2 border-white flex items-center justify-center gap-2">
+<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M2 1 L11 6 L2 11 Z"/></svg> PLAY NEXT ROOM
+            </button>
+<!-- Review Replay -->
+<button class="flex-1 py-4 px-6 bg-space-850 hover:bg-space-800 text-hearth-lavender hover:text-white font-pixel text-xs uppercase tracking-wider transition-all border-2 border-hearth-lavender/60 hover:border-hearth-lavender shadow-pixel-lavender flex items-center justify-center gap-2">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg> MAIN MENU
+            </button>
+<!-- Share Score -->
+<button class="flex-1 py-4 px-6 bg-space-850 hover:bg-space-800 text-hearth-peach hover:text-white font-pixel text-xs uppercase tracking-wider transition-all border-2 border-hearth-peach/60 hover:border-hearth-peach shadow-pixel-peach flex items-center justify-center gap-2">
+<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 1 L11 8 L1 8 Z"/></svg> SHARE SCORE
+            </button>
+</div>
+</div>
 <!-- BEGIN: SystemFooter -->
 <footer class="mt-8 pt-4 border-t border-space-800/80 text-center text-xs font-retro text-slate-400" data-purpose="system-status-bar">
-<p>COSMIC HEARTH ENGINE // BUILD v2.4.9 // ESCAPE ROOM DEPLOYMENT: COMPLETED</p>
+<p>BUILD v1.0 // BugScape</p>
 </footer>
 <!-- END: SystemFooter -->
 </div>
