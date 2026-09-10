@@ -3,206 +3,353 @@
 <html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Cozy Starlight Escape Room</title>
-<!-- Tailwind CSS CDN -->
+<title>Test Summary - Cosmic Hearth Escape Room</title>
+<!-- Tailwind CSS v3 -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Google Fonts for retro pixel game aesthetic -->
+<!-- Google Fonts: Press Start 2P & Silkscreen / Inter for pixel aesthetic -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;display=swap" rel="stylesheet"/>
-<!-- BEGIN: Custom Styles -->
-<style data-purpose="typography">
-    .font-pixel {
-      font-family: 'Press Start 2P', monospace;
-    }
-    .font-digital {
-      font-family: 'VT323', monospace;
-    }
-  </style>
-<style data-purpose="hud-styling">
-    /* Pixel border style for retro HUD */
-    .pixel-box {
-      border: 3px solid #6366f1;
-      box-shadow: 0 0 10px rgba(99, 102, 241, 0.4), inset 0 0 10px rgba(99, 102, 241, 0.2);
-      backdrop-filter: blur(8px);
-      background: rgba(10, 15, 30, 0.82);
-    }
-    .pixel-btn {
-      border: 2px solid #a855f7;
-      box-shadow: 0 4px 0 #6b21a8;
-      transition: all 0.1s ease-in-out;
-    }
-    .pixel-btn:active {
-      transform: translateY(3px);
-      box-shadow: 0 1px 0 #6b21a8;
-    }
-  </style>
-<style data-purpose="hotspots">
-    /* Pulsing hotspot glow animations */
-    @keyframes pulse-ring {
-      0% {
-        transform: scale(0.85);
-        opacity: 0.9;
-      }
-      50% {
-        transform: scale(1.25);
-        opacity: 0.4;
-      }
-      100% {
-        transform: scale(0.85);
-        opacity: 0.9;
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&amp;family=Press+Start+2P&amp;family=Silkscreen:wght@400;700&amp;family=Space+Grotesk:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            space: {
+              950: '#070a14',
+              900: '#0a0d1a',
+              850: '#101426',
+              800: '#161b33',
+              700: '#232a4e',
+            },
+            hearth: {
+              cyan: '#38e1ff',
+              cyanGlow: '#00f2fe',
+              lavender: '#a594f9',
+              lavenderDark: '#6b5ca5',
+              peach: '#f7a8b8',
+              peachBright: '#ff9ebb',
+              gold: '#ffd166',
+              mint: '#06d6a0',
+              crimson: '#ff5c8a',
+            }
+          },
+          fontFamily: {
+            pixel: ['"Press Start 2P"', 'monospace'],
+            retro: ['"Silkscreen"', 'monospace'],
+            body: ['"Chakra Petch"', 'sans-serif'],
+          },
+          boxShadow: {
+            'pixel-cyan': '0 0 0 2px #38e1ff, 0 0 16px rgba(56, 225, 255, 0.4)',
+            'pixel-lavender': '0 0 0 2px #a594f9, 0 0 16px rgba(165, 148, 249, 0.35)',
+            'pixel-peach': '0 0 0 2px #f7a8b8, 0 0 16px rgba(247, 168, 184, 0.35)',
+            'pixel-card': 'inset 0 0 0 2px #2d355f, 0 10px 25px -5px rgba(0, 0, 0, 0.7)',
+          }
+        }
       }
     }
-    .hotspot-pulse {
-      animation: pulse-ring 2.2s infinite ease-in-out;
+  </script>
+<style data-purpose="pixel-aesthetics">
+    /* Pixel border styling emulation */
+    .nes-box {
+      border: 3px solid #323b6b;
+      background: rgba(16, 20, 38, 0.88);
+      position: relative;
     }
-    .hotspot-tag {
-      opacity: 0;
-      transform: translateY(4px);
-      transition: all 0.2s ease;
+    .nes-box::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 1px solid rgba(56, 225, 255, 0.15);
       pointer-events: none;
     }
-    .hotspot-group:hover .hotspot-tag {
-      opacity: 1;
-      transform: translateY(0);
+    .crt-scanlines {
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 3px 100%;
+      pointer-events: none;
+    }
+    .pixel-corner-glow {
+      box-shadow: 0 0 25px rgba(56, 225, 255, 0.2);
+    }
+    .star-bg {
+      background-image: 
+        radial-gradient(1px 1px at 25px 35px, #fff, rgba(0,0,0,0)),
+        radial-gradient(1.5px 1.5px at 85px 140px, #a594f9, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 160px 80px, #38e1ff, rgba(0,0,0,0)),
+        radial-gradient(1.5px 1.5px at 240px 220px, #fff, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 350px 110px, #f7a8b8, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 450px 290px, #38e1ff, rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 580px 180px, #fff, rgba(0,0,0,0));
+      background-repeat: repeat;
+      background-size: 600px 350px;
+    }
+    /* Stepped pulse animation for retro feel */
+    @keyframes pixel-blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    .blink-cursor {
+      animation: pixel-blink 1s infinite steps(1);
     }
   </style>
-<!-- END: Custom Styles -->
 </head>
-<body class="bg-black text-slate-100 h-screen w-screen overflow-hidden select-none flex flex-col justify-center items-center">
-<!-- BEGIN: GameRoomContainer -->
-<main class="relative w-full h-full max-w-[1920px] max-h-[1080px] aspect-[16/9] mx-auto overflow-hidden bg-slate-950 flex items-center justify-center">
-<!-- Primary Room Background Image -->
-<!-- Descriptive Comment: Using the exact reference image with contain/cover layout to maintain retro pixel aspect ratio -->
-<img alt="Pixel Escape Room Background" class="w-full h-full object-contain md:object-cover pointer-events-none select-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2Kh6x_fK8efon_ypj7rqDw9WQFjzUkul1gdcIe3sFo9SjLb-XBMX-h58TgmiUORpF7RnRy_YMNv338w5DuRmFf2p0fhjlCCMgLyiFXGEKga-reTq-W7FUm--us6Oz-m6quSOzdNPjsccbHls7ibq0vlknzcWdDKgEvKHMm-gPNigk2jmWBOGdenlP6FDxPe8q9btuKQmO9yz5EWgfIU311jNLBzmJFrzeyewI1HLwmrBBu2NgYBa42TK1vtP3QQ05Xg"/>
-<!-- BEGIN: InteractiveHotspotsLayer -->
-<!-- Hotspots overlay accurately anchored over pixel room objects -->
-<div class="absolute inset-0 z-10 pointer-events-auto" data-purpose="puzzle-hotspots">
-<!-- Hotspot 1: Window [Star Matrix Puzzle] -->
-<button class="hotspot-group absolute top-[16%] left-[49%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer focus:outline-none" data-purpose="hotspot-window" title="Examine Moonlit Window">
-<div class="relative flex items-center justify-center w-9 h-9">
-<span class="absolute inline-flex w-full h-full rounded-full bg-cyan-400/40 hotspot-pulse"></span>
-<span class="relative inline-flex items-center justify-center rounded-full w-6 h-6 bg-cyan-500/90 text-[10px] text-white font-bold border border-cyan-200 shadow-lg shadow-cyan-500/50">✦</span>
+<body class="bg-space-950 text-slate-200 font-body min-h-screen relative overflow-x-hidden star-bg selection:bg-hearth-cyan selection:text-space-950">
+<!-- Scanline CRT Overlay -->
+<div class="fixed inset-0 crt-scanlines z-50 pointer-events-none opacity-40"></div>
+<!-- Space Ambience Lights -->
+<div class="fixed top-0 left-1/4 w-96 h-96 bg-hearth-cyan/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="fixed bottom-10 right-1/4 w-96 h-96 bg-hearth-lavender/10 rounded-full blur-3xl pointer-events-none"></div>
+<div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-screen justify-between">
+<!-- BEGIN: MainHeader -->
+<header class="mb-8" data-purpose="header-section">
+<div class="flex flex-col md:flex-row items-center justify-between border-b-2 border-space-700/80 pb-5 gap-4">
+<!-- Logo and Room Identity -->
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 bg-space-900 border-2 border-hearth-cyan flex items-center justify-center shadow-pixel-cyan">
+<span class="text-hearth-cyan text-xl font-pixel">✦</span>
 </div>
-<div class="hotspot-tag mt-1 px-2 py-0.5 bg-slate-900/90 border border-cyan-400/80 rounded text-[9px] font-pixel text-cyan-300 tracking-wider shadow">
-          WINDOW [STAR MATRIX]
-        </div>
-</button>
-<!-- Hotspot 2: Fridge [Lock Puzzle] -->
-<button class="hotspot-group absolute top-[43%] left-[43.5%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer focus:outline-none" data-purpose="hotspot-fridge" title="Inspect Fridge Lock">
-<div class="relative flex items-center justify-center w-8 h-8">
-<span class="absolute inline-flex w-full h-full rounded-full bg-amber-400/40 hotspot-pulse"></span>
-<span class="relative inline-flex items-center justify-center rounded-full w-5 h-5 bg-amber-500/90 text-[9px] text-white font-bold border border-amber-200 shadow-lg shadow-amber-500/50">🔒</span>
+<div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-pixel text-hearth-peach tracking-wider uppercase">Mission Complete</span>
+<span class="w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span>
 </div>
-<div class="hotspot-tag mt-1 px-2 py-0.5 bg-slate-900/90 border border-amber-400/80 rounded text-[9px] font-pixel text-amber-300 tracking-wider shadow">
-          FRIDGE [CODE LOCK]
-        </div>
-</button>
-<!-- Hotspot 3: Tea Table [Cipher Puzzle] -->
-<button class="hotspot-group absolute top-[65%] left-[46.5%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer focus:outline-none" data-purpose="hotspot-teatable" title="Check Tea Set Cipher">
-<div class="relative flex items-center justify-center w-9 h-9">
-<span class="absolute inline-flex w-full h-full rounded-full bg-emerald-400/40 hotspot-pulse"></span>
-<span class="relative inline-flex items-center justify-center rounded-full w-6 h-6 bg-emerald-500/90 text-[11px] text-white font-bold border border-emerald-200 shadow-lg shadow-emerald-500/50">☕</span>
+<h1 class="text-2xl sm:text-3xl font-pixel tracking-wide text-white mt-1">
+              COSMIC HEARTH <span class="text-hearth-cyan text-sm sm:text-base">[TEST SUMMARY]</span>
+</h1>
 </div>
-<div class="hotspot-tag mt-1 px-2 py-0.5 bg-slate-900/90 border border-emerald-400/80 rounded text-[9px] font-pixel text-emerald-300 tracking-wider shadow">
-          TABLE [TEA CIPHER]
-        </div>
-</button>
-<!-- Hotspot 4: Exit Door [Keypad Lock] -->
-<button class="hotspot-group absolute top-[47%] left-[75.5%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer focus:outline-none" data-purpose="hotspot-door" title="Door Escape Keypad">
-<div class="relative flex items-center justify-center w-8 h-8">
-<span class="absolute inline-flex w-full h-full rounded-full bg-rose-500/40 hotspot-pulse"></span>
-<span class="relative inline-flex items-center justify-center rounded-full w-5 h-5 bg-rose-600/90 text-[10px] text-white font-bold border border-rose-300 shadow-lg shadow-rose-500/50">🔑</span>
 </div>
-<div class="hotspot-tag mt-1 px-2 py-0.5 bg-slate-900/90 border border-rose-500/80 rounded text-[9px] font-pixel text-rose-300 tracking-wider shadow">
-          DOOR [KEYPAD]
-        </div>
-</button>
+<!-- Terminal Status Metadata -->
+<div class="flex items-center gap-3 text-xs font-retro bg-space-900/90 border border-space-700 px-4 py-2 text-slate-300">
+<span class="text-hearth-lavender">SYSTEM: KITCHEN_MODULE_01</span>
+<span class="text-slate-600">|</span>
+<span class="text-hearth-cyan">STATUS: VERIFIED</span>
+<span class="inline-block w-2 h-3 bg-hearth-cyan blink-cursor ml-1"></span>
 </div>
-<!-- END: InteractiveHotspotsLayer -->
-<!-- BEGIN: UpperLeftProgressIndicator -->
-<!-- EXACT POSITIONAL REQUIREMENT 4: PROGRESS INDICATOR AT THE UPPER LEFT -->
-<header class="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 pixel-box px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-md min-w-[240px] sm:min-w-[280px]" data-purpose="upper-left-progress-indicator">
-<div class="flex items-center justify-between gap-2 mb-1.5">
-<div class="text-[9px] sm:text-[10px] font-pixel text-indigo-300 tracking-wider flex items-center gap-1.5">
-<span class="inline-block w-2 h-2 rounded-full bg-green-400 animate-ping"></span>
-          ROOM PROGRESS
-        </div>
-<span class="font-pixel text-[10px] sm:text-xs text-amber-300 font-bold">2 / 5 SOLVED</span>
-</div>
-<!-- Segmented Puzzle Node Dots -->
-<div class="flex items-center gap-1.5 my-2">
-<!-- Solved puzzle node -->
-<span class="h-2.5 w-5 bg-cyan-400 rounded-xs border border-cyan-200 shadow-sm shadow-cyan-400" title="Solved: Wall Clock"></span>
-<!-- Solved puzzle node -->
-<span class="h-2.5 w-5 bg-cyan-400 rounded-xs border border-cyan-200 shadow-sm shadow-cyan-400" title="Solved: Cat Basket"></span>
-<!-- Unsolved puzzle node (active) -->
-<span class="h-2.5 w-5 bg-amber-400/80 rounded-xs border border-amber-300 animate-pulse" title="In Progress: Star Window"></span>
-<!-- Unsolved puzzle node -->
-<span class="h-2.5 w-5 bg-slate-700/80 rounded-xs border border-slate-600" title="Locked: Tea Cipher"></span>
-<!-- Final door node -->
-<span class="h-2.5 w-5 bg-slate-700/80 rounded-xs border border-slate-600" title="Locked: Final Exit Keypad"></span>
-</div>
-<!-- Linear progress bar fill -->
-<div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-indigo-900/60 mt-1">
-<div class="bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400 h-full w-[40%] rounded-full"></div>
 </div>
 </header>
-<!-- END: UpperLeftProgressIndicator -->
-<!-- BEGIN: UpperCenterTimer -->
-<!-- EXACT POSITIONAL REQUIREMENT 2: TIMER AT THE UPPER CENTER -->
-<div class="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 z-20 pixel-box px-6 py-2 sm:px-8 sm:py-2.5 rounded-lg flex flex-col items-center justify-center border-2 border-red-500/80 shadow-[0_0_20px_rgba(239,68,68,0.35)]" data-purpose="upper-center-timer">
-<div class="text-[8px] sm:text-[9px] font-pixel text-red-400 uppercase tracking-widest mb-0.5">
-        TIME REMAINING
-      </div>
-<!-- Glowing Retro Digital Countdown Display -->
-<div class="flex items-baseline space-x-1 text-red-500 drop-shadow-[0_0_12px_rgba(239,68,68,0.9)]">
-<span class="font-digital text-4xl sm:text-5xl lg:text-6xl font-black tracking-widest leading-none">28:45</span>
+<!-- END: MainHeader -->
+<!-- BEGIN: PrimaryDashboardContent -->
+<main class="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-grow" data-purpose="dashboard-grid">
+<!-- LEFT COLUMN: Snapshot & Score Metrics (5 Cols) -->
+<div class="lg:col-span-5 flex flex-col gap-6" data-purpose="score-metrics-panel">
+<!-- Level Snapshot Card -->
+<div class="nes-box p-3 rounded-none bg-space-900/95 border-space-700">
+<div class="flex items-center justify-between pb-2 mb-2 border-b border-space-800 text-xs font-retro text-hearth-lavender">
+<span>TERMINAL CAMERA FEED // SECTOR_02</span>
+<span class="text-hearth-peach">LIVE RECORDING</span>
+</div>
+<!-- Room Snapshot Image -->
+<div class="relative overflow-hidden border border-space-700 group">
+<img alt="Cosmic Hearth Kitchen Escape Room pixel interior" class="w-full h-56 sm:h-64 object-cover pixelated transform group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxpXR3hhvxx7SdTEOSNcykPkgxuHHPkDYobj0aC88aStcwwIYDHEokMsL8tiuOJcBU0cn3tNlKp0FE-jkXUfACBCUgmC0Xdu7HlTuGekMLYj30n86f0Ktiukofm5hmhUJvDGqYhxaViWrnL1fQ_eg0AA4U0zOD2heH9L5-Cguxan8AFel2Ca9HNwYpr4VrBM2mo9PLsEBhqYq6ttDP4xheljB8FBLPjf_doLA0CQfmjgle6acrYH9dXp0W3DXsQ3ejpQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-space-950 via-transparent to-transparent opacity-80"></div>
+<!-- Starry Pixel HUD Marker -->
+<div class="absolute bottom-3 left-3 flex items-center gap-2 font-pixel text-[10px] text-hearth-cyan bg-space-950/80 px-2 py-1 border border-hearth-cyan/40">
+<span class="text-hearth-peachBright">★</span> ESCAPE SUCCESSFUL
+            </div>
 </div>
 </div>
-<!-- END: UpperCenterTimer -->
-<!-- BEGIN: UpperRightActions -->
-<!-- Helper controls for game settings / sound toggling -->
-<aside class="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 flex gap-2" data-purpose="hud-controls">
-<button class="pixel-box px-3 py-2 rounded text-[10px] font-pixel hover:bg-indigo-950/80 text-slate-300 hover:text-cyan-300 transition-colors" title="Room Audio Toggle">
-        🔊 ON
-      </button>
-<button class="pixel-box px-3 py-2 rounded text-[10px] font-pixel hover:bg-indigo-950/80 text-slate-300 hover:text-amber-300 transition-colors" title="Settings &amp; Menu">
-        ⚙️ MENU
-      </button>
-</aside>
-<!-- END: UpperRightActions -->
-<!-- BEGIN: LowerLeftHintsButton -->
-<!-- EXACT POSITIONAL REQUIREMENT 3: HINTS BUTTON AT THE LOWER LEFT -->
-<div class="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-20" data-purpose="lower-left-hints">
-<button class="pixel-btn bg-purple-900/90 hover:bg-purple-800 text-yellow-300 font-pixel text-[10px] sm:text-xs tracking-wider px-4 py-3 sm:px-5 sm:py-3.5 rounded-md flex items-center gap-2 cursor-pointer shadow-lg active:translate-y-0.5" title="Request Puzzle Hint">
-<span class="text-base sm:text-lg animate-bounce">💡</span>
-<span>HINTS [3/3 REMAINING]</span>
-</button>
+<!-- SCORE METRICS CARD -->
+<div class="nes-box p-6 bg-space-900/95 border-hearth-cyan/60 shadow-pixel-cyan relative overflow-hidden">
+<!-- Ambient decorative corner lights -->
+<div class="absolute top-0 right-0 w-16 h-16 bg-hearth-cyan/15 rounded-bl-full pointer-events-none"></div>
+<div class="flex justify-between items-start mb-4">
+<div>
+<p class="font-retro text-xs tracking-widest text-slate-400 uppercase">Evaluation Report</p>
+<h2 class="text-xl sm:text-2xl font-pixel text-white mt-1 tracking-tight">
+                FINAL SCORE: <span class="text-hearth-cyan drop-shadow-[0_0_8px_rgba(56,225,255,0.7)]">8,750 PTS</span>
+</h2>
 </div>
-<!-- END: LowerLeftHintsButton -->
-<!-- BEGIN: LowerRightInventoryBar -->
-<!-- Essential escape room inventory bar aligned with theme -->
-<footer class="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 pixel-box px-4 py-2 sm:py-2.5 rounded-md flex items-center gap-3" data-purpose="inventory-slots">
-<span class="font-pixel text-[9px] sm:text-[10px] text-indigo-300 uppercase tracking-wider mr-1 hidden sm:inline-block">INVENTORY:</span>
-<!-- Item Slot 1 -->
-<div class="w-10 h-10 sm:w-11 sm:h-11 bg-slate-900/90 border-2 border-indigo-500/80 rounded flex items-center justify-center hover:border-cyan-400 cursor-pointer transition shadow-inner" title="Item: Glowing Moon Crystal">
-<span class="text-lg">🌙</span>
+<!-- Grade Badge -->
+<div class="text-right">
+<div class="bg-gradient-to-b from-hearth-peach to-hearth-lavender text-space-950 px-3 py-1 font-pixel font-bold text-xs tracking-wide shadow-md">
+                GRADE
+              </div>
 </div>
-<!-- Item Slot 2 -->
-<div class="w-10 h-10 sm:w-11 sm:h-11 bg-slate-900/90 border-2 border-indigo-500/80 rounded flex items-center justify-center hover:border-cyan-400 cursor-pointer transition shadow-inner" title="Item: Kettle Valve Key">
-<span class="text-lg">🗝️</span>
 </div>
-<!-- Item Slot 3: Empty -->
-<div class="w-10 h-10 sm:w-11 sm:h-11 bg-slate-950/60 border-2 border-dashed border-slate-700/80 rounded flex items-center justify-center">
-<span class="text-slate-600 font-pixel text-[9px]">+</span>
+<!-- Prominent Rank Banner -->
+<div class="bg-space-850/90 border-2 border-hearth-lavender/50 p-4 mb-5 flex items-center justify-between">
+<div class="flex items-center space-x-3">
+<span class="text-3xl font-pixel text-hearth-gold">S</span>
+<div>
+<p class="font-pixel text-sm text-hearth-lavender font-bold">RANK S - MASTER CODER</p>
+<p class="text-xs text-slate-400 font-retro">Top 3.8% of Interstellar Explorers</p>
 </div>
-<!-- Item Slot 4: Empty -->
-<div class="w-10 h-10 sm:w-11 sm:h-11 bg-slate-950/60 border-2 border-dashed border-slate-700/80 rounded flex items-center justify-center">
-<span class="text-slate-600 font-pixel text-[9px]">+</span>
 </div>
-</footer>
-<!-- END: LowerRightInventoryBar -->
+<span class="text-hearth-cyan text-xl font-pixel animate-pulse">✦✦✦</span>
+</div>
+<!-- Secondary Metrics Grid -->
+<div class="grid grid-cols-2 gap-4 pt-2">
+<!-- Time Taken -->
+<div class="bg-space-800/80 border border-space-700 p-3">
+<div class="text-[11px] font-retro text-slate-400 mb-1">TIME TAKEN</div>
+<div class="font-pixel text-lg sm:text-xl text-hearth-peach">21m 15s</div>
+<div class="text-[10px] font-retro text-emerald-400 mt-1">▲ 02m 45s faster than avg</div>
+</div>
+<!-- Accuracy -->
+<div class="bg-space-800/80 border border-space-700 p-3">
+<div class="text-[11px] font-retro text-slate-400 mb-1">ACCURACY</div>
+<div class="font-pixel text-lg sm:text-xl text-hearth-cyan">92%</div>
+<div class="text-[10px] font-retro text-hearth-lavender mt-1">23 / 25 Nodes Clean</div>
+</div>
+</div>
+</div>
+</div>
+<!-- END: Left Column -->
+<!-- RIGHT COLUMN: Mistakes, Recommendations & Actions (7 Cols) -->
+<div class="lg:col-span-7 flex flex-col gap-6" data-purpose="analysis-and-actions">
+<!-- SECTION 2: COMMON MISTAKES -->
+<div class="nes-box p-6 bg-space-900/90 border-hearth-crimson/50" data-purpose="common-mistakes-section">
+<div class="flex items-center justify-between mb-4 border-b border-space-700/80 pb-3">
+<div class="flex items-center space-x-2">
+<span class="w-3 h-3 bg-hearth-crimson inline-block"></span>
+<h3 class="font-pixel text-sm sm:text-base text-hearth-peach tracking-wide">
+                ANOMALIES DETECTED (COMMON MISTAKES)
+              </h3>
+</div>
+<span class="text-xs font-retro text-hearth-crimson bg-hearth-crimson/10 px-2 py-0.5 border border-hearth-crimson/30">
+              3 LOGS FOUND
+            </span>
+</div>
+<div class="space-y-3 font-body">
+<!-- Mistake 1 -->
+<div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-crimson border border-space-700 hover:border-hearth-crimson/60 transition-colors">
+<div class="flex items-start gap-3">
+<span class="font-retro text-xs text-hearth-crimson bg-space-950 px-2 py-1 font-bold border border-hearth-crimson/40 shrink-0">
+                  ERR #01
+                </span>
+<div>
+<h4 class="font-pixel text-xs text-slate-100 mb-1">
+                    Off-by-One in Loop Termination
+                  </h4>
+<p class="text-xs text-slate-300 font-retro">
+                    Array index out of bounds on <span class="text-hearth-peach">Kettle sensor</span> logic iteration. Triggered panic routine during boil cycle.
+                  </p>
+</div>
+</div>
+</div>
+<!-- Mistake 2 -->
+<div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-crimson border border-space-700 hover:border-hearth-crimson/60 transition-colors">
+<div class="flex items-start gap-3">
+<span class="font-retro text-xs text-hearth-crimson bg-space-950 px-2 py-1 font-bold border border-hearth-crimson/40 shrink-0">
+                  ERR #02
+                </span>
+<div>
+<h4 class="font-pixel text-xs text-slate-100 mb-1">
+                    Unhandled Null Pointer Exception
+                  </h4>
+<p class="text-xs text-slate-300 font-retro">
+                    Encountered in <span class="text-hearth-cyan">Star Map Parser</span> when query window telemetry returned unmapped constellation coordinates.
+                  </p>
+</div>
+</div>
+</div>
+<!-- Mistake 3 -->
+<div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-crimson border border-space-700 hover:border-hearth-crimson/60 transition-colors">
+<div class="flex items-start gap-3">
+<span class="font-retro text-xs text-hearth-crimson bg-space-950 px-2 py-1 font-bold border border-hearth-crimson/40 shrink-0">
+                  ERR #03
+                </span>
+<div>
+<h4 class="font-pixel text-xs text-slate-100 mb-1">
+                    Suboptimal Time Complexity
+                  </h4>
+<p class="text-xs text-slate-300 font-retro">
+                    Detected in <span class="text-hearth-lavender">Door Lock Permutation</span> brute calculation. Nested O(N!) factorial scan delayed exit hatch unseal.
+                  </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 3: RECOMMENDATIONS -->
+<div class="nes-box p-6 bg-space-900/90 border-hearth-lavender/50 shadow-pixel-lavender" data-purpose="recommendations-section">
+<div class="flex items-center justify-between mb-4 border-b border-space-700/80 pb-3">
+<div class="flex items-center space-x-2">
+<span class="w-3 h-3 bg-hearth-lavender inline-block"></span>
+<h3 class="font-pixel text-sm sm:text-base text-hearth-lavender tracking-wide">
+                FLIGHT INSTRUCTOR RECOMMENDATIONS
+              </h3>
+</div>
+<span class="text-xs font-retro text-hearth-cyan bg-hearth-cyan/10 px-2 py-0.5 border border-hearth-cyan/30">
+              OPTIMIZATION PATH
+            </span>
+</div>
+<div class="space-y-3 font-body">
+<!-- Recommendation 1 -->
+<div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-lavender border border-space-700 hover:border-hearth-lavender/70 transition-colors">
+<div class="flex items-start gap-3">
+<span class="font-retro text-xs text-hearth-lavender bg-space-950 px-2 py-1 font-bold border border-hearth-lavender/40 shrink-0">
+                  REC #01
+                </span>
+<div>
+<h4 class="font-pixel text-xs text-slate-100 mb-1">
+                    Practice Boundary Condition Checking
+                  </h4>
+<p class="text-xs text-slate-300 font-retro">
+                    Reinforce edge constraints in recursive algorithms to prevent stack overflows and one-off edge index overflows.
+                  </p>
+</div>
+</div>
+</div>
+<!-- Recommendation 2 -->
+<div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-lavender border border-space-700 hover:border-hearth-lavender/70 transition-colors">
+<div class="flex items-start gap-3">
+<span class="font-retro text-xs text-hearth-lavender bg-space-950 px-2 py-1 font-bold border border-hearth-lavender/40 shrink-0">
+                  REC #02
+                </span>
+<div>
+<h4 class="font-pixel text-xs text-slate-100 mb-1">
+                    Strengthen Error Handling &amp; Null Checks
+                  </h4>
+<p class="text-xs text-slate-300 font-retro">
+                    Implement optional unwrapping and defensive fallbacks in data streams before parsing incoming star chamber payloads.
+                  </p>
+</div>
+</div>
+</div>
+<!-- Recommendation 3 -->
+<div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-lavender border border-space-700 hover:border-hearth-lavender/70 transition-colors">
+<div class="flex items-start gap-3">
+<span class="font-retro text-xs text-hearth-lavender bg-space-950 px-2 py-1 font-bold border border-hearth-lavender/40 shrink-0">
+                  REC #03
+                </span>
+<div>
+<h4 class="font-pixel text-xs text-slate-100 mb-1">
+                    Review Big-O Notation for Hash Set Lookups
+                  </h4>
+<p class="text-xs text-slate-300 font-retro">
+                    Leverage O(1) hash sets for key combination lookups to replace nested iterative permutations across chamber mechanisms.
+                  </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 4: ACTIONS -->
+<div class="pt-2" data-purpose="actions-footer">
+<div class="flex flex-col sm:flex-row items-stretch gap-4">
+<!-- Play Next Room -->
+<button class="flex-1 py-4 px-6 bg-hearth-cyan hover:bg-hearth-cyanGlow text-space-950 font-pixel text-xs uppercase tracking-wider font-bold transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-pixel-cyan border-2 border-white flex items-center justify-center gap-2">
+<span>▶</span> PLAY NEXT ROOM
+            </button>
+<!-- Review Replay -->
+<button class="flex-1 py-4 px-6 bg-space-850 hover:bg-space-800 text-hearth-lavender hover:text-white font-pixel text-xs uppercase tracking-wider transition-all border-2 border-hearth-lavender/60 hover:border-hearth-lavender shadow-pixel-lavender flex items-center justify-center gap-2">
+<span>⟲</span> REVIEW REPLAY
+            </button>
+<!-- Share Score -->
+<button class="sm:flex-none py-4 px-6 bg-space-850 hover:bg-space-800 text-hearth-peach hover:text-white font-pixel text-xs uppercase tracking-wider transition-all border-2 border-hearth-peach/60 hover:border-hearth-peach shadow-pixel-peach flex items-center justify-center gap-2">
+<span>▲</span> SHARE SCORE
+            </button>
+</div>
+</div>
+</div>
+<!-- END: Right Column -->
 </main>
-<!-- END: GameRoomContainer -->
+<!-- END: PrimaryDashboardContent -->
+<!-- BEGIN: SystemFooter -->
+<footer class="mt-8 pt-4 border-t border-space-800/80 text-center text-xs font-retro text-slate-400" data-purpose="system-status-bar">
+<p>COSMIC HEARTH ENGINE // BUILD v2.4.9 // ESCAPE ROOM DEPLOYMENT: COMPLETED</p>
+</footer>
+<!-- END: SystemFooter -->
+</div>
 </body></html>
