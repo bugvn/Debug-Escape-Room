@@ -236,7 +236,7 @@
 </label>
 <div class="pixel-input-border flex items-center bg-space-950 px-3 py-2 transition" id="email-field-wrap">
 <span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">&gt;</span>
-<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-500 focus:ring-0 focus:outline-none" id="account-email" maxlength="50" autocomplete="email" autofocus name="accountEmail" placeholder="you@example.com" required type="email"/>
+<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-500 focus:ring-0 focus:outline-none" id="account-email" spellcheck="false" maxlength="50" autocomplete="email" autofocus name="accountEmail" placeholder="you@example.com" required type="email"/>
 </div>
 <p class="hidden mt-1.5 text-[11px] font-mono text-rose-400" id="email-error">Enter a valid email address.</p>
 <p class="hidden mt-1.5 text-[11px] font-mono text-pixel-amber" id="email-limit"></p>
@@ -270,7 +270,7 @@
 </div>
 <div class="pixel-input-border flex items-center bg-space-950 px-3 py-2 transition" id="name-field-wrap">
 <span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">&gt;</span>
-<input aria-describedby="name-error" class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-500 focus:ring-0 focus:outline-none" id="player-name" maxlength="20" autocomplete="off" name="playerName" placeholder="e.g. YourName99" type="text"/>
+<input aria-describedby="name-error" class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-500 focus:ring-0 focus:outline-none" id="player-name" spellcheck="false" maxlength="20" autocomplete="off" name="playerName" placeholder="e.g. YourName99" type="text"/>
 </div>
 <p class="hidden mt-1.5 text-[11px] font-mono text-rose-400" id="name-error"></p>
 <p class="hidden mt-1.5 text-[11px] font-mono text-pixel-amber" id="name-limit"></p>
@@ -447,9 +447,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const rules = {
     email(v) {
       v = v.trim();
-      if (!v) return 'Email is required. Enter the email you registered with.';           // missing
+      if (!v) return mode === 'login' ? 'Email is required. Enter the email you registered with.' : 'Email is required. Enter the email you want to use for your account.';           // missing
       if (v.length > 50) return `Email is too long. Maximum is 50 characters, you entered ${v.length}.`;
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return 'Enter a valid email, like you@school.edu.ph.'; // type
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return 'Enter a valid email, like you@example.com.'; // type
       return '';
     },
     password(v) {
@@ -515,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
     gBtn.classList.add('bg-space-950', 'border-emerald-500/60', 'text-emerald-400', 'cursor-default', 'opacity-80');
     $('google-icon').classList.add('grayscale', 'opacity-60');
     $('google-btn-label').textContent = '✓ SIGNED IN WITH GOOGLE';
-    ['email', 'password'].forEach((k) => { fields[k].input.disabled = true; check_clear(k); });
+    ['email', 'password'].forEach((k) => { fields[k].input.value = ''; fields[k].input.disabled = true; check_clear(k); });
     pwBtn.disabled = true;
     $('account-fields-group').classList.add('opacity-40', 'pointer-events-none');
     $('email-divider').classList.add('hidden'); $('forgot-password-btn').classList.add('hidden');
