@@ -1,380 +1,289 @@
 <!DOCTYPE html>
-
 <html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Bugscape: Escape Room</title>
-<!-- Tailwind CSS v3 with Plugins -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Google Fonts: Pixelated & Cozy Modern Fonts -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
 <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            pixel: ['"Press Start 2P"', 'monospace'],
-            retro: ['"VT323"', 'monospace'],
-            sans: ['"Nunito"', 'sans-serif'],
-          },
-          colors: {
-            space: {
-              950: '#020d16',
-              900: '#051b2a',
-              800: '#0a2334',
-              700: '#163e50',
-            },
-            hearth: {
-              amber: '#8bdcf6',
-              cyan: '#7ae8ff',
-              purple: '#95dfff',
-              pink: '#dff9ff',
-            }
-          },
-          boxShadow: {
-            'pixel-glow': '0 0 25px rgba(56, 189, 248, 0.6), inset 0 0 15px rgba(168, 85, 247, 0.4)',
-            'pixel-gold': '0 0 30px rgba(246, 173, 85, 0.8), 0 0 60px rgba(236, 72, 153, 0.3)',
-          }
-        }
-      }
-    }
-  </script>
-<!-- Custom Styles: Keyframe Animations & Pixel Borders -->
-<style data-purpose="custom-animations">
-    @keyframes pulse-glow {
-      0%, 100% {
-        transform: scale(1);
-        box-shadow: 0 0 25px rgba(246, 173, 85, 0.8), 0 0 50px rgba(56, 189, 248, 0.5);
-      }
-      50% {
-        transform: scale(1.04);
-        box-shadow: 0 0 40px rgba(246, 173, 85, 1), 0 0 70px rgba(236, 72, 153, 0.8);
-      }
-    }
-
-    @keyframes subtle-float {
-      0%, 100% { transform: translateY(0px) rotate(0deg); }
-      50% { transform: translateY(-8px) rotate(0.4deg); }
-    }
-
-    @keyframes twinkle {
-      0%, 100% { opacity: 0.2; transform: scale(0.8); }
-      50% { opacity: 1; transform: scale(1.3); }
-    }
-
-    .animate-pixel-pulse {
-      animation: pulse-glow 2.5s infinite ease-in-out;
-    }
-
-    .animate-float-island {
-      animation: subtle-float 6s infinite ease-in-out;
-    }
-
-    .pixelated-border {
-      box-shadow: 
-        -4px 0 0 0 #7ef9ff,
-        4px 0 0 0 #7ef9ff,
-        0 -4px 0 0 #7ef9ff,
-        0 4px 0 0 #7ef9ff;
-    }
-
-    .pixel-btn-border {
-      box-shadow: 
-        inset -3px -3px 0px 0px rgba(0,0,0,0.5),
-        inset 3px 3px 0px 0px rgba(255,255,255,0.25);
-    }
-
-    .pixel-btn-border:active {
-      box-shadow: 
-        inset 3px 3px 0px 0px rgba(0,0,0,0.6),
-        inset -2px -2px 0px 0px rgba(255,255,255,0.15);
-      transform: translateY(2px);
-    }
-
-    .pixel-box {
-      box-shadow: 
-        0 0 0 2px #071a2b,
-        0 0 0 4px #153f50,
-        0 0 0 6px #62dfff,
-        0 12px 30px rgba(0, 0, 0, 0.85);
-    }
-
-    .pixel-art-img {
-      image-rendering: pixelated;
-      image-rendering: -moz-crisp-edges;
-      image-rendering: crisp-edges;
-    }
-
-    .hud-panel {
-      background: rgba(8, 20, 31, 0.96);
-      border: 1px solid rgba(92, 225, 230, 0.5);
-      box-shadow: inset 0 0 0 1px rgba(92, 225, 230, 0.10), 0 0 20px rgba(82, 216, 240, 0.08);
-    }
-
-    .hud-grid {
-      background-image: linear-gradient(rgba(92, 225, 230, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(92, 225, 230, 0.06) 1px, transparent 1px);
-      background-size: 22px 22px;
-    }
-
-    .terminal-window {
-      background: rgba(8, 14, 28, 0.96);
-      border: 1px solid rgba(56, 189, 248, 0.5);
-      box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.2), 0 0 25px rgba(56, 189, 248, 0.15);
-    }
-
-    .terminal-window::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(92, 225, 230, 0.04), transparent 40%, rgba(168, 85, 247, 0.04));
-      pointer-events: none;
-    }
-  </style>
+  tailwind.config = {
+    theme: { extend: {
+      fontFamily: { pixel: ['"Press Start 2P"', 'monospace'], retro: ['"VT323"', 'monospace'], sans: ['"Nunito"', 'sans-serif'] },
+      colors: { space: { 950: '#020d16', 900: '#051b2a', 800: '#0a2334', 700: '#163e50' } }
+    } }
+  }
+</script>
+<style>
+  @keyframes twinkle { 0%,100% { opacity:.2; transform:scale(.8);} 50% { opacity:1; transform:scale(1.3);} }
+  @keyframes pop-in { from { opacity:0; transform:scale(.92) translateY(8px);} to { opacity:1; transform:scale(1) translateY(0);} }
+  @keyframes toast-in { from { opacity:0; transform:translateX(40px);} to { opacity:1; transform:translateX(0);} }
+  @keyframes toast-out { to { opacity:0; transform:translateX(40px);} }
+  @keyframes blink { 50% { opacity:0; } }
+  .anim-pop { animation: pop-in .2s ease-out; }
+  .caret { animation: blink 1s steps(1) infinite; }
+  .toast { animation: toast-in .25s ease-out; }
+  .toast.leaving { animation: toast-out .25s ease-in forwards; }
+  .pixel-btn-border { box-shadow: inset -3px -3px 0 0 rgba(0,0,0,.5), inset 3px 3px 0 0 rgba(255,255,255,.25); }
+  .pixel-btn-border:active { box-shadow: inset 3px 3px 0 0 rgba(0,0,0,.6), inset -2px -2px 0 0 rgba(255,255,255,.15); transform: translateY(2px); }
+  .pixel-box { box-shadow: 0 0 0 2px #071a2b, 0 0 0 4px #153f50, 0 0 0 6px #62dfff, 0 12px 30px rgba(0,0,0,.85); }
+  .btn { font-family:'Press Start 2P',monospace; font-size:10px; padding:.85rem 1.1rem; display:inline-flex; align-items:center; justify-content:center; transition:filter .15s; }
+  .btn:hover { filter:brightness(1.12); }
+  .btn-primary { background:#7ae8ff; color:#061d29; }
+  .btn-ghost { background:#0b2335; color:#bfefff; border:2px solid rgba(122,232,255,.4); }
+  .btn-danger { background:#f87171; color:#2a0a0a; }
+  .modal-title { font-family:'Press Start 2P',monospace; }
+  #crtOverlay { background: repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0px, rgba(0,0,0,.28) 1px, transparent 1px, transparent 3px); }
+</style>
 </head>
 <body class="bg-[#020d1a] text-slate-200 min-h-screen relative overflow-x-hidden flex flex-col font-sans select-none selection:bg-cyan-300 selection:text-space-950">
-<!-- BEGIN: AmbientCosmicBackground -->
-<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" data-purpose="ambient-space-stars">
-<div class="absolute inset-0 bg-[#0a0d1a]"></div>
-<canvas class="absolute inset-0 w-full h-full opacity-70" id="starfield-canvas"></canvas>
-<div class="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-cyan-900/20 blur-3xl"></div>
-<div class="absolute bottom-10 -right-24 w-[30rem] h-[30rem] rounded-full bg-indigo-900/20 blur-3xl"></div>
-<div class="absolute top-12 left-16 text-cyan-200 animate-[twinkle_4s_ease-in-out_infinite] text-sm select-none font-pixel">✦</div>
-<div class="absolute top-36 left-[30%] text-white animate-[twinkle_2s_ease-in-out_infinite] text-xs select-none font-pixel">★</div>
-<div class="absolute bottom-28 left-20 text-cyan-300 animate-[twinkle_4s_ease-in-out_infinite] text-xs select-none font-pixel">✦</div>
-<div class="absolute top-20 right-24 text-purple-200 animate-[twinkle_2s_ease-in-out_infinite] text-sm select-none font-pixel">✦</div>
-<div class="absolute bottom-36 right-32 text-white animate-[twinkle_4s_ease-in-out_infinite] text-xs select-none font-pixel">★</div>
-<div class="absolute top-[60%] left-10 text-cyan-200 animate-[twinkle_2s_ease-in-out_infinite] text-xs select-none font-pixel">✦</div>
-<div class="absolute top-[45%] right-12 text-cyan-200 animate-[twinkle_4s_ease-in-out_infinite] text-sm select-none font-pixel">★</div>
-</div>
-<!-- END: AmbientCosmicBackground -->
 
-<header class="relative z-10 w-full px-4 sm:px-8 py-3 border-b-2 border-cyan-400/40 bg-[#081b2a]/90 backdrop-blur-md" data-purpose="main-header">
-<div class="max-w-6xl mx-auto flex items-center justify-between">
-<div class="flex items-center gap-3">
-<div class="w-7 h-7 bg-cyan-400/20 border-2 border-cyan-400 flex items-center justify-center text-cyan-300 text-xs font-pixel shadow-[0_0_8px_rgba(56,189,248,0.6)]">
-          &lt;&gt;
-        </div>
-<div>
-<span class="font-pixel text-[10px] sm:text-xs tracking-wider text-cyan-300 uppercase drop-shadow-[0_0_5px_rgba(56,189,248,0.5)]">
-            BugScape
-          </span>
-<span class="hidden sm:inline text-xs text-slate-500 font-pixel mx-2">/</span>
-<span class="hidden sm:inline font-pixel text-[9px] text-purple-200 uppercase tracking-wide">
-            Escape Room v1.0
-          </span>
-</div>
+<!-- CRT scanline overlay (controlled by Settings) -->
+<div id="crtOverlay" class="fixed inset-0 z-[90] pointer-events-none"></div>
+
+<!-- Ambient background -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+  <div class="absolute inset-0 bg-[#0a0d1a]"></div>
+  <canvas class="absolute inset-0 w-full h-full opacity-70" id="starfield-canvas"></canvas>
+  <div class="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-cyan-900/20 blur-3xl"></div>
+  <div class="absolute bottom-10 -right-24 w-[30rem] h-[30rem] rounded-full bg-indigo-900/20 blur-3xl"></div>
+  <div class="absolute top-12 left-16 text-cyan-200 animate-[twinkle_4s_ease-in-out_infinite] text-sm font-pixel">✦</div>
+  <div class="absolute top-36 left-[30%] text-white animate-[twinkle_2s_ease-in-out_infinite] text-xs font-pixel">★</div>
+  <div class="absolute bottom-28 left-20 text-cyan-300 animate-[twinkle_4s_ease-in-out_infinite] text-xs font-pixel">✦</div>
+  <div class="absolute top-20 right-24 text-purple-200 animate-[twinkle_2s_ease-in-out_infinite] text-sm font-pixel">✦</div>
+  <div class="absolute bottom-36 right-32 text-white animate-[twinkle_4s_ease-in-out_infinite] text-xs font-pixel">★</div>
 </div>
 
-<div class="flex items-center gap-3 sm:gap-5 text-xs font-mono">
-<button class="flex items-center gap-1.5 px-2.5 py-1 bg-[#0b2335] hover:bg-[#112d42] border border-cyan-400/40 text-cyan-200 text-xs transition duration-150 active:scale-95" data-purpose="rules-button" id="rulesBtn" onclick="toggleModal('rulesModal')" type="button">
-<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24">
-<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" fill="none"></path>
-</svg>
-<span class="font-pixel text-[8px] uppercase tracking-wider">Rules</span>
-</button>
-<button class="flex items-center gap-1.5 px-2.5 py-1 bg-[#0b2335] hover:bg-[#112d42] border border-cyan-400/40 text-cyan-100 text-xs transition duration-150 active:scale-95" data-purpose="settings-button" id="settingsBtn" onclick="toggleModal('settingsModal')" type="button">
-<svg class="w-3.5 h-3.5 fill-current" viewbox="0 0 24 24">
-<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" fill="none"></path>
-<path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" fill="none"></path>
-</svg>
-<span class="font-pixel text-[8px] uppercase tracking-wider">Settings</span>
-</button>
-</div>
-</div>
+<!-- Header -->
+<header class="relative z-10 w-full px-4 sm:px-8 py-3 border-b-2 border-cyan-400/40 bg-[#081b2a]/90 backdrop-blur-md">
+  <div class="max-w-6xl mx-auto flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-7 h-7 bg-cyan-400/20 border-2 border-cyan-400 flex items-center justify-center text-cyan-300 text-xs font-pixel">&lt;&gt;</div>
+      <div>
+        <span class="font-pixel text-[10px] sm:text-xs tracking-wider text-cyan-300 uppercase">BugScape</span>
+        <span class="hidden sm:inline text-xs text-slate-500 font-pixel mx-2">/</span>
+        <span class="hidden sm:inline font-pixel text-[9px] text-purple-200 uppercase tracking-wide">Escape Room v1.0</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 sm:gap-5">
+      <button class="px-2.5 py-1 bg-[#0b2335] hover:bg-[#112d42] border border-cyan-400/40 text-cyan-200 font-pixel text-[8px] uppercase tracking-wider active:scale-95" onclick="openModal('rulesModal')" type="button">Rules</button>
+      <button class="px-2.5 py-1 bg-[#0b2335] hover:bg-[#112d42] border border-cyan-400/40 text-cyan-100 font-pixel text-[8px] uppercase tracking-wider active:scale-95" onclick="openModal('settingsModal')" type="button">Settings</button>
+    </div>
+  </div>
 </header>
 
-<main class="relative z-10 flex-1 flex items-center justify-center px-4 py-12 sm:px-6 md:px-8" data-purpose="hero-section">
+<!-- Hero -->
+<main class="relative z-10 flex-1 flex items-center justify-center px-4 py-12 sm:px-6 md:px-8">
   <div class="w-full max-w-5xl">
-    <div class="mx-auto max-w-4xl rounded-none border-2 border-cyan-400/60 bg-[#081b2b]/80 px-4 py-8 shadow-[0_0_0_2px_rgba(122,232,255,0.12),0_0_28px_rgba(122,232,255,0.1)] backdrop-blur-sm sm:px-8 sm:py-10 lg:px-12 lg:py-12">
-      <div class="mb-5 text-center text-[8px] font-pixel uppercase tracking-[0.35em] text-[#7ef9ff]">
-        Isometric Kitchen Chamber · Sector 07
-      </div>
-
+    <div class="mx-auto max-w-4xl border-2 border-cyan-400/60 bg-[#081b2b]/80 px-4 py-8 shadow-[0_0_28px_rgba(122,232,255,0.1)] backdrop-blur-sm sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+      <div class="mb-5 text-center text-[8px] font-pixel uppercase tracking-[0.35em] text-[#7ef9ff]">Isometric Kitchen Chamber · Sector 07</div>
       <h1 class="text-center font-pixel text-3xl sm:text-4xl md:text-5xl lg:text-[4rem] leading-[1.15] tracking-tight text-white">
-        <span class="block text-[#dffcff]" style="text-shadow: 0 0 12px rgba(223, 252, 255, 0.9), 0 0 24px rgba(122, 232, 255, 0.55);">BUGSCAPE:</span>
-        <span class="mt-2 block text-[#7ae8ff]" style="text-shadow: 0 0 12px rgba(122, 232, 255, 0.9), 0 0 26px rgba(122, 232, 255, 0.65);">
-          ESCAPE ROOM
-        </span>
+        <span class="block text-[#dffcff]" style="text-shadow:0 0 12px rgba(223,252,255,.9),0 0 24px rgba(122,232,255,.55);">BUGSCAPE:</span>
+        <span class="mt-2 block text-[#7ae8ff]" style="text-shadow:0 0 12px rgba(122,232,255,.9),0 0 26px rgba(122,232,255,.65);">ESCAPE ROOM</span>
       </h1>
-
-      <p class="mx-auto mt-5 max-w-2xl text-center text-sm sm:text-base text-slate-200/90 leading-relaxed">
-        A 2D cozy pixel escape room where your algorithmic instincts illuminate the cosmos.
-      </p>
-
+      <p class="mx-auto mt-5 max-w-2xl text-center text-sm sm:text-base text-slate-200/90 leading-relaxed">A 2D cozy pixel escape room where your algorithmic instincts illuminate the cosmos.</p>
       <div class="mt-8 flex justify-center">
-        <button class="pixel-btn-border relative group px-8 py-4 sm:px-10 sm:py-5 bg-[#7ae8ff] text-[#061d29] font-pixel text-sm sm:text-base tracking-[0.18em] shadow-[0_0_25px_rgba(122,232,255,0.45)] hover:brightness-110 transition-all duration-200 active:scale-95" id="playNowBtn" onclick="handlePlayGame()" type="button">
+        <button class="pixel-btn-border px-8 py-4 sm:px-10 sm:py-5 bg-[#7ae8ff] text-[#061d29] font-pixel text-sm sm:text-base tracking-[0.18em] shadow-[0_0_25px_rgba(122,232,255,0.45)] hover:brightness-110 transition-all" id="playNowBtn" onclick="handlePlayGame()" type="button">
           <span class="flex items-center gap-3">
-            <svg class="w-5 h-5 fill-current inline-block" viewbox="0 0 24 24">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
             <span>PLAY NOW</span>
           </span>
         </button>
       </div>
-
-      <div class="mt-5 text-center text-[8px] font-pixel uppercase tracking-[0.3em] text-[#7ef9ff]/80">
-        [ Press Space or Click to Launch ]
-      </div>
+      <div class="mt-5 text-center text-[8px] font-pixel uppercase tracking-[0.3em] text-[#7ef9ff]/80">[ Press Space or Click to Launch ]</div>
     </div>
   </div>
 </main>
-<!-- BEGIN: Game Rules Modal -->
-<div class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-md flex items-center justify-center p-4" data-purpose="rules-modal" id="rulesModal">
-<div class="bg-space-900 border-2 border-cyan-500 rounded-xl max-w-lg w-full p-6 sm:p-8 shadow-[0_0_30px_rgba(56,189,248,0.3)] relative">
-<!-- Close button -->
-<button aria-label="Close Rules Modal" class="absolute top-4 right-4 text-cyan-400 hover:text-white font-pixel text-sm p-1" onclick="toggleModal('rulesModal')">
-        ✕
-      </button>
-<div class="flex items-center space-x-3 mb-4">
-<span class="text-cyan-400 text-xl font-pixel">📜</span>
-<h2 class="font-pixel text-lg text-cyan-300">GAME RULES</h2>
-</div>
-<div class="space-y-4 text-sm text-slate-300 font-sans leading-relaxed">
-<p><strong class="text-white">1. Explore the Cozy Quarters:</strong> Click and inspect kitchen cupboards, the kettle, celestial clocks, and starry windows to gather hidden clues.</p>
-<p><strong class="text-white">2. Solve Algorithmic Terminals:</strong> Execute logic puzzles and short coding sequences to power up the escape gateway portal.</p>
-<p><strong class="text-white">3. Collect Constellation Shards:</strong> Find secret memory tiles scattered across the kitchen floor to reveal the secret exit passage.</p>
-</div>
-<div class="mt-6 pt-4 border-t border-slate-700 flex justify-end">
-<button class="px-5 py-2 font-pixel text-xs bg-cyan-500 text-space-950 font-bold rounded hover:bg-cyan-400 transition-colors" onclick="toggleModal('rulesModal')">
-          GOT IT
-        </button>
-</div>
-</div>
-</div>
-<!-- END: Game Rules Modal -->
-<!-- BEGIN: Settings Modal -->
-<div class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-md flex items-center justify-center p-4" data-purpose="settings-modal" id="settingsModal">
-<div class="bg-space-900 border-2 border-purple-500 rounded-xl max-w-md w-full p-6 sm:p-8 shadow-[0_0_30px_rgba(168,85,247,0.3)] relative">
-<!-- Close button -->
-<button aria-label="Close Settings Modal" class="absolute top-4 right-4 text-purple-400 hover:text-white font-pixel text-sm p-1" onclick="toggleModal('settingsModal')">
-        ✕
-      </button>
-<div class="flex items-center space-x-3 mb-5">
-<span class="text-purple-400 text-xl font-pixel">⚙️</span>
-<h2 class="font-pixel text-lg text-purple-300">SETTINGS</h2>
-</div>
-<div class="space-y-5 text-sm">
-<!-- BGM Volume Slider -->
-<div>
-<div class="flex justify-between text-xs font-mono text-purple-200 mb-1">
-<span>CHILL PIXEL BGM</span>
-<span>80%</span>
-</div>
-<input class="w-full accent-purple-500 cursor-pointer bg-space-800 rounded-lg" max="100" min="0" type="range" value="80"/>
-</div>
-<!-- Sound FX Slider -->
-<div>
-<div class="flex justify-between text-xs font-mono text-purple-200 mb-1">
-<span>SOUND EFFECTS</span>
-<span>95%</span>
-</div>
-<input class="w-full accent-cyan-400 cursor-pointer bg-space-800 rounded-lg" max="100" min="0" type="range" value="95"/>
-</div>
-<!-- CRT Scanline Filter Toggle -->
-<div class="flex items-center justify-between pt-2">
-<span class="text-xs font-mono text-slate-300">RETRO CRT SCANLINES</span>
-<label class="relative inline-flex items-center cursor-pointer">
-<input checked="" class="sr-only peer" type="checkbox"/>
-<div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-</label>
-</div>
-</div>
-<div class="mt-6 pt-4 border-t border-slate-700 flex justify-end">
-<button class="px-5 py-2 font-pixel text-xs bg-purple-500 text-white font-bold rounded hover:bg-purple-400 transition-colors" onclick="toggleModal('settingsModal')">
-          SAVE
-        </button>
-</div>
-</div>
-</div>
-<!-- END: Settings Modal -->
-<!-- Starfield Canvas Script -->
-<script data-purpose="starfield-generator">
-    document.addEventListener('DOMContentLoaded', () => {
-      const canvas = document.getElementById('starfield-canvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
 
-      let width = (canvas.width = window.innerWidth);
-      let height = (canvas.height = window.innerHeight);
+<!-- Toast feedback container -->
+<div id="toastRoot" class="fixed top-16 right-4 z-[80] flex flex-col gap-3 w-[min(92vw,22rem)] pointer-events-none"></div>
 
-      window.addEventListener('resize', () => {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-        initStars();
-      });
+<!-- DIALOG: Game Rules -->
+<div class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-md flex items-center justify-center p-4" id="rulesModal">
+  <div class="pixel-box anim-pop bg-[#081b2b] max-w-lg w-full p-6 sm:p-8 relative">
+    <button aria-label="Close Rules" class="absolute top-3 right-4 text-cyan-400 hover:text-white font-pixel text-sm" onclick="closeModal('rulesModal')">✕</button>
+    <div class="flex items-center gap-3 mb-4"><span class="text-xl">📜</span><h2 class="modal-title text-base text-cyan-300">GAME RULES</h2></div>
+    <div class="space-y-4 text-sm text-slate-300 leading-relaxed">
+      <p><strong class="text-white">1. Explore the Cozy Quarters:</strong> Click and inspect kitchen cupboards, the kettle, celestial clocks, and starry windows to gather hidden clues.</p>
+      <p><strong class="text-white">2. Solve Algorithmic Terminals:</strong> Execute logic puzzles and short coding sequences to power up the escape gateway portal.</p>
+      <p><strong class="text-white">3. Collect Constellation Shards:</strong> Find secret memory tiles scattered across the kitchen floor to reveal the secret exit passage.</p>
+    </div>
+    <div class="mt-6 pt-4 border-t border-slate-700 flex justify-end">
+      <button class="btn btn-primary pixel-btn-border" onclick="closeModal('rulesModal')">GOT IT</button>
+    </div>
+  </div>
+</div>
 
-      const stars = [];
-      const STAR_COUNT = 140;
+<!-- DIALOG: Settings -->
+<div class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-md flex items-center justify-center p-4" id="settingsModal">
+  <div class="pixel-box anim-pop bg-[#081b2b] max-w-md w-full p-6 sm:p-8 relative">
+    <button aria-label="Close Settings" class="absolute top-3 right-4 text-purple-300 hover:text-white font-pixel text-sm" onclick="cancelSettings()">✕</button>
+    <div class="flex items-center gap-3 mb-5"><span class="text-xl">⚙️</span><h2 class="modal-title text-base text-purple-300">SETTINGS</h2></div>
+    <div class="space-y-5 text-sm">
+      <div>
+        <div class="flex justify-between text-xs font-mono text-purple-200 mb-1"><span>CHILL PIXEL BGM</span><span id="bgmVal">80%</span></div>
+        <input id="bgmRange" class="w-full accent-purple-500 cursor-pointer" max="100" min="0" type="range" value="80" oninput="$('bgmVal').textContent=this.value+'%'"/>
+      </div>
+      <div>
+        <div class="flex justify-between text-xs font-mono text-purple-200 mb-1"><span>SOUND EFFECTS</span><span id="sfxVal">95%</span></div>
+        <input id="sfxRange" class="w-full accent-cyan-400 cursor-pointer" max="100" min="0" type="range" value="95" oninput="$('sfxVal').textContent=this.value+'%'"/>
+      </div>
+      <div class="flex items-center justify-between pt-2">
+        <span class="text-xs font-mono text-slate-300">RETRO CRT SCANLINES</span>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input id="crtToggle" checked class="sr-only peer" type="checkbox" onchange="$('crtOverlay').style.display=this.checked?'block':'none'"/>
+          <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+        </label>
+      </div>
+    </div>
+    <div class="mt-6 pt-4 border-t border-slate-700 flex items-center justify-between gap-3">
+      <button class="text-xs text-red-300 hover:underline" onclick="openModal('confirmModal')">Reset to default</button>
+      <div class="flex gap-3">
+        <button class="btn btn-ghost pixel-btn-border" onclick="cancelSettings()">CANCEL</button>
+        <button class="btn btn-primary pixel-btn-border" onclick="saveSettings()">SAVE</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-      function initStars() {
-        stars.length = 0;
-        for (let i = 0; i < STAR_COUNT; i++) {
-          stars.push({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            size: Math.random() > 0.85 ? 3 : (Math.random() > 0.5 ? 2 : 1),
-            color: ['#ffffff', '#5ce1e6', '#b8c0ff', '#8ea7e9', '#ffd166'][Math.floor(Math.random() * 5)],
-            alpha: Math.random() * 0.9 + 0.1,
-            speed: Math.random() * 0.02 + 0.005,
-            direction: Math.random() > 0.5 ? 1 : -1
-          });
-        }
-      }
+<!-- DIALOG: Confirm reset -->
+<div class="fixed inset-0 z-[55] hidden bg-black/75 backdrop-blur-md flex items-center justify-center p-4" id="confirmModal">
+  <div class="pixel-box anim-pop bg-[#081b2b] max-w-sm w-full p-6 sm:p-8 text-center">
+    <div class="text-4xl mb-3">⚠️</div>
+    <h2 class="modal-title text-sm text-amber-300 mb-3">RESET SETTINGS?</h2>
+    <p class="text-sm text-slate-300 leading-relaxed">Music, sound effects and scanlines will go back to their default values.</p>
+    <div class="flex gap-3 mt-6">
+      <button class="btn btn-ghost pixel-btn-border flex-1" onclick="openModal('settingsModal')">NO</button>
+      <button class="btn btn-danger pixel-btn-border flex-1" onclick="resetSettings()">YES, RESET</button>
+    </div>
+  </div>
+</div>
 
-      function draw() {
-        ctx.clearRect(0, 0, width, height);
+<!-- FEEDBACK: Launch / loading dialog -->
+<div class="fixed inset-0 z-[60] hidden bg-black/85 flex flex-col items-center justify-center gap-4 p-4" id="loadingOverlay">
+  <div class="font-pixel text-[10px] sm:text-xs text-cyan-300 text-center">ENTERING COZY KITCHEN CHAMBER<span class="caret">_</span></div>
+  <div class="w-64 sm:w-80 h-4 border-2 border-cyan-400 bg-[#061522]"><div id="loadBar" class="h-full bg-cyan-400" style="width:0%"></div></div>
+  <div class="flex justify-between w-64 sm:w-80 font-retro text-xl text-slate-300"><span id="loadMsg">Initializing...</span><span id="loadPct">0%</span></div>
+</div>
 
-        for (let i = 0; i < stars.length; i++) {
-          const s = stars[i];
-          s.alpha += s.speed * s.direction;
-          if (s.alpha > 0.95 || s.alpha < 0.15) {
-            s.direction *= -1;
-          }
-
-          ctx.save();
-          ctx.globalAlpha = Math.max(0.1, Math.min(1, s.alpha));
-          ctx.fillStyle = s.color;
-          ctx.fillRect(Math.floor(s.x), Math.floor(s.y), s.size, s.size);
-          ctx.restore();
-        }
-
-        requestAnimationFrame(draw);
-      }
-
-      initStars();
-      draw();
-    });
-  </script>
-
-<!-- BEGIN: Interactive Logic Scripts -->
-<script data-purpose="modal-handlers">
-    // Toggle utility for rules and settings modals
-    function toggleModal(modalId) {
-      const modal = document.getElementById(modalId);
-      if (modal) {
-        modal.classList.toggle('hidden');
-      }
+<!-- Starfield -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const canvas = document.getElementById('starfield-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let width = (canvas.width = window.innerWidth), height = (canvas.height = window.innerHeight);
+    const stars = [];
+    function initStars() {
+      stars.length = 0;
+      for (let i = 0; i < 140; i++) stars.push({
+        x: Math.random()*width, y: Math.random()*height,
+        size: Math.random() > .85 ? 3 : (Math.random() > .5 ? 2 : 1),
+        color: ['#ffffff','#5ce1e6','#b8c0ff','#8ea7e9','#ffd166'][Math.floor(Math.random()*5)],
+        alpha: Math.random()*.9+.1, speed: Math.random()*.02+.005, direction: Math.random() > .5 ? 1 : -1 });
     }
-
-    // Play button action transition
-    function handlePlayGame() {
-      const btn = document.getElementById('playNowBtn');
-      btn.classList.add('scale-90');
-      setTimeout(() => {
-        btn.classList.remove('scale-90');
-        alert('Entering Cozy Kitchen Chamber: Initializing Code Escape Sequencer...');
-      }, 150);
-    }
-
-    // Allow keyboard spacebar trigger
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && e.target === document.body) {
-        e.preventDefault();
-        handlePlayGame();
+    window.addEventListener('resize', () => { width = canvas.width = innerWidth; height = canvas.height = innerHeight; initStars(); });
+    (function draw() {
+      ctx.clearRect(0,0,width,height);
+      for (const s of stars) {
+        s.alpha += s.speed*s.direction;
+        if (s.alpha > .95 || s.alpha < .15) s.direction *= -1;
+        ctx.globalAlpha = Math.max(.1, Math.min(1, s.alpha));
+        ctx.fillStyle = s.color;
+        ctx.fillRect(Math.floor(s.x), Math.floor(s.y), s.size, s.size);
       }
-    });
-  </script>
-<!-- END: Interactive Logic Scripts -->
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(draw);
+    })();
+    initStars();
+  });
+</script>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const MODALS = ['rulesModal', 'settingsModal', 'confirmModal'];
+  const DEFAULTS = { bgm: 80, sfx: 95, crt: true };
+  let saved = { ...DEFAULTS };
+  let launching = false;
+
+  /* Dialog helpers */
+  function openModal(id) { MODALS.forEach(m => $(m).classList.add('hidden')); $(id).classList.remove('hidden'); }
+  function closeModal(id) { $(id).classList.add('hidden'); }
+  function toggleModal(id) { $(id).classList.contains('hidden') ? openModal(id) : closeModal(id); }
+
+  /* Toast feedback */
+  const TOAST = {
+    success: { icon: '✔', border: 'border-emerald-400', text: 'text-emerald-300', bg: 'bg-emerald-950/90' },
+    error:   { icon: '✖', border: 'border-red-400',     text: 'text-red-300',     bg: 'bg-red-950/90' },
+    warning: { icon: '!', border: 'border-amber-400',   text: 'text-amber-300',   bg: 'bg-amber-950/90' },
+    info:    { icon: 'i', border: 'border-cyan-400',    text: 'text-cyan-300',    bg: 'bg-[#06202f]/95' },
+  };
+  function showToast(type, title, message, ms = 3500) {
+    const t = TOAST[type];
+    const el = document.createElement('div');
+    el.className = `toast pointer-events-auto border-2 ${t.border} ${t.bg} p-3 flex gap-3 items-start shadow-lg`;
+    el.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    el.innerHTML = `
+      <div class="w-6 h-6 shrink-0 border-2 ${t.border} ${t.text} flex items-center justify-center font-pixel text-[10px]">${t.icon}</div>
+      <div class="flex-1 min-w-0"><div class="font-pixel text-[9px] ${t.text} mb-1">${title}</div><div class="text-xs text-slate-200">${message}</div></div>
+      <button class="text-slate-400 hover:text-white text-xs" aria-label="Dismiss">✕</button>`;
+    const remove = () => { el.classList.add('leaving'); setTimeout(() => el.remove(), 250); };
+    el.querySelector('button').onclick = remove;
+    $('toastRoot').appendChild(el);
+    setTimeout(remove, ms);
+  }
+
+  /* Settings */
+  function applySettings(s) {
+    $('bgmRange').value = s.bgm; $('bgmVal').textContent = s.bgm + '%';
+    $('sfxRange').value = s.sfx; $('sfxVal').textContent = s.sfx + '%';
+    $('crtToggle').checked = s.crt; $('crtOverlay').style.display = s.crt ? 'block' : 'none';
+  }
+  function saveSettings() {
+    saved = { bgm: +$('bgmRange').value, sfx: +$('sfxRange').value, crt: $('crtToggle').checked };
+    closeModal('settingsModal');
+    showToast('success', 'Settings saved', 'Your preferences have been updated.');
+  }
+  function cancelSettings() { applySettings(saved); closeModal('settingsModal'); }
+  function resetSettings() {
+    saved = { ...DEFAULTS }; applySettings(saved); closeModal('confirmModal');
+    showToast('warning', 'Settings reset', 'Default values restored.');
+  }
+  applySettings(saved);
+
+  /* Play Now: loading feedback */
+  function startLoading() {
+    if (launching) return;
+    launching = true;
+    const msgs = ['Initializing...', 'Loading kitchen assets...', 'Lighting the stars...', 'Almost there...'];
+    let pct = 0;
+    $('loadingOverlay').classList.remove('hidden');
+    const iv = setInterval(() => {
+      pct = Math.min(100, pct + Math.ceil(Math.random() * 10));
+      $('loadBar').style.width = pct + '%'; $('loadPct').textContent = pct + '%';
+      $('loadMsg').textContent = msgs[Math.min(msgs.length - 1, Math.floor(pct / 26))];
+      if (pct >= 100) {
+        clearInterval(iv);
+        setTimeout(() => {
+          $('loadingOverlay').classList.add('hidden');
+          $('loadBar').style.width = '0%'; $('loadPct').textContent = '0%';
+          launching = false;
+          showToast('success', 'Chamber ready!', 'Welcome to Sector 07. Find the first clue.');
+        }, 400);
+      }
+    }, 160);
+  }
+  function handlePlayGame() {
+    const btn = $('playNowBtn');
+    btn.classList.add('scale-90');
+    setTimeout(() => { btn.classList.remove('scale-90'); startLoading(); }, 150);
+  }
+
+  /* Keyboard: Space launches, Esc closes dialogs */
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); handlePlayGame(); }
+    if (e.key === 'Escape') { if (!$('settingsModal').classList.contains('hidden')) cancelSettings(); MODALS.forEach(closeModal); }
+  });
+</script>
 </body></html>
