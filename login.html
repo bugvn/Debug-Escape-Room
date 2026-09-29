@@ -3,7 +3,7 @@
 <html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>BugScape: Code Escape - Login &amp; Registration</title>
+<title>Remediate: Python Debugging Escape Room - Login &amp; Registration</title>
 <!-- Tailwind CSS CDN with Plugins -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <!-- Tailwind Configuration -->
@@ -104,6 +104,14 @@
       image-rendering: -moz-crisp-edges;
       image-rendering: crisp-edges;
     }
+  
+    .pixel-input-border.field-error, .pixel-input-border.field-error:focus-within {
+      box-shadow: inset 2px 2px 0px 0px #070913, 0 0 0 2px #fb7185, 0 0 10px rgba(251,113,133,0.35);
+    }
+  
+    .tab-btn { padding:10px 8px; font-family:'Press Start 2P',monospace; font-size:10px; text-transform:uppercase; background:#0a0d1a; color:#94a3b8; border:2px solid #2b3964; border-bottom-width:4px; cursor:pointer; }
+    .tab-btn:hover { color:#fff; }
+    .tab-btn[aria-selected="true"] { background:#151c33; color:#5ce1e6; border-color:#5ce1e6; }
   </style>
 </head>
 <body class="bg-[#0a0d1a] text-slate-200 min-h-screen relative overflow-x-hidden flex flex-col font-sans select-none selection:bg-pixel-cyan selection:text-space-950">
@@ -135,12 +143,11 @@
         </div>
 <div>
 <span class="font-pixel text-[10px] sm:text-xs tracking-wider text-pixel-cyan uppercase drop-shadow-[0_0_5px_rgba(92,225,230,0.5)]">
-            BugScape
+            Remediate
           </span>
 <span class="hidden sm:inline text-xs text-space-600 font-pixel mx-2">/</span>
 <span class="hidden sm:inline font-pixel text-[9px] text-pixel-lavender uppercase tracking-wide">
-            Escape Room v1.0
-          </span>
+            Python Debugging Escape Room</span>
 </div>
 </div>
 <!-- Controls & Status Bar (Audio, Avatar status, Room info) -->
@@ -151,7 +158,7 @@
 <svg class="w-3.5 h-3.5 fill-current" id="audio-icon-on" viewbox="0 0 24 24">
 <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-2.5-2.23l-5.5 5h-4v12h4l5.5 5v-22z"></path>
 </svg>
-<span class="font-pixel text-[8px] uppercase tracking-wider">BGM ON</span>
+<span class="font-pixel text-[8px] uppercase tracking-wider">MUSIC ON</span>
 </button>
 </div>
 </div>
@@ -165,7 +172,7 @@
 <div class="w-full flex flex-col bg-space-850 border-2 border-space-700 p-2 relative group shadow-2xl">
 <!-- Pixel Frame Header Bar -->
 <div class="bg-space-900 border-b border-space-700 px-3 py-1.5 flex items-center mb-2">
-<span class="font-pixel text-[8px] text-slate-400 tracking-wider uppercase">SECTOR_KITCHEN.PIX</span>
+<span class="font-pixel text-[8px] text-slate-400 tracking-wider uppercase">ROOM PREVIEW</span>
 </div>
 <!-- Scene Snapshot with Cozy Pixel Art Room -->
 <div class="relative overflow-hidden border border-space-700/80 aspect-[16/9] sm:aspect-[16/9] w-full bg-space-950">
@@ -173,7 +180,7 @@
 <!-- Atmospheric scanline overlay for retro CRT effect -->
 <div class="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/[0.03] to-indigo-950/40 pointer-events-none"></div>
 <div class="absolute bottom-2 left-2 bg-space-950/90 border border-pixel-cyan/40 px-2 py-0.5 text-[8px] font-pixel text-pixel-cyan">
-              ROOM: THE MIDNIGHT DORM
+              ROOM: THE KITCHEN
             </div>
 </div>
 <!-- Dialog Box below Preview -->
@@ -197,15 +204,19 @@
 <div class="absolute bottom-1 right-1 w-2 h-2 bg-pixel-cyan"></div>
 <!-- Registration Header -->
 <div class="mb-3 border-b-2 border-space-700/80 pb-2.5">
-<span class="font-pixel text-[9px] uppercase tracking-widest text-pixel-cyan block mb-1">
-                ACCOUNT + PLAYER SETUP
-              </span>
-<h1 class="font-pixel text-base sm:text-lg text-white tracking-wide">
-                JOIN ESCAPE SEQUENCE
-              </h1>
+<h1 class="font-pixel text-base sm:text-lg text-white tracking-wide" id="form-title">LOG IN TO REMEDIATE</h1>
 </div>
 <!-- Registration Form -->
+<div aria-label="Account options" class="grid grid-cols-2 gap-2 mb-4" role="tablist">
+<button aria-selected="true" class="tab-btn" id="tab-login" role="tab" type="button">Log in</button>
+<button aria-selected="false" class="tab-btn" id="tab-create" role="tab" type="button">Create account</button>
+</div>
 <form action="#" class="space-y-3" id="escape-login-form" method="POST" novalidate="" onsubmit="event.preventDefault();">
+<div class="hidden border-2 border-rose-400/70 bg-rose-950/40 px-3 py-2 flex items-start gap-2" id="form-banner" role="alert">
+<span class="font-pixel text-[10px] text-rose-400 mt-0.5">!</span>
+<p class="font-mono text-xs text-rose-200" id="form-banner-text"></p>
+</div>
+<p class="font-mono text-[11px] text-slate-300"><span class="text-rose-400 font-bold">*</span> = required</p>
 <!-- Alternate sign-in moved ABOVE the manual fields: a shortcut path should sit before the form it bypasses, not inside it -->
 <button class="w-full flex items-center justify-center gap-2 py-2 bg-space-900 border border-space-600 hover:border-slate-400 text-slate-300 text-xs font-mono transition" id="google-signin-btn" type="button">
 <svg class="w-4 h-4" id="google-icon" viewbox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path></svg>
@@ -213,7 +224,7 @@
               </button>
 <div class="flex items-center gap-3 py-0.5" id="email-divider">
 <div class="flex-1 border-t border-space-700/80"></div>
-<span class="font-pixel text-[9px] text-slate-500 uppercase">or sign in with email</span>
+<span class="font-pixel text-[9px] text-slate-500 uppercase" id="divider-text">or log in with email</span>
 <div class="flex-1 border-t border-space-700/80"></div>
 </div>
 <!-- Requirement 0: ACCOUNT CREDENTIALS - email + password, required so mistake-pattern history can persist across sessions -->
@@ -224,104 +235,81 @@
                 ACCOUNT EMAIL <span class="text-rose-400">*</span>
 </label>
 <div class="pixel-input-border flex items-center bg-space-950 px-3 py-2 transition" id="email-field-wrap">
-<span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">@</span>
-<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-600 focus:ring-0 focus:outline-none" id="account-email" name="accountEmail" placeholder="you@school.edu.ph" required type="email"/>
+<span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">&gt;</span>
+<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-500 focus:ring-0 focus:outline-none" id="account-email" maxlength="50" autocomplete="email" autofocus name="accountEmail" placeholder="you@example.com" required type="email"/>
 </div>
 <p class="hidden mt-1.5 text-[11px] font-mono text-rose-400" id="email-error">Enter a valid email address.</p>
+<p class="hidden mt-1.5 text-[11px] font-mono text-pixel-amber" id="email-limit"></p>
 </div>
 <div>
 <div class="flex items-center justify-between mb-1.5">
 <label class="block font-pixel text-[10px] text-pixel-lavender uppercase" for="account-password">
                   PASSWORD <span class="text-rose-400">*</span>
 </label>
-<button class="font-pixel text-[8px] text-slate-500 hover:text-pixel-cyan uppercase transition" id="forgot-password-btn" type="button">Forgot?</button>
+<button class="font-pixel text-[8px] text-slate-500 hover:text-pixel-cyan uppercase transition" id="forgot-password-btn" type="button">Forgot password?</button>
 </div>
 <div class="pixel-input-border flex items-center bg-space-950 px-3 py-2 transition" id="password-field-wrap">
-<span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">*</span>
-<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-600 focus:ring-0 focus:outline-none" id="account-password" minlength="8" name="accountPassword" placeholder="••••••••••••" required type="password"/>
-<button aria-label="Show password" class="text-slate-500 hover:text-pixel-cyan ml-2 select-none" id="toggle-password-btn" type="button">👁</button>
+<span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">&gt;</span>
+<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-500 focus:ring-0 focus:outline-none" id="account-password" maxlength="32" autocomplete="current-password" minlength="8" name="accountPassword" placeholder="8+ characters" required type="password"/>
+<button aria-label="Show password" title="Show password" class="text-slate-500 hover:text-pixel-cyan ml-2 select-none" id="toggle-password-btn" type="button">👁</button>
 </div>
 <p class="hidden mt-1.5 text-[11px] font-mono text-rose-400" id="password-error">Must be at least 8 characters.</p>
-</div>
-</div>
-<p class="mt-1 text-[11px] font-mono text-slate-400">Remembers which bugs you've struggled with.</p>
-</div>
-<!-- Section divider: everything below applies no matter which sign-in method you picked above -->
-<div class="flex items-center gap-3 pt-1 pb-0.5">
-<div class="flex-1 border-t border-space-700/80"></div>
-<span class="font-pixel text-[9px] text-pixel-cyan uppercase">player setup</span>
-<div class="flex-1 border-t border-space-700/80"></div>
-</div>
-<!-- Requirement 1: PLAYER NAME input field -->
-<div data-purpose="form-group-player-name">
-<label class="block font-pixel text-[10px] text-pixel-lavender uppercase mb-1.5" for="player-name">
-                PLAYER NAME / HANDLE <span class="text-rose-400">*</span>
-</label>
-<div class="relative">
-<div class="pixel-input-border flex items-center bg-space-950 px-3 py-2 transition">
-<span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">&gt;</span>
-<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-600 focus:ring-0 focus:outline-none" id="player-name" maxlength="20" name="playerName" placeholder="e.g. YourName99" required="" type="text"/>
-</div>
+<p class="hidden mt-1.5 text-[11px] font-mono text-pixel-amber" id="password-limit"></p>
 </div>
 </div>
 
-<!-- Requirement 3: PREFERRED PROGRAMMING LANGUAGES - grouped with the rest of the required fields -->
-<div class="!mt-5" data-purpose="form-group-languages">
-<div class="flex items-center justify-between mb-2">
-<label class="block font-pixel text-[10px] text-pixel-lavender uppercase mb-0">
-                LANGUAGES <span class="text-rose-400">*</span>
-</label>
-<span class="text-[9px] font-mono text-slate-400">SELECT 1+</span>
 </div>
-<div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="language-chips-group">
-<label class="cursor-pointer">
-<input checked="" class="sr-only peer" name="languages" type="checkbox" value="PYTHON"/>
-<div class="pixel-input-border flex items-center justify-center text-center bg-space-950 px-2 py-2 peer-checked:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] peer-checked:bg-pixel-cyan/15 transition">
-<div class="font-pixel text-[9px] text-slate-300 peer-checked:text-pixel-cyan">PYTHON</div>
+<div class="hidden space-y-3" id="create-only">
+<!-- Section divider: everything below applies no matter which sign-in method you picked above -->
+
+<!-- Requirement 1: PLAYER NAME input field -->
+<div data-purpose="form-group-player-name">
+<div class="flex items-center justify-between mb-1.5">
+<label class="block font-pixel text-[10px] text-pixel-lavender uppercase" for="player-name">PLAYER NAME / HANDLE <span class="text-rose-400">*</span></label>
+<span class="font-mono text-[10px] text-slate-400" id="name-count">0/20</span>
 </div>
-</label>
-<label class="cursor-pointer">
-<input class="sr-only peer" name="languages" type="checkbox" value="JAVA"/>
-<div class="pixel-input-border flex items-center justify-center text-center bg-space-950 px-2 py-2 peer-checked:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] peer-checked:bg-pixel-cyan/15 transition">
-<div class="font-pixel text-[9px] text-slate-300 peer-checked:text-pixel-cyan">JAVA</div>
+<div class="pixel-input-border flex items-center bg-space-950 px-3 py-2 transition" id="name-field-wrap">
+<span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">&gt;</span>
+<input aria-describedby="name-error" class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-500 focus:ring-0 focus:outline-none" id="player-name" maxlength="20" autocomplete="off" name="playerName" placeholder="e.g. YourName99" type="text"/>
 </div>
-</label>
-<label class="cursor-pointer">
-<input class="sr-only peer" name="languages" type="checkbox" value="CPP"/>
-<div class="pixel-input-border flex items-center justify-center text-center bg-space-950 px-2 py-2 peer-checked:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] peer-checked:bg-pixel-cyan/15 transition">
-<div class="font-pixel text-[9px] text-slate-300 peer-checked:text-pixel-cyan">C++</div>
-</div>
-</label>
-<label class="cursor-pointer">
-<input class="sr-only peer" name="languages" type="checkbox" value="JAVASCRIPT"/>
-<div class="pixel-input-border flex items-center justify-center text-center bg-space-950 px-2 py-2 peer-checked:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] peer-checked:bg-pixel-cyan/15 transition">
-<div class="font-pixel text-[9px] text-slate-300 peer-checked:text-pixel-cyan">JS</div>
-</div>
-</label>
-</div>
+<p class="hidden mt-1.5 text-[11px] font-mono text-rose-400" id="name-error"></p>
+<p class="hidden mt-1.5 text-[11px] font-mono text-pixel-amber" id="name-limit"></p>
 </div>
 
 <div class="!mt-5" data-purpose="form-group-difficulty">
 <label class="block font-pixel text-[10px] text-pixel-lavender uppercase mb-1.5">
-                DIFFICULTY LEVEL <span class="text-rose-400">*</span>
+                STARTING DIFFICULTY
 </label>
 <div aria-label="Difficulty Level Selection" class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="difficulty-group" role="radiogroup">
 <label class="pixel-input-border flex items-center justify-between px-3 py-2 bg-space-950 cursor-pointer transition select-none group has-[:checked]:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] has-[:checked]:bg-space-800">
 <input checked="" class="sr-only" name="difficulty" type="radio" value="BEGINNER"/>
 <span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">BEGINNER</span>
-<span class="text-[9px] font-pixel text-emerald-400/90">★</span>
 </label>
 <label class="pixel-input-border flex items-center justify-between px-3 py-2 bg-space-950 cursor-pointer transition select-none group has-[:checked]:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] has-[:checked]:bg-space-800">
 <input class="sr-only" name="difficulty" type="radio" value="INTERMEDIATE"/>
 <span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">INTERMEDIATE</span>
-<span class="text-[9px] font-pixel text-amber-400/90">★★</span>
 </label>
 <label class="pixel-input-border flex items-center justify-between px-3 py-2 bg-space-950 cursor-pointer transition select-none group has-[:checked]:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] has-[:checked]:bg-space-800">
-<input class="sr-only" name="difficulty" type="radio" value="HARD"/>
-<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">HARD</span>
-<span class="text-[9px] font-pixel text-rose-400/90">★★★</span>
+<input class="sr-only" name="difficulty" type="radio" value="ADVANCED"/>
+<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">ADVANCED</span>
 </label>
 </div>
+</div>
+</div>
+<div class="!mt-5 flex flex-wrap items-start justify-between gap-x-6 gap-y-2" data-purpose="form-group-options" id="options-row">
+<div class="hidden space-y-1" id="agree-wrap">
+<label class="flex items-start gap-3 cursor-pointer select-none">
+<input class="sr-only peer" id="agree-rules" type="checkbox"/>
+<span class="pixel-input-border w-5 h-5 mt-0.5 bg-space-950 flex items-center justify-center shrink-0 font-pixel text-[10px] text-transparent peer-checked:text-pixel-cyan peer-focus-visible:ring-2 peer-focus-visible:ring-pixel-cyan" id="agree-rules-box">✓</span>
+<span class="font-mono text-xs text-slate-300">I agree to have my gameplay data recorded. <span class="text-rose-400">*</span></span>
+</label>
+<p class="hidden ml-8 text-[11px] font-mono text-rose-400" id="agree-error"></p>
+</div>
+<div id="remember-wrap"><label class="flex items-start gap-3 cursor-pointer select-none">
+<input class="sr-only peer" id="remember-me" type="checkbox"/>
+<span class="pixel-input-border w-5 h-5 mt-0.5 bg-space-950 flex items-center justify-center shrink-0 font-pixel text-[10px] text-transparent peer-checked:text-pixel-cyan peer-focus-visible:ring-2 peer-focus-visible:ring-pixel-cyan" id="remember-me-box">✓</span>
+<span class="font-mono text-xs text-slate-300">Remember me</span>
+</label></div>
 </div>
 <!-- Requirement 4: 'ENTER ESCAPE ROOM' / 'START ADVENTURE' Primary Button -->
 <div class="pt-1" data-purpose="form-submit-action">
@@ -397,151 +385,233 @@
       draw();
     });
   </script>
-<!-- Audio Toggle and Form Handler Interactions -->
+<!-- Dialog (one at a time, never stacked) and toast -->
+<div aria-labelledby="dialog-title" aria-modal="true" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-space-950/80 backdrop-blur-sm" id="dialog-overlay" role="dialog">
+<div class="pixel-box bg-space-850 w-full max-w-sm p-5 relative">
+<div class="absolute top-1 left-1 w-2 h-2 bg-pixel-cyan"></div><div class="absolute top-1 right-1 w-2 h-2 bg-pixel-cyan"></div><div class="absolute bottom-1 left-1 w-2 h-2 bg-pixel-cyan"></div><div class="absolute bottom-1 right-1 w-2 h-2 bg-pixel-cyan"></div>
+<span class="font-pixel text-[9px] uppercase tracking-widest block mb-1" id="dialog-tag"></span>
+<h2 class="font-pixel text-sm text-white mb-3 leading-relaxed" id="dialog-title"></h2>
+<p class="font-retro text-xl leading-snug text-slate-300 mb-5" id="dialog-body"></p>
+<div class="flex flex-col-reverse sm:flex-row gap-2" id="dialog-actions"></div>
+</div>
+</div>
+<div class="hidden fixed bottom-4 right-4 z-50 max-w-xs bg-space-850 border-2 px-3 py-2 font-mono text-xs" id="toast" role="status"></div>
 <script data-purpose="ui-interactions">
-    document.addEventListener('DOMContentLoaded', () => {
-      // Audio toggle button handler
-      const audioBtn = document.getElementById('audio-toggle-btn');
-      let isMuted = false;
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = (id) => document.getElementById(id);
+  const DEMO_EMAIL = 'demo@ue.edu.ph', DEMO_PASS = 'Debug1234'; // demo account, used to show the wrong-credentials message
+  let googleSignedIn = false, mode = 'login';
+  const goHome = () => { window.location.href = 'home-page.html'; };
 
-      if (audioBtn) {
-        audioBtn.addEventListener('click', () => {
-          isMuted = !isMuted;
-          const textSpan = audioBtn.querySelector('span');
-          if (isMuted) {
-            textSpan.textContent = 'BGM OFF';
-            audioBtn.classList.remove('text-pixel-cyan');
-            audioBtn.classList.add('text-slate-500');
-          } else {
-            textSpan.textContent = 'BGM ON';
-            audioBtn.classList.remove('text-slate-500');
-            audioBtn.classList.add('text-pixel-cyan');
-          }
-        });
-      }
+  // ---------- Audio + password toggles ----------
+  const audioBtn = $('audio-toggle-btn'); let muted = false;
+  audioBtn.addEventListener('click', () => {
+    muted = !muted;
+    audioBtn.querySelector('span').textContent = muted ? 'MUSIC OFF' : 'MUSIC ON';
+    audioBtn.classList.toggle('text-slate-500', muted);
+    audioBtn.classList.toggle('text-pixel-cyan', !muted);
+  });
+  const pw = $('account-password'), pwBtn = $('toggle-password-btn');
+  pwBtn.addEventListener('click', () => {
+    const showing = pw.type === 'text';
+    pw.type = showing ? 'password' : 'text';
+    pwBtn.textContent = showing ? '👁' : '🙈';
+    pwBtn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password'); pwBtn.title = showing ? 'Show password' : 'Hide password';
+  });
 
-      // Password show/hide toggle
-      const toggleBtn = document.getElementById('toggle-password-btn');
-      const passwordField = document.getElementById('account-password');
-      if (toggleBtn && passwordField) {
-        toggleBtn.addEventListener('click', () => {
-          const showing = passwordField.type === 'text';
-          passwordField.type = showing ? 'password' : 'text';
-          toggleBtn.textContent = showing ? '👁' : '🙈';
-        });
-      }
-
-      // Google sign-in placeholder — in the real app this authenticates via Google.
-      // Once signed in this way, email/password are no longer needed, so the account
-      // fields are locked and the submit handler below skips validating them.
-      let googleSignedIn = false;
-      const googleBtn = document.getElementById('google-signin-btn');
-      const googleLabel = document.getElementById('google-btn-label');
-      const googleIcon = document.getElementById('google-icon');
-      const accountFieldsGroup = document.getElementById('account-fields-group');
-      const emailDivider = document.getElementById('email-divider');
-      const forgotBtnEl = document.getElementById('forgot-password-btn');
-      const emailInputEl = document.getElementById('account-email');
-      const passwordInputEl = document.getElementById('account-password');
-      const togglePasswordBtnEl = document.getElementById('toggle-password-btn');
-
-      if (googleBtn) {
-        googleBtn.addEventListener('click', () => {
-          googleSignedIn = true;
-
-          // Gray out the button itself so it visibly reads as "done"
-          googleBtn.disabled = true;
-          googleBtn.classList.remove('bg-space-900', 'border-space-600', 'hover:border-slate-400', 'text-slate-300');
-          googleBtn.classList.add('bg-space-950', 'border-emerald-500/60', 'text-emerald-400', 'cursor-default', 'opacity-80');
-          if (googleIcon) googleIcon.classList.add('grayscale', 'opacity-60');
-          if (googleLabel) googleLabel.textContent = '✓ SIGNED IN WITH GOOGLE';
-
-          // Now that email/password are no longer needed, visibly dim and lock them
-          if (emailInputEl) { emailInputEl.disabled = true; emailInputEl.required = false; }
-          if (passwordInputEl) { passwordInputEl.disabled = true; passwordInputEl.required = false; }
-          if (togglePasswordBtnEl) togglePasswordBtnEl.disabled = true;
-          if (accountFieldsGroup) {
-            accountFieldsGroup.classList.add('opacity-40', 'pointer-events-none', 'grayscale-[0.3]');
-          }
-
-          // The "or sign in with email" choice and "Forgot?" link no longer apply
-          if (emailDivider) emailDivider.classList.add('hidden');
-          if (forgotBtnEl) forgotBtnEl.classList.add('hidden');
-
-          alert('Signed in with Google! Please continue filling in your Player Setup below.');
-          const nameInput = document.getElementById('player-name');
-          if (nameInput) nameInput.focus();
-        });
-      }
-
-      // Forgot password placeholder
-      const forgotBtn = document.getElementById('forgot-password-btn');
-      if (forgotBtn) {
-        forgotBtn.addEventListener('click', () => {
-          alert('A password reset link would be sent to your account email.');
-        });
-      }
-
-      // Enter Adventure Button handler
-      const form = document.getElementById('escape-login-form');
-      if (form) {
-        form.addEventListener('submit', (e) => {
-          e.preventDefault();
-          const emailInput = document.getElementById('account-email');
-          const passwordInput = document.getElementById('account-password');
-          const emailWrap = document.getElementById('email-field-wrap');
-          const passwordWrap = document.getElementById('password-field-wrap');
-          const emailError = document.getElementById('email-error');
-          const passwordError = document.getElementById('password-error');
-          const nameInput = document.getElementById('player-name');
-          const playerName = nameInput ? nameInput.value.trim() : '';
-          const languageChecks = document.querySelectorAll('#language-chips-group input[name="languages"]:checked');
-
-          // Skip email/password checks entirely once the player has signed in with Google
-          if (!googleSignedIn) {
-            const emailValid = emailInput.checkValidity() && emailInput.value.trim();
-            const passwordValid = passwordInput.value.length >= 8;
-
-            emailWrap.classList.toggle('!shadow-[inset_2px_2px_0px_0px_#070913,0_0_0_2px_#fb7185]', !emailValid);
-            emailError.classList.toggle('hidden', emailValid);
-            passwordWrap.classList.toggle('!shadow-[inset_2px_2px_0px_0px_#070913,0_0_0_2px_#fb7185]', !passwordValid);
-            passwordError.classList.toggle('hidden', passwordValid);
-
-            if (!emailValid || !passwordValid) {
-              (!emailValid ? emailInput : passwordInput).focus();
-              return;
-            }
-          }
-
-          if (!playerName) {
-            nameInput.focus();
-            return;
-          }
-
-          if (languageChecks.length === 0) {
-            const languageGroup = document.getElementById('language-chips-group');
-            if (languageGroup) {
-              languageGroup.classList.add('ring-2', 'ring-rose-400');
-              languageGroup.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-            return;
-          }
-
-          const btn = document.getElementById('start-game-btn');
-          const originalText = btn.innerHTML;
-          btn.disabled = true;
-          btn.innerHTML = `
-            <span class="animate-spin text-sm">◆</span>
-            <span>INITIALIZING POD TRANSLATOR...</span>
-          `;
-
-          setTimeout(() => {
-            alert(`Welcome aboard, Operator ${playerName}! Calibrating kitchen airlocks...`);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-          }, 1000);
-        });
-      }
+  // ---------- Dialog + toast ----------
+  const overlay = $('dialog-overlay');
+  function closeDialog() { overlay.classList.add('hidden'); }
+  function openDialog({ tag, color, title, body, actions }) {
+    $('dialog-tag').textContent = tag; $('dialog-tag').className = 'font-pixel text-[9px] uppercase tracking-widest block mb-1 ' + color;
+    $('dialog-title').textContent = title; $('dialog-body').textContent = body;
+    const box = $('dialog-actions'); box.innerHTML = '';
+    actions.forEach((a) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = a.label;
+      b.className = 'pixel-btn-border flex-1 py-2.5 px-4 font-pixel text-[10px] uppercase tracking-wider ' +
+        (a.primary ? 'bg-pixel-cyan text-space-950 font-bold hover:brightness-110' : 'bg-space-900 border border-space-600 text-slate-300 hover:border-slate-400');
+      b.addEventListener('click', () => { closeDialog(); if (a.onClick) a.onClick(); });
+      box.appendChild(b);
     });
-  </script>
+    overlay.classList.remove('hidden'); box.querySelector('button').focus();
+  }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDialog(); });
+  let toastTimer;
+  function toast(msg, ok = true) {
+    const t = $('toast'); t.textContent = (ok ? '✓ ' : '! ') + msg;
+    t.className = 'fixed bottom-4 right-4 z-50 max-w-xs bg-space-850 border-2 px-3 py-2 font-mono text-xs ' + (ok ? 'border-pixel-emerald text-pixel-emerald' : 'border-rose-400 text-rose-300');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), 4000);
+  }
+
+  // ---------- Validation (each returns an error message or '') ----------
+  const rules = {
+    email(v) {
+      v = v.trim();
+      if (!v) return 'Email is required. Enter the email you registered with.';           // missing
+      if (v.length > 50) return `Email is too long. Maximum is 50 characters, you entered ${v.length}.`;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return 'Enter a valid email, like you@school.edu.ph.'; // type
+      return '';
+    },
+    password(v) {
+      if (!v) return 'Password is required.';
+      if (mode === 'login') return '';   // login only needs a password, the format rules apply when creating one
+      if (v.length < 8) return `Password must be at least 8 characters. You entered ${v.length}.`; // length
+      if (v.length > 32) return `Password is too long. Maximum is 32 characters, you entered ${v.length}.`;
+      if (!/[A-Za-z]/.test(v) || !/\d/.test(v)) return 'Use at least one letter and one number.';   // type
+      return '';
+    },
+    name(v) {
+      v = v.trim();
+      if (!v) return 'Player name is required. Pick a handle to show on your profile.';    // missing
+      if (v.length < 3) return `Player name must be at least 3 characters. You entered ${v.length}.`; // length
+      if (v.length > 20) return `Player name is too long. Maximum is 20 characters, you entered ${v.length}.`;
+      if (!/^[A-Za-z0-9_]+$/.test(v)) return 'Use only letters, numbers, and underscores (no spaces).'; // type
+      return '';
+    },
+    agree() { return $('agree-rules').checked ? '' : 'Please agree to data recording to continue.'; }
+  };
+  const fields = {
+    email:    { input: $('account-email'), wrap: $('email-field-wrap'),    err: $('email-error') },
+    password: { input: pw,                 wrap: $('password-field-wrap'), err: $('password-error') },
+    name:     { input: $('player-name'),   wrap: $('name-field-wrap'),     err: $('name-error') },
+    agree:    { input: $('agree-rules'),   wrap: $('agree-rules-box'),     err: $('agree-error') }
+  };
+  function check(key) {
+    const f = fields[key], msg = rules[key](key === 'agree' ? '' : f.input.value);
+    f.wrap.classList.toggle('field-error', !!msg);
+    f.err.textContent = msg ? '⚠ ' + msg : ''; f.err.classList.toggle('hidden', !msg);
+    f.input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+    return !msg;
+  }
+  const touched = {};
+  ['email', 'password', 'name'].forEach((k) => {
+    fields[k].input.addEventListener('blur', () => { touched[k] = true; if (!googleSignedIn || k === 'name') check(k); });
+    fields[k].input.addEventListener('input', () => { if (touched[k]) check(k); $('form-banner').classList.add('hidden'); });
+  });
+  fields.agree.input.addEventListener('change', () => { if (touched.agree) check('agree'); });
+  fields.name.input.addEventListener('input', () => { $('name-count').textContent = fields.name.input.value.length + '/20'; });
+
+  // ---------- Live max-length notice ----------
+  const MAX = { email: 50, password: 32, name: 20 }, LABEL = { email: 'Email', password: 'Password', name: 'Player name' };
+  function limitNotice(k) {
+    const at = fields[k].input.value.length >= MAX[k], el = $(k + '-limit');
+    el.textContent = at ? `Maximum of ${MAX[k]} characters reached.` : '';
+    el.classList.toggle('hidden', !at);
+    if (k === 'name') { $('name-count').classList.toggle('text-pixel-amber', at); $('name-count').classList.toggle('text-slate-400', !at); }
+  }
+  ['email', 'password', 'name'].forEach((k) => fields[k].input.addEventListener('input', () => limitNotice(k)));
+
+  // ---------- Google sign-in (placeholder) ----------
+  const gBtn = $('google-signin-btn');
+  gBtn.addEventListener('click', () => {
+    if (mode === 'login') {
+      openDialog({ tag: 'Logged in', color: 'text-pixel-emerald', title: 'WELCOME BACK!', body: 'You are signed in with Google. Your progress and mistake history are loaded.',
+        actions: [{ label: 'Start playing', primary: true, onClick: goHome }] });
+      return;
+    }
+    googleSignedIn = true;
+    gBtn.disabled = true;
+    gBtn.classList.remove('bg-space-900', 'border-space-600', 'hover:border-slate-400', 'text-slate-300');
+    gBtn.classList.add('bg-space-950', 'border-emerald-500/60', 'text-emerald-400', 'cursor-default', 'opacity-80');
+    $('google-icon').classList.add('grayscale', 'opacity-60');
+    $('google-btn-label').textContent = '✓ SIGNED IN WITH GOOGLE';
+    ['email', 'password'].forEach((k) => { fields[k].input.disabled = true; check_clear(k); });
+    pwBtn.disabled = true;
+    $('account-fields-group').classList.add('opacity-40', 'pointer-events-none');
+    $('email-divider').classList.add('hidden'); $('forgot-password-btn').classList.add('hidden');
+    toast('Signed in with Google. Finish your player setup below.');
+    fields.name.input.focus();
+  });
+  function check_clear(k) { fields[k].wrap.classList.remove('field-error'); fields[k].err.classList.add('hidden'); }
+
+  // ---------- Forgot password (confirmation dialog) ----------
+  $('forgot-password-btn').addEventListener('click', () => {
+    if (!check('email')) { fields.email.input.focus(); return; }
+    const email = fields.email.input.value.trim();
+    openDialog({
+      tag: 'Reset password', color: 'text-pixel-amber', title: 'SEND RESET LINK?',
+      body: `We will send a password reset link to ${email}.`,
+      actions: [
+        { label: 'Cancel' },
+        { label: 'Send link', primary: true, onClick: () => toast(`Reset link sent to ${email}. Check your inbox.`) }
+      ]
+    });
+  });
+
+  // ---------- Log in / Create account tabs ----------
+  const COPY = {
+    login:  { tag: 'Welcome back', title: 'LOG IN TO REMEDIATE',  divider: 'or log in with email',  btn: 'LOG IN',         pw: 'current-password' },
+    create: { tag: 'New player',   title: 'CREATE YOUR ACCOUNT',  divider: 'or sign up with email', btn: 'CREATE ACCOUNT', pw: 'new-password' }
+  };
+  gBtn.dataset.cls = gBtn.className;
+  function resetGoogle() {
+    if (!googleSignedIn) return;
+    googleSignedIn = false; gBtn.disabled = false; gBtn.className = gBtn.dataset.cls;
+    $('google-icon').classList.remove('grayscale', 'opacity-60'); $('google-btn-label').textContent = 'CONTINUE WITH GOOGLE';
+    ['email', 'password'].forEach((k) => { fields[k].input.disabled = false; });
+    pwBtn.disabled = false; $('account-fields-group').classList.remove('opacity-40', 'pointer-events-none'); $('email-divider').classList.remove('hidden');
+  }
+  function setMode(m) {
+    resetGoogle(); mode = m; const c = COPY[m];
+    $('tab-login').setAttribute('aria-selected', m === 'login'); $('tab-create').setAttribute('aria-selected', m === 'create');
+    $('form-title').textContent = c.title; $('divider-text').textContent = c.divider;
+    $('start-game-btn').querySelector('span').textContent = c.btn;
+    $('create-only').classList.toggle('hidden', m === 'login'); $('agree-wrap').classList.toggle('hidden', m === 'login');
+    $('forgot-password-btn').classList.toggle('hidden', m === 'create'); $('remember-wrap').classList.toggle('hidden', m === 'create');
+    pw.setAttribute('autocomplete', c.pw); $('form-banner').classList.add('hidden');
+    Object.values(fields).forEach((f) => { f.wrap.classList.remove('field-error'); f.err.classList.add('hidden'); f.input.setAttribute('aria-invalid', 'false'); });
+    Object.keys(touched).forEach((k) => delete touched[k]);
+  }
+  $('tab-login').addEventListener('click', () => setMode('login'));
+  $('tab-create').addEventListener('click', () => setMode('create'));
+
+  // ---------- Submit ----------
+  $('escape-login-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    touched.email = touched.password = touched.name = touched.agree = true;
+    const keys = mode === 'login' ? ['email', 'password'] : (googleSignedIn ? ['name', 'agree'] : ['email', 'password', 'name', 'agree']);
+    const results = keys.map((k) => [k, check(k)]);           // run every check so all errors show at once
+    const firstBad = results.find(([, ok]) => !ok);
+    const banner = $('form-banner'), bannerText = $('form-banner-text');
+    if (firstBad) {
+      const n = results.filter(([, ok]) => !ok).length;
+      bannerText.textContent = `${n} ${n === 1 ? 'field needs' : 'fields need'} your attention. Fix the highlighted ${n === 1 ? 'field' : 'fields'} and try again.`;
+      banner.classList.remove('hidden');
+      fields[firstBad[0]].input.focus();
+      return;
+    }
+    banner.classList.add('hidden');
+
+    const btn = $('start-game-btn'), original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="animate-spin text-sm">◆</span><span>CHECKING ACCOUNT...</span>';
+    setTimeout(() => {
+      btn.innerHTML = original; btn.disabled = false;
+      const email = fields.email.input.value.trim().toLowerCase();
+      if (mode === 'login') {
+        if (email === DEMO_EMAIL && pw.value !== DEMO_PASS) {
+          bannerText.textContent = 'Email or password is incorrect. Check both and try again, or select Forgot password? to reset it.';
+          banner.classList.remove('hidden');
+          fields.password.wrap.classList.add('field-error'); pw.value = ''; pw.focus();
+          return;
+        }
+        openDialog({ tag: 'Logged in', color: 'text-pixel-emerald', title: 'WELCOME BACK!', body: 'Your progress and mistake history are loaded.',
+          actions: [{ label: 'Start playing', primary: true, onClick: goHome }] });
+        return;
+      }
+      if (!googleSignedIn && email === DEMO_EMAIL) {
+        bannerText.textContent = 'An account with this email already exists. Select Log in, or use a different email.';
+        banner.classList.remove('hidden'); fields.email.wrap.classList.add('field-error'); fields.email.input.focus();
+        return;
+      }
+      const diff = document.querySelector('input[name="difficulty"]:checked').value;
+      openDialog({
+        tag: 'Account ready', color: 'text-pixel-emerald', title: 'WELCOME, ' + fields.name.input.value.trim().toUpperCase() + '!',
+        body: `Your account is ready. Starting difficulty: ${diff.charAt(0) + diff.slice(1).toLowerCase()}. Your mistake history will be saved to your account.`,
+        actions: [{ label: 'Start playing', primary: true, onClick: goHome }]
+      });
+    }, 900);
+  });
+});
+</script>
 </body></html>
