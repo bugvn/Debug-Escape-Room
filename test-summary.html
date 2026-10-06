@@ -3,13 +3,13 @@
 <html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Test Summary</title>
+<title>Debug Report</title>
 <!-- Tailwind CSS v3 -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Google Fonts: Press Start 2P & Silkscreen / Inter for pixel aesthetic -->
+<!-- Google Fonts: Press Start 2P + VT323 (same pair as the other pages) -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&amp;family=Press+Start+2P&amp;family=Silkscreen:wght@400;700&amp;family=Space+Grotesk:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;display=swap" rel="stylesheet"/>
 <script>
     tailwind.config = {
       theme: {
@@ -36,8 +36,8 @@
           },
           fontFamily: {
             pixel: ['"Press Start 2P"', 'monospace'],
-            retro: ['"Silkscreen"', 'monospace'],
-            body: ['"Chakra Petch"', 'sans-serif'],
+            retro: ['VT323', 'monospace'],
+            body: ['VT323', 'monospace'],
           },
           boxShadow: {
             'pixel-cyan': '0 0 0 2px #38e1ff, 0 0 16px rgba(56, 225, 255, 0.4)',
@@ -50,18 +50,13 @@
     }
   </script>
 <style data-purpose="pixel-aesthetics">
-    /* Pixel border styling emulation */
-    .nes-box {
-      border: 3px solid #323b6b;
-      background: rgba(16, 20, 38, 0.88);
-      position: relative;
-    }
-    .nes-box::after {
-      content: '';
-      position: absolute;
-      inset: -3px;
-      border: 1px solid rgba(56, 225, 255, 0.15);
-      pointer-events: none;
+    /* Pixel box: same triple-ring square frame as the login / home / game room pages */
+    .pixel-box {
+      box-shadow:
+        0 0 0 2px #0a0d1a,
+        0 0 0 4px #2b3964,
+        0 0 0 6px #5ce1e6,
+        0 12px 30px rgba(0, 0, 0, 0.85);
     }
     .crt-scanlines {
       background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
@@ -105,19 +100,17 @@
 <div class="flex flex-col md:flex-row items-center justify-between border-b-2 border-space-700/80 pb-5 gap-4">
 <!-- Logo and Room Identity -->
 <div class="flex items-center space-x-4">
-<div class="w-12 h-12 bg-space-900 border-2 border-hearth-cyan flex items-center justify-center shadow-pixel-cyan">
-<svg width="16" height="16" viewBox="0 0 16 16" class="text-hearth-cyan" fill="currentColor">
-<path d="M8 0 L9.5 6.5 L16 8 L9.5 9.5 L8 16 L6.5 9.5 L0 8 L6.5 6.5 Z"/>
-</svg>
+<div class="w-12 h-12 bg-hearth-cyan/20 border-2 border-hearth-cyan flex items-center justify-center text-hearth-cyan text-sm font-pixel shadow-[0_0_8px_rgba(56,225,255,0.6)]">
+&lt;&gt;
 </div>
 <div>
 <h1 class="text-2xl sm:text-3xl font-pixel tracking-wide text-white">
-              Test Summary
+              Debug Report
 </h1>
 </div>
 </div>
 <!-- Profile Menu -->
-<div class="flex items-center gap-3 text-xs font-retro">
+<div class="flex items-center gap-3 text-base font-retro">
 <div class="flex items-center gap-2 bg-space-900/90 border border-space-700 px-3 py-2 text-slate-300 hover:border-hearth-lavender transition-colors cursor-pointer">
 <div class="relative w-5 h-5 bg-space-800 border border-hearth-lavender flex items-center justify-center font-pixel text-[10px] text-hearth-lavender">
                 ?
@@ -134,7 +127,7 @@
 <main class="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-grow" data-purpose="dashboard-grid">
 <!-- LEFT COLUMN: single unified box, divided into 3 sections by horizontal rules -->
 <div class="lg:col-span-5 flex flex-col" data-purpose="score-metrics-panel">
-<div class="nes-box bg-space-900/95 border-hearth-cyan/60 shadow-pixel-cyan flex flex-col h-full">
+<div class="pixel-box border-2 bg-space-900/95 border-hearth-cyan/60 flex flex-col h-full">
 
 <!-- SECTION A: Room Snapshot -->
 
@@ -143,11 +136,12 @@
 <div class="border-t-2 border-space-700 mx-4"></div>
 
 <!-- SECTION B: Score -->
-<div class="p-4 relative overflow-hidden">
-<div class="absolute top-8 -right-14 w-36 h-36 rounded-full bg-hearth-cyan/15 blur-md pointer-events-none"></div>
-<div class="absolute top-8 -left-14 w-36 h-36 rounded-full bg-hearth-lavender/15 blur-md pointer-events-none"></div>
+<div class="p-4 relative overflow-hidden flex-grow flex flex-col justify-center">
+<div class="relative">
+<div class="absolute top-8 -right-10 w-36 h-36 rounded-full bg-hearth-cyan/15 blur-md pointer-events-none"></div>
+<div class="absolute top-8 -left-10 w-36 h-36 rounded-full bg-hearth-lavender/15 blur-md pointer-events-none"></div>
 <div class="mt-3 mb-6 relative text-center">
-<p class="font-retro text-xs tracking-widest text-slate-400 uppercase">Evaluation Report</p>
+<p class="font-retro text-base tracking-widest text-slate-400 uppercase">Evaluation Report</p>
 <p class="font-pixel text-sm sm:text-base text-white tracking-widest mt-3">FINAL</p>
 <div class="font-pixel text-5xl sm:text-6xl text-hearth-cyan tracking-tight drop-shadow-[0_0_12px_rgba(56,225,255,0.8)] my-1">100</div>
 <p class="font-pixel text-sm sm:text-base text-white tracking-widest">SCORE</p>
@@ -158,21 +152,22 @@
 <span class="text-3xl font-pixel text-hearth-gold">S</span>
 <div>
 <p class="font-pixel text-sm text-hearth-lavender font-bold">RANK S - MASTER CODER</p>
-<p class="text-xs text-slate-400 font-retro">Top 3.8% of Players</p>
+<p class="text-base text-slate-400 font-retro uppercase">Top 3.8% of Players</p>
 </div>
 </div>
 </div>
 <!-- Secondary Metrics Grid -->
 <div class="grid grid-cols-2 gap-4">
 <div class="bg-space-800/80 border border-space-700 p-3">
-<div class="text-[11px] font-retro text-slate-400 mb-1">TIME TAKEN</div>
+<div class="text-sm font-retro text-slate-400 mb-1">TIME TAKEN</div>
 <div class="font-pixel text-lg sm:text-xl text-hearth-peach">21m 15s</div>
-<div class="text-[10px] font-retro text-emerald-400 mt-1">faster than avg</div>
+<div class="text-sm font-retro text-emerald-400 mt-1 uppercase">faster than avg</div>
 </div>
 <div class="bg-space-800/80 border border-space-700 p-3">
-<div class="text-[11px] font-retro text-slate-400 mb-1">ACCURACY</div>
+<div class="text-sm font-retro text-slate-400 mb-1">ACCURACY</div>
 <div class="font-pixel text-lg sm:text-xl text-hearth-cyan">92%</div>
-<div class="text-[10px] font-retro text-hearth-lavender mt-1">23 / 25 Nodes Clean</div>
+<div class="text-sm font-retro text-hearth-lavender mt-1 uppercase">23 / 25 Nodes Clean</div>
+</div>
 </div>
 </div>
 </div>
@@ -185,7 +180,7 @@
 <p class="font-pixel text-[11px] tracking-widest text-hearth-lavender uppercase mb-5">Mistake Pattern Log</p>
 <div class="space-y-5">
 <div>
-<div class="flex items-center justify-between font-retro text-[11px] mb-1.5">
+<div class="flex items-center justify-between font-retro text-sm mb-1.5">
 <span class="text-slate-300 uppercase">Boundary / Off-by-One</span>
 <span class="text-hearth-crimson">2 HITS</span>
 </div>
@@ -194,7 +189,7 @@
 </div>
 </div>
 <div>
-<div class="flex items-center justify-between font-retro text-[11px] mb-1.5">
+<div class="flex items-center justify-between font-retro text-sm mb-1.5">
 <span class="text-slate-300 uppercase">Null / Undefined Checks</span>
 <span class="text-hearth-lavender">1 HIT</span>
 </div>
@@ -211,7 +206,7 @@
 <!-- RIGHT COLUMN: Mistakes, Recommendations & Actions (7 Cols) -->
 <div class="lg:col-span-7 flex flex-col gap-6 h-full" data-purpose="analysis-and-actions">
 <!-- SECTION 2: COMMON MISTAKES -->
-<div class="nes-box p-6 bg-space-900/90 border-hearth-crimson/50" data-purpose="common-mistakes-section">
+<div class="pixel-box border-2 p-6 bg-space-900/90 border-hearth-crimson/50" data-purpose="common-mistakes-section">
 <div class="flex items-center justify-between mb-4 border-b border-space-700/80 pb-3">
 <div class="flex items-center space-x-2">
 <span class="w-3 h-3 bg-hearth-crimson inline-block"></span>
@@ -219,7 +214,7 @@
                 COMMON MISTAKES
               </h3>
 </div>
-<span class="text-xs font-retro text-hearth-crimson bg-hearth-crimson/10 px-2 py-0.5 border border-hearth-crimson/30">
+<span class="text-base font-retro text-hearth-crimson bg-hearth-crimson/10 px-2 py-0.5 border border-hearth-crimson/30">
               3 FOUND
             </span>
 </div>
@@ -227,14 +222,14 @@
 <!-- Mistake 1 -->
 <div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-crimson border border-space-700 hover:border-hearth-crimson/60 transition-colors">
 <div class="flex items-start gap-3">
-<span class="font-retro text-xs text-hearth-crimson bg-space-950 px-2 py-1 font-bold border border-hearth-crimson/40 shrink-0">
+<span class="font-retro text-base text-hearth-crimson bg-space-950 px-2 py-1 font-bold border border-hearth-crimson/40 shrink-0">
                   ERR #01
                 </span>
 <div>
-<h4 class="font-pixel text-xs text-slate-100 mb-1">
+<h4 class="font-pixel text-xs text-slate-100 mb-1 uppercase">
                     Off-by-One in Loop Termination
                   </h4>
-<p class="text-xs text-slate-300 font-retro">
+<p class="text-base text-slate-300 font-retro">
                     Array index out of bounds on <span class="text-hearth-peach">Kettle sensor</span> logic iteration. Triggered panic routine during boil cycle.
                   </p>
 </div>
@@ -243,14 +238,14 @@
 <!-- Mistake 2 -->
 <div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-crimson border border-space-700 hover:border-hearth-crimson/60 transition-colors">
 <div class="flex items-start gap-3">
-<span class="font-retro text-xs text-hearth-crimson bg-space-950 px-2 py-1 font-bold border border-hearth-crimson/40 shrink-0">
+<span class="font-retro text-base text-hearth-crimson bg-space-950 px-2 py-1 font-bold border border-hearth-crimson/40 shrink-0">
                   ERR #02
                 </span>
 <div>
-<h4 class="font-pixel text-xs text-slate-100 mb-1">
+<h4 class="font-pixel text-xs text-slate-100 mb-1 uppercase">
                     Unhandled Null Pointer Exception
                   </h4>
-<p class="text-xs text-slate-300 font-retro">
+<p class="text-base text-slate-300 font-retro">
                     Encountered in <span class="text-hearth-cyan">Star Map Parser</span> when query window telemetry returned unmapped constellation coordinates.
                   </p>
 </div>
@@ -259,14 +254,14 @@
 <!-- Mistake 3 -->
 <div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-crimson border border-space-700 hover:border-hearth-crimson/60 transition-colors">
 <div class="flex items-start gap-3">
-<span class="font-retro text-xs text-hearth-crimson bg-space-950 px-2 py-1 font-bold border border-hearth-crimson/40 shrink-0">
+<span class="font-retro text-base text-hearth-crimson bg-space-950 px-2 py-1 font-bold border border-hearth-crimson/40 shrink-0">
                   ERR #03
                 </span>
 <div>
-<h4 class="font-pixel text-xs text-slate-100 mb-1">
+<h4 class="font-pixel text-xs text-slate-100 mb-1 uppercase">
                     Suboptimal Time Complexity
                   </h4>
-<p class="text-xs text-slate-300 font-retro">
+<p class="text-base text-slate-300 font-retro">
                     Detected in <span class="text-hearth-lavender">Door Lock Permutation</span> brute calculation. Nested O(N!) factorial scan delayed exit hatch unseal.
                   </p>
 </div>
@@ -275,7 +270,7 @@
 </div>
 </div>
 <!-- SECTION 3: RECOMMENDATIONS -->
-<div class="nes-box p-6 bg-space-900/90 border-hearth-lavender/50 shadow-pixel-lavender flex-grow flex flex-col" data-purpose="recommendations-section">
+<div class="pixel-box border-2 p-6 bg-space-900/90 border-hearth-lavender/50 flex-grow flex flex-col" data-purpose="recommendations-section">
 <div class="flex items-center justify-between mb-4 border-b border-space-700/80 pb-3">
 <div class="flex items-center space-x-2">
 <span class="w-3 h-3 bg-hearth-lavender inline-block"></span>
@@ -283,7 +278,7 @@
                 RECOMMENDATIONS
               </h3>
 </div>
-<span class="text-xs font-retro text-hearth-cyan bg-hearth-cyan/10 px-2 py-0.5 border border-hearth-cyan/30">
+<span class="text-base font-retro text-hearth-cyan bg-hearth-cyan/10 px-2 py-0.5 border border-hearth-cyan/30">
               3 SUGGESTIONS
             </span>
 </div>
@@ -291,14 +286,14 @@
 <!-- Recommendation 1 -->
 <div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-lavender border border-space-700 hover:border-hearth-lavender/70 transition-colors">
 <div class="flex items-start gap-3">
-<span class="font-retro text-xs text-hearth-lavender bg-space-950 px-2 py-1 font-bold border border-hearth-lavender/40 shrink-0">
+<span class="font-retro text-base text-hearth-lavender bg-space-950 px-2 py-1 font-bold border border-hearth-lavender/40 shrink-0">
                   REC #01
                 </span>
 <div>
-<h4 class="font-pixel text-xs text-slate-100 mb-1">
+<h4 class="font-pixel text-xs text-slate-100 mb-1 uppercase">
                     Practice Boundary Condition Checking
                   </h4>
-<p class="text-xs text-slate-300 font-retro">
+<p class="text-base text-slate-300 font-retro">
                     Reinforce edge constraints in recursive algorithms to prevent stack overflows and one-off edge index overflows.
                   </p>
 </div>
@@ -307,14 +302,14 @@
 <!-- Recommendation 2 -->
 <div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-lavender border border-space-700 hover:border-hearth-lavender/70 transition-colors">
 <div class="flex items-start gap-3">
-<span class="font-retro text-xs text-hearth-lavender bg-space-950 px-2 py-1 font-bold border border-hearth-lavender/40 shrink-0">
+<span class="font-retro text-base text-hearth-lavender bg-space-950 px-2 py-1 font-bold border border-hearth-lavender/40 shrink-0">
                   REC #02
                 </span>
 <div>
-<h4 class="font-pixel text-xs text-slate-100 mb-1">
+<h4 class="font-pixel text-xs text-slate-100 mb-1 uppercase">
                     Strengthen Error Handling &amp; Null Checks
                   </h4>
-<p class="text-xs text-slate-300 font-retro">
+<p class="text-base text-slate-300 font-retro">
                     Implement optional unwrapping and defensive fallbacks in data streams before parsing incoming star chamber payloads.
                   </p>
 </div>
@@ -323,14 +318,14 @@
 <!-- Recommendation 3 -->
 <div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-lavender border border-space-700 hover:border-hearth-lavender/70 transition-colors">
 <div class="flex items-start gap-3">
-<span class="font-retro text-xs text-hearth-lavender bg-space-950 px-2 py-1 font-bold border border-hearth-lavender/40 shrink-0">
+<span class="font-retro text-base text-hearth-lavender bg-space-950 px-2 py-1 font-bold border border-hearth-lavender/40 shrink-0">
                   REC #03
                 </span>
 <div>
-<h4 class="font-pixel text-xs text-slate-100 mb-1">
+<h4 class="font-pixel text-xs text-slate-100 mb-1 uppercase">
                     Review Big-O Notation for Hash Set Lookups
                   </h4>
-<p class="text-xs text-slate-300 font-retro">
+<p class="text-base text-slate-300 font-retro">
                     Leverage O(1) hash sets for key combination lookups to replace nested iterative permutations across chamber mechanisms.
                   </p>
 </div>
