@@ -1,268 +1,312 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Submission Form</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap');
 
-<html lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Submission Form - Pixel Escape Room</title>
-<!-- Google Fonts: VT323 & Press Start 2P for authentic pixel art aesthetic -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&amp;family=Press+Start+2P&amp;family=VT323&amp;display=swap" rel="stylesheet"/>
-<!-- Tailwind CSS CDN -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Custom Pixel Stylesheet -->
-<style data-purpose="pixel-styling">
-    .pixel-font {
-      font-family: 'Press Start 2P', monospace;
-    }
-    .vt-font {
-      font-family: 'VT323', monospace;
-    }
-    .code-font {
-      font-family: 'Fira Code', monospace;
-    }
-    /* Pixel borders styling */
-    .pixel-box {
-      border: 4px solid #1e1b4b;
-      box-shadow: 
-        inset -4px -4px 0px 0px #09090b,
-        inset 4px 4px 0px 0px #4338ca,
-        0px 0px 24px rgba(0, 0, 0, 0.85);
-    }
-    .pixel-inner-box {
-      border: 3px solid #0f172a;
-      box-shadow: inset 2px 2px 0px #312e81;
-    }
-    .pixel-btn-action {
-      box-shadow: inset -3px -3px 0px #065f46, inset 3px 3px 0px #6ee7b7, 0 4px 0 #022c22;
-    }
-    .pixel-btn-action:active {
-      transform: translateY(2px);
-      box-shadow: inset -2px -2px 0px #065f46, inset 2px 2px 0px #6ee7b7, 0 2px 0 #022c22;
-    }
-    .pixel-btn-secondary {
-      box-shadow: inset -3px -3px 0px #1e293b, inset 3px 3px 0px #64748b, 0 4px 0 #0f172a;
-    }
-    .pixel-btn-secondary:active {
-      transform: translateY(2px);
-      box-shadow: inset -2px -2px 0px #1e293b, inset 2px 2px 0px #64748b, 0 2px 0 #0f172a;
-    }
-    /* Custom scrollbar for pixel feel */
-    textarea::-webkit-scrollbar, div::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    textarea::-webkit-scrollbar-track, div::-webkit-scrollbar-track {
-      background: #090d16;
-    }
-    textarea::-webkit-scrollbar-thumb, div::-webkit-scrollbar-thumb {
-      background: #3b82f6;
-    }
-  </style>
+  :root{
+    --bg:#060814; --panel:#0c1024; --panel-2:#0a0e1f; --border:#1c2440;
+    --cyan:#4fe0ff; --violet:#9b8cf5; --pink:#ff5a9d; --amber:#ffc857;
+    --ink:#cfd6f0; --ink-dim:#6a7196;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; min-height:100vh; color:var(--ink); background:var(--bg);
+    font-family:'Space Mono',monospace; padding:0 0 60px; position:relative; }
+  body::before{
+    content:''; position:fixed; inset:0; pointer-events:none; opacity:.5;
+    background-image:
+      radial-gradient(1px 1px at 8% 15%, #fff 100%, transparent),
+      radial-gradient(1px 1px at 82% 10%, #fff 100%, transparent),
+      radial-gradient(1px 1px at 30% 70%, #fff 100%, transparent),
+      radial-gradient(1px 1px at 95% 55%, #fff 100%, transparent),
+      radial-gradient(1px 1px at 60% 90%, #fff 100%, transparent);
+    background-size:340px 340px;
+  }
+  .stage{ max-width:1000px; margin:0 auto; padding:0 24px; position:relative; }
+
+  .appbar{ display:flex; justify-content:space-between; align-items:center;
+    padding:16px 24px; max-width:1000px; margin:0 auto; }
+  .appbar .word{ font-family:'Press Start 2P',monospace; font-size:14px; color:#fff; letter-spacing:.02em; }
+  .guest{ border:1px solid var(--border); border-radius:6px; padding:7px 12px; font-size:11px;
+    color:var(--ink); display:flex; align-items:center; gap:6px; }
+  .guest .q{ width:16px; height:16px; border:1px solid var(--violet); border-radius:4px; color:var(--violet);
+    display:inline-flex; align-items:center; justify-content:center; font-size:10px; }
+
+  .panel{ position:relative; background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--border); border-radius:4px; }
+  .panel::before,.panel::after,.panel .tick-br,.panel .tick-bl{
+    content:''; position:absolute; width:7px; height:7px; background:var(--cyan); }
+  .panel::before{ top:-4px; left:-4px; } .panel::after{ top:-4px; right:-4px; }
+  .panel .tick-bl{ bottom:-4px; left:-4px; } .panel .tick-br{ bottom:-4px; right:-4px; }
+  .panel.pink::before,.panel.pink::after,.panel.pink .tick-bl,.panel.pink .tick-br{ background:var(--pink); }
+  .panel.violet::before,.panel.violet::after,.panel.violet .tick-bl,.panel.violet .tick-br{ background:var(--violet); }
+
+  .section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .section-head .title{ display:flex; align-items:center; gap:10px; font-size:14px; font-weight:700;
+    letter-spacing:.03em; color:#fff; }
+  .sq{ width:9px; height:9px; }
+  .sq.cyan{ background:var(--cyan); } .sq.pink{ background:var(--pink); } .sq.violet{ background:var(--violet); }
+  .badge{ font-size:10px; font-weight:700; letter-spacing:.05em; border:1px solid; border-radius:5px; padding:4px 10px; }
+  .badge.pink{ color:var(--pink); border-color:rgba(255,90,157,.4); background:rgba(255,90,157,.08); }
+  .badge.violet{ color:var(--violet); border-color:rgba(155,140,245,.4); background:rgba(155,140,245,.08); }
+  .badge.cyan{ color:var(--cyan); border-color:rgba(79,224,255,.4); background:rgba(79,224,255,.08); }
+
+  .topbar{ display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:16px; margin:4px 0 18px; }
+  .topbar .panel{ padding:14px 20px; }
+  .topbar .label{ font-size:10px; letter-spacing:.1em; color:var(--ink-dim); }
+  .topbar .value{ font-size:16px; font-weight:700; margin-top:7px; color:#fff; }
+  #progress .value{ color:var(--cyan); }
+  #keys{ text-align:right; } #keys .value{ color:var(--amber); }
+  .dots{ display:inline-flex; gap:5px; margin-top:8px; }
+  .dot{ width:7px; height:7px; background:#232a4a; }
+  .dot.on{ background:var(--cyan); box-shadow:0 0 8px var(--cyan); }
+  #countdown{ text-align:center; }
+  #countdown .value{ font-family:'Press Start 2P',monospace; font-size:26px; color:var(--pink);
+    text-shadow:0 0 16px rgba(255,90,157,.55); margin-top:10px; }
+
+  .puzzle{ padding:20px 26px 22px; margin-bottom:18px; }
+  .eyebrow{ font-size:10px; letter-spacing:.1em; color:var(--ink-dim); margin-bottom:14px; }
+  .mission{ background:var(--panel-2); border:1px solid var(--border); border-left:3px solid var(--cyan);
+    padding:12px 16px; font-size:13px; line-height:1.6; margin-bottom:14px; }
+  .mission.plain{ margin-bottom:0; }
+  .mission b{ color:var(--amber); }
+  .mission a{ color:var(--cyan); }
+
+  .code-card{ background:var(--panel-2); border:1px solid var(--border); border-left:3px solid var(--pink); padding:13px 18px; }
+  .code-card .tagrow{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .code-card .tag{ font-size:10px; font-weight:700; color:var(--pink); border:1px solid rgba(255,90,157,.4);
+    border-radius:4px; padding:3px 8px; }
+  .code-card .status{ font-size:10px; color:var(--ink-dim); }
+  .code-card .msg{ font-size:12.5px; line-height:1.6; }
+  .code{ font-size:13px; line-height:1.7; white-space:pre; overflow-x:auto; }
+  .code .kw{ color:var(--violet); } .code .fn{ color:var(--cyan); }
+  .code .cm{ color:var(--ink-dim); } .code .str{ color:#7ee0b0; }
+  .code .bug{ color:var(--pink); font-weight:700; }
+
+  .form-card{ padding:20px 26px 22px; }
+  .meta{ font-size:10px; color:var(--ink-dim); margin-bottom:12px; }
+  textarea{ width:100%; min-height:96px; background:var(--panel-2); border:1px solid var(--border);
+    color:var(--ink); font-family:'Space Mono',monospace; font-size:13px; line-height:1.7;
+    padding:12px 14px; resize:vertical; white-space:pre; overflow-x:auto; word-break:normal; overflow-wrap:normal; }
+  textarea:focus{ outline:none; border-color:var(--violet); box-shadow:0 0 0 3px rgba(155,140,245,.15); }
+  .tip{ font-size:10.5px; color:var(--ink-dim); margin-top:8px; }
+
+  .footer{ display:flex; justify-content:space-between; align-items:center; margin-top:18px; }
+  .hints{ font-size:11px; color:var(--ink-dim); }
+  .hints b{ color:var(--amber); }
+  .btns{ display:flex; gap:10px; }
+  .btn{ font-family:'Space Mono',monospace; font-weight:700; font-size:12px; letter-spacing:.04em;
+    padding:11px 20px; border-radius:4px; cursor:pointer; display:flex; align-items:center; gap:8px; }
+  .btn.ghost{ background:transparent; border:1px solid var(--violet); color:var(--violet); }
+  .btn.ghost:hover{ background:rgba(155,140,245,.12); }
+  .btn.go{ background:var(--cyan); border:none; color:#03202b; box-shadow:0 0 18px rgba(79,224,255,.4); }
+  .btn.go:hover{ filter:brightness(1.1); }
+  .btn:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+
+  /* dialog layer: dimmed + blurred background, one dialog at a time */
+  .overlay{ position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
+    background:rgba(4,6,16,.72); backdrop-filter:blur(4px); padding:24px; }
+  .overlay[hidden]{ display:none; }
+  .dlg{ width:100%; max-width:480px; padding:22px 26px 24px; }
+</style>
 </head>
-<body class="bg-black text-slate-100 h-screen w-screen overflow-hidden select-none m-0 p-0 flex items-center justify-center font-sans">
-<!-- BEGIN: GameRoomCanvasContainer -->
-<!-- Underlying Game Room Canvas maintaining exact Game Room UI -->
-<main class="relative w-full h-full flex items-center justify-center overflow-hidden bg-slate-950" data-purpose="game-screen-viewport">
-<!-- Background Game Art: Starlight Room -->
-<div class="absolute inset-0 flex items-center justify-center overflow-hidden z-0" data-purpose="game-background-layer">
-<img alt="Cosmic Pixel Kitchen Game Room" class="w-full h-full object-cover object-center filter brightness-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5nbtXgCxKUhR7Gf8N5q5yTK0cUueFD5I58lHaQejv21VIpSYJNgK3JAtHWTLXLvVzRCMf1D1OGG3n9iNyL0tyToiROrs7ZWJR24Kl2hlfpqZRJTCRZm-e2UsOIKErDAImdMEWTUt4phH4AwsE-Zlaojw6qpAQBcqZthxJtk-e65qY6FKZm5MTcQdy-_ZfOn1wN6qyyMaDNmIsIT3rMly8mcIsMMJ_QwD8-Dw8w_5vCYsE1BZyKy-HxSlJm6faqLSc5w"/>
-<!-- Dimming backdrop overlay to focus attention on modal -->
-<div class="absolute inset-0 bg-indigo-950/60 backdrop-blur-[2px]" data-purpose="modal-backdrop"></div>
-</div>
-<!-- BEGIN: TopBarChrome -->
-<!-- Screen Design UI: Progress, Timer, Status -->
-<header class="absolute top-0 left-0 right-0 p-4 sm:p-6 flex justify-between items-start z-20 pointer-events-none" data-purpose="hud-header">
-<!-- Progress Indicator at Upper Left -->
-<div class="pointer-events-auto bg-slate-900/90 border-2 border-indigo-500/80 px-4 py-2.5 rounded-none shadow-[0_4px_12px_rgba(0,0,0,0.8)] flex items-center gap-3 backdrop-blur-md" data-purpose="progress-indicator">
-<div class="flex flex-col gap-1">
-<div class="flex items-center gap-2">
-<span class="w-2.5 h-2.5 bg-emerald-400 inline-block animate-pulse shadow-[0_0_8px_#34d399]"></span>
-<span class="pixel-font text-[10px] text-cyan-300 tracking-wider">ROOM PROGRESS</span>
-</div>
-<div class="flex items-center gap-1.5 mt-0.5">
-<span class="text-xs vt-font text-amber-300 text-base">CHAMBER 02 / 04</span>
-<div class="flex gap-1 ml-2">
-<span class="w-3 h-2 bg-emerald-400 border border-black inline-block"></span>
-<span class="w-3 h-2 bg-emerald-400 border border-black inline-block animate-pulse"></span>
-<span class="w-3 h-2 bg-slate-700 border border-black inline-block"></span>
-<span class="w-3 h-2 bg-slate-700 border border-black inline-block"></span>
-</div>
-</div>
-</div>
-</div>
-<!-- Timer at Upper Center -->
-<div class="pointer-events-auto bg-slate-950/95 border-2 border-rose-500/90 px-6 py-2 rounded-none shadow-[0_0_20px_rgba(244,63,94,0.3)] flex flex-col items-center" data-purpose="timer-display">
-<span class="pixel-font text-[9px] text-rose-400 tracking-widest uppercase mb-0.5">Escape Countdown</span>
-<div class="flex items-center gap-2">
-<span class="text-rose-500 animate-pulse text-xl">⏳</span>
-<span class="vt-font text-3xl sm:text-4xl text-rose-400 tracking-widest font-bold drop-shadow-[0_0_10px_rgba(244,63,94,0.7)]" id="countdown-timer">24:15</span>
-</div>
-</div>
-<!-- Right Chrome Quick Stats -->
-<div class="pointer-events-auto hidden md:flex bg-slate-900/90 border-2 border-indigo-500/80 px-4 py-2.5 rounded-none shadow-lg items-center gap-3 backdrop-blur-md" data-purpose="inventory-status">
-<div class="text-right">
-<div class="pixel-font text-[9px] text-indigo-300">KEYS COLLECTED</div>
-<div class="vt-font text-xl text-yellow-400">🗝️ 1 / 3</div>
-</div>
-</div>
-</header>
-<!-- END: TopBarChrome -->
-<!-- BEGIN: BottomBarChrome -->
-<!-- Screen Design UI: Hints Button at Lower Left -->
-<footer class="absolute bottom-0 left-0 right-0 p-4 sm:p-6 flex justify-between items-end z-20 pointer-events-none" data-purpose="hud-footer">
-<!-- HINTS BUTTON AT LOWER LEFT -->
-<button class="pointer-events-auto pixel-btn-secondary group bg-slate-800 hover:bg-slate-700 text-amber-300 border-2 border-amber-400/80 px-4 py-2.5 flex items-center gap-2.5 transition active:scale-95 cursor-pointer shadow-lg" data-purpose="hints-trigger-button" id="hints-button" type="button">
-<span class="text-lg group-hover:rotate-12 transition-transform duration-200">💡</span>
-<div class="text-left">
-<span class="pixel-font text-[10px] block text-amber-200">HINTS (2 LEFT)</span>
-<span class="vt-font text-xs text-amber-400/80 uppercase">Click to decode logs</span>
-</div>
-</button>
-<!-- Bottom Right Room Navigation Info -->
-<div class="pointer-events-auto bg-slate-900/80 border border-slate-700 px-3 py-1.5 text-slate-400 vt-font text-sm hidden sm:block">
-        PRESS <span class="text-cyan-400 font-bold">[ESC]</span> TO VIEW SCENE
+<body>
+
+  <div class="appbar">
+    <span class="word">SUBMISSION FORM</span>
+    <div class="guest"><span class="q">?</span> Luna ▾</div>
+  </div>
+
+  <div class="stage" id="screen">
+
+    <div class="topbar">
+      <div class="panel" id="progress"><span class="tick-bl"></span><span class="tick-br"></span>
+        <div class="label">ROOM PROGRESS</div>
+        <div class="value">CHAMBER 02 / 04</div>
+        <div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
       </div>
-</footer>
-<!-- END: BottomBarChrome -->
-<!-- BEGIN: CenteredPuzzleModal -->
-<!-- PUZZLE QUESTION IS AT THE CENTER WITHIN A CRISP PIXEL BOX -->
-<div class="relative z-30 w-[95%] max-w-3xl max-h-[88vh] bg-slate-950/95 pixel-box flex flex-col p-4 sm:p-6 rounded-none text-slate-200 shadow-2xl overflow-y-auto my-auto" data-purpose="centered-debugging-puzzle-modal">
-<!-- Puzzle Box Header Banner -->
-<div class="flex items-center justify-between pb-3 mb-3 border-b-2 border-indigo-900/80" data-purpose="puzzle-header">
-<div class="flex items-center gap-3">
-<div class="w-7 h-7 bg-indigo-600 border border-indigo-400 flex items-center justify-center text-white text-xs font-bold shadow-inner">
-            👾
-          </div>
-<div>
-<span class="pixel-font text-[9px] text-cyan-400 tracking-widest block">DEBUGGING TERMINAL // OVERRIDE LOCK</span>
-<h1 class="pixel-font text-xs sm:text-sm text-yellow-300 mt-0.5">PUZZLE 02: RECURSIVE KETTLE LOOP</h1>
-</div>
-</div>
-<div class="flex items-center gap-2">
-<span class="inline-block px-2 py-0.5 text-[9px] pixel-font bg-rose-950 border border-rose-500 text-rose-300 animate-pulse">
-            FAULT DETECTED
-          </span>
-</div>
-</div>
-<!-- SECTION: DEBUGGING QUESTION -->
-<!-- Explains context and displays the buggy code snippet -->
-<section class="mb-4 bg-slate-900/90 pixel-inner-box p-3 sm:p-4 rounded-none" data-purpose="debugging-question-container">
-<div class="flex items-start gap-2 mb-2">
-<span class="text-cyan-400 font-bold text-sm">▶</span>
-<p class="text-xs sm:text-sm text-slate-300 leading-relaxed vt-font sm:text-base">
-<span class="text-amber-300 font-bold">MISSION:</span> The electric kettle on the dining table keeps boiling infinitely, triggering the room containment seal! 
-            Inspect the recursive heating routine below, <span class="text-cyan-300 font-semibold underline decoration-cyan-500">identify the logical recursion bug</span>, and provide the corrected code to stabilize the temperature.
-          </p>
-</div>
-<!-- Buggy Code Display -->
-<div class="relative mt-2 bg-slate-950 border border-indigo-950 p-3 rounded-none">
-<div class="flex justify-between items-center pb-1.5 mb-2 border-b border-slate-800 text-[10px] code-font text-slate-400">
-<span class="text-indigo-400 font-semibold">kettle_controller.py (BUGGY SOURCE)</span>
-<span class="text-rose-400 vt-font text-xs">STATUS: STACK_OVERFLOW_RISK</span>
-</div>
-<pre class="code-font text-xs sm:text-sm leading-relaxed overflow-x-auto text-indigo-200 selection:bg-indigo-700"><span class="text-purple-400">def</span> <span class="text-yellow-300">heat_water</span>(current_temp, target_temp, cycle):
-    <span class="text-slate-500"># Stop condition when reaching target</span>
-    <span class="text-purple-400">if</span> current_temp &gt;= target_temp:
-        <span class="text-purple-400">return</span> <span class="text-emerald-300">"KETTLE_READY: SAFE_TO_POUR"</span>
+      <div class="panel" id="countdown"><span class="tick-bl"></span><span class="tick-br"></span>
+        <div class="label">ESCAPE COUNTDOWN</div>
+        <div class="value">24:15</div>
+      </div>
+      <div class="panel" id="keys"><span class="tick-bl"></span><span class="tick-br"></span>
+        <div class="label">KEYS COLLECTED</div>
+        <div class="value">1 / 3</div>
+      </div>
+    </div>
 
-    <span class="text-slate-500"># BUG: Infinite recursion occurs here! Cycle is not incrementing/stepped properly</span>
-    <span class="text-purple-400">return</span> <span class="text-yellow-300">heat_water</span>(current_temp + <span class="text-amber-400">10</span>, target_temp, cycle)  <span class="text-rose-400 font-bold">&lt;-- CRITICAL LOOP ERROR</span></pre>
-</div>
-</section>
-<!-- SECTION: BOX AREA TO WRITE ANSWERS -->
-<!-- Interactive editable code/solution textarea with visual line markers -->
-<form class="flex flex-col flex-grow" data-purpose="solution-submission-form" id="solution-form" onsubmit="event.preventDefault();">
-<div class="mb-3">
-<div class="flex justify-between items-center mb-1.5">
-<label class="pixel-font text-[10px] text-emerald-400 flex items-center gap-1.5" for="code-editor-input">
-<span>✍️</span> WRITE YOUR ANSWER / CODE FIX HERE:
-            </label>
-<span class="text-slate-400 text-xs vt-font">PYTHON 3.x MONOSPACE MODE</span>
-</div>
-<!-- Code Editor Container -->
-<div class="relative flex border-2 border-emerald-500/70 bg-[#070b14] shadow-inner focus-within:border-cyan-400 transition-colors">
-<!-- Line numbers column -->
-<div class="bg-slate-950 py-3 px-2 text-right border-r border-slate-800 text-slate-600 select-none code-font text-xs leading-5">
-              1<br/>2<br/>3<br/>4<br/>5<br/>6
-            </div>
-<!-- Monospace Answer Box -->
-<textarea class="w-full bg-transparent p-3 text-cyan-200 code-font text-xs sm:text-sm leading-5 resize-none focus:outline-none focus:ring-0 placeholder:text-slate-600" id="code-editor-input" name="user_solution" placeholder="def heat_water(current_temp, target_temp, cycle):
-    # Write your fixed logic here...
-    if current_temp &gt;= target_temp:
-        return 'KETTLE_READY: SAFE_TO_POUR'
-    return heat_water(current_temp + 10, target_temp, cycle + 1)" rows="6" spellcheck="false"></textarea>
-</div>
-<div class="flex justify-between text-[11px] text-slate-400 vt-font mt-1">
-<span>TIP: Make sure the base case or step progression terminates cleanly!</span>
-<span id="char-counter">0 chars entered</span>
-</div>
-</div>
-<!-- SECTION: ACTION BUTTONS (SUBMIT & RUN TEST) -->
-<div class="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-800/80 mt-auto" data-purpose="action-buttons-group">
-<div class="flex items-center gap-2 text-xs vt-font text-slate-400">
-<span class="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-<span>SYSTEM WAITING FOR USER PATCH...</span>
-</div>
-<div class="flex items-center gap-3 w-full sm:w-auto">
-<!-- Secondary Test Button -->
-<button class="flex-1 sm:flex-none pixel-btn-secondary bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-500 pixel-font text-[10px] py-2.5 px-4 transition active:translate-y-0.5 cursor-pointer flex items-center justify-center gap-1.5" id="run-test-btn" type="button">
-<span>⚙️</span> RUN TEST
-            </button>
-<!-- Prominent Green/Cyan Submit Button -->
-<button class="flex-1 sm:flex-none pixel-btn-action bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold pixel-font text-[10px] sm:text-xs py-2.5 px-6 transition active:translate-y-0.5 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.5)] flex items-center justify-center gap-2" id="submit-solution-btn" type="submit">
-<span>🚀</span> SUBMIT SOLUTION
-            </button>
-</div>
-</div>
-</form>
-</div>
-<!-- END: CenteredPuzzleModal -->
-</main>
-<!-- END: GameRoomCanvasContainer -->
-<!-- JavaScript Handling for minor interactivity -->
-<script data-purpose="hud-and-modal-interactions">
-    // Interactive feedback for character counter and buttons
-    const codeEditor = document.getElementById('code-editor-input');
-    const charCounter = document.getElementById('char-counter');
-    const submitBtn = document.getElementById('submit-solution-btn');
-    const runTestBtn = document.getElementById('run-test-btn');
-    const hintsBtn = document.getElementById('hints-button');
+    <div class="panel pink puzzle">
+      <span class="tick-bl"></span><span class="tick-br"></span>
+      <div class="section-head">
+        <div class="title"><span class="sq pink"></span>PUZZLE 02: RECURSIVE KETTLE LOOP</div>
+        <span class="badge pink">FAULT DETECTED</span>
+      </div>
+      <div class="eyebrow">DEBUGGING TERMINAL // OVERRIDE LOCK</div>
+      <div class="mission">
+        <b>MISSION:</b> the kettle on the dining table is boiling infinitely, tripping the room's
+        containment seal. inspect the recursive heating routine below, <a href="#">identify the logic bug</a>,
+        and provide the corrected code to stabilize the temperature.
+      </div>
+      <div class="code-card">
+        <div class="tagrow"><span class="tag">BUG</span><span class="status">kettle_controller.py // stack_overflow_risk</span></div>
+        <div class="code"><span class="kw">def</span> <span class="fn">heat_water</span>(current_temp, target_temp, cycle):
+    <span class="cm"># stop condition when reaching target</span>
+    <span class="kw">if</span> current_temp >= target_temp:
+        <span class="kw">return</span> <span class="str">"kettle_ready: safe_to_pour"</span>
 
-    if (codeEditor && charCounter) {
-      codeEditor.addEventListener('input', (e) => {
-        charCounter.textContent = `${e.target.value.length} chars entered`;
+    <span class="cm"># bug: infinite recursion, cycle is not incrementing</span>
+    <span class="kw">return</span> <span class="bug">heat_water(current_temp + 10, target_temp, cycle)</span></div>
+      </div>
+    </div>
+
+    <div class="panel violet form-card">
+      <span class="tick-bl"></span><span class="tick-br"></span>
+      <div class="section-head">
+        <div class="title"><span class="sq violet"></span>SUBMISSION FORM</div>
+        <span class="badge violet" id="statusBadge">AWAITING PATCH</span>
+      </div>
+      <div class="meta">PYTHON 3.X // MONOSPACE MODE</div>
+      <textarea id="answer" spellcheck="false">def heat_water(current_temp, target_temp, cycle):
+    if current_temp >= target_temp:
+        return 'kettle_ready: safe_to_pour'
+    return heat_water(current_temp + 10, target_temp, cycle + 1)</textarea>
+      <div class="tip">TIP: make sure the base case or step progression terminates cleanly.</div>
+      <div class="footer">
+        <div class="hints">HINTS LEFT: <b>2</b> — click to decode log</div>
+        <div class="btns">
+          <button class="btn ghost" id="runBtn">↻ RUN TEST</button>
+          <button class="btn go" id="submitBtn">▶ SUBMIT SOLUTION</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay" hidden>
+    <div class="panel dlg" id="dlg" role="dialog" aria-modal="true"></div>
+  </div>
+
+<script>
+  // Where the player goes after a correct submission (teammate's page in the same repo)
+  var NEXT_PAGE = 'test-summary.html';
+
+  var overlay = document.getElementById('overlay');
+  var dlg = document.getElementById('dlg');
+  var answer = document.getElementById('answer');
+  var badge = document.getElementById('statusBadge');
+
+  function closeDialog(){ overlay.hidden = true; dlg.innerHTML = ''; }
+
+  function render(opts){
+    // opts: tone (violet|cyan|pink), title, badge, eyebrow, text, code (bool), buttons [{label, kind, onClick}]
+    var toneClass = opts.tone === 'cyan' ? '' : opts.tone;
+    dlg.className = 'panel dlg ' + toneClass;
+    var body = opts.code
+      ? '<div class="code-card"><div class="tagrow"><span class="tag">FAULT</span><span class="status">kettle_controller.py // test_failed</span></div><div class="msg">' + opts.text + '</div></div>'
+      : '<div class="mission plain" style="border-left-color:var(--' + opts.tone + ')">' + opts.text + '</div>';
+    dlg.innerHTML =
+      '<span class="tick-bl"></span><span class="tick-br"></span>' +
+      '<div class="section-head"><div class="title"><span class="sq ' + opts.tone + '"></span>' + opts.title + '</div>' +
+      '<span class="badge ' + opts.tone + '">' + opts.badge + '</span></div>' +
+      (opts.eyebrow ? '<div class="eyebrow">' + opts.eyebrow + '</div>' : '') +
+      body +
+      '<div class="footer"><div class="hints"></div><div class="btns" id="dlgBtns"></div></div>';
+    var wrap = document.getElementById('dlgBtns');
+    var first = null;
+    opts.buttons.forEach(function(b){
+      var el = document.createElement('button');
+      el.className = 'btn ' + b.kind;
+      el.textContent = b.label;
+      el.addEventListener('click', b.onClick);
+      wrap.appendChild(el);
+      first = el;           // last button = primary action
+    });
+    overlay.hidden = false;
+    if (first) first.focus();
+  }
+
+  function isCorrect(code){
+    var c = code.replace(/\s+/g,'');
+    return c.indexOf('defheat_water(') !== -1 && /cycle\+1/.test(c);
+  }
+
+  var MAX_CHARS = 500;
+
+  // Validation: missing field, type/format of input, length of input
+  function validate(){
+    var v = answer.value;
+    if (v.trim() === '')
+      return {title:'SUBMISSION IS EMPTY', badge:'REQUIRED FIELD',
+        text:'Your submission is empty. Write your fix in the form before submitting.'};
+    if (v.replace(/\s+/g,'').indexOf('defheat_water(') === -1)
+      return {title:'FUNCTION NOT FOUND', badge:'INVALID FORMAT',
+        text:'Your code must define the function, starting with: def heat_water('};
+    if (v.length > MAX_CHARS)
+      return {title:'CODE IS TOO LONG', badge:'LENGTH LIMIT',
+        text:'Your code is ' + v.length + ' characters. The limit is ' + MAX_CHARS + '.'};
+    return null;
+  }
+
+  function showInvalid(v){
+    render({
+      tone:'pink', title:v.title, badge:v.badge, text:v.text, code:false,
+      buttons:[{label:'\u21bb OK, FIX IT', kind:'ghost', onClick:function(){ closeDialog(); answer.focus(); }}]
+    });
+  }
+
+  // Valid input, but the logic is still wrong
+  function showFailure(){
+    render({
+      tone:'pink', title:'RECURSION STILL RUNS FOREVER', badge:'ERROR',
+      text:'current_temp is not moving closer to target_temp. Check the recursive call and try again.',
+      code:true,
+      buttons:[{label:'\u21bb OK, TRY AGAIN', kind:'ghost', onClick:function(){ closeDialog(); answer.focus(); }}]
+    });
+  }
+
+  document.getElementById('submitBtn').addEventListener('click', function(){
+    var bad = validate();
+    if (bad){ showInvalid(bad); return; }
+    render({
+      tone:'violet', title:'SUBMIT SOLUTION?', badge:'CONFIRM',
+      eyebrow:'ACTION CONFIRMATION // PUZZLE 02',
+      text:'You are about to submit your fix for Puzzle 02. You can still edit your code again if the test fails.',
+      buttons:[
+        {label:'CANCEL', kind:'ghost', onClick:closeDialog},
+        {label:'▶ YES, SUBMIT', kind:'go', onClick:function(){
+          if (isCorrect(answer.value)){
+            badge.textContent = 'SOLVED';
+            render({
+              tone:'cyan', title:'KETTLE STABILIZED', badge:'SUCCESS',
+              eyebrow:'TEST RESULT // PUZZLE 02',
+              text:'Your fix corrected the recursion. The kettle reached target temperature safely. Chamber 02 is now unlocked.',
+              buttons:[{label:'▶ OK, CONTINUE', kind:'go', onClick:function(){ window.location.href = NEXT_PAGE; }}]
+            });
+          } else { showFailure(); }
+        }}
+      ]
+    });
+  });
+
+  document.getElementById('runBtn').addEventListener('click', function(){
+    var bad = validate();
+    if (bad){ showInvalid(bad); return; }
+    if (isCorrect(answer.value)){
+      render({
+        tone:'cyan', title:'TEST PASSED', badge:'SUCCESS',
+        eyebrow:'TEST RESULT // PUZZLE 02',
+        text:'Your code stops correctly. You can submit it when you are ready.',
+        buttons:[{label:'▶ OK', kind:'go', onClick:closeDialog}]
       });
-    }
+    } else { showFailure(); }
+  });
 
-    if (runTestBtn) {
-      runTestBtn.addEventListener('click', () => {
-        const val = codeEditor.value.trim();
-        if (!val) {
-          alert("⚡ [SYNTAX TEST]: Answer box is empty! Enter code fix first.");
-        } else {
-          alert("🧪 [TEST BENCH]: Running simulation unit tests... Base case checks: OK.");
-        }
-      });
-    }
-
-    if (submitBtn) {
-      submitBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const code = codeEditor.value.trim();
-        if (!code) {
-          alert("⚠️ Please enter your solution before submitting!");
-          codeEditor.focus();
-        } else {
-          alert("✅ SOLUTION TRANSMITTED! Validating recursive termination sequence...");
-        }
-      });
-    }
-
-    if (hintsBtn) {
-      hintsBtn.addEventListener('click', () => {
-        alert("💡 HINT: Examine the third argument 'cycle' inside the recursive heat_water call. Is it progressing towards a termination bound, or should current_temp check against target_temp correctly?");
-      });
-    }
-  </script>
-</body></html>
+  // Escape closes the dialog (same as Cancel / OK)
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && !overlay.hidden) closeDialog();
+  });
+</script>
+</body>
+</html>
