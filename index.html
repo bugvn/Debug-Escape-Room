@@ -270,7 +270,7 @@
           $('loadingOverlay').classList.add('hidden');
           $('loadBar').style.width = '0%'; $('loadPct').textContent = '0%';
           launching = false;
-          showToast('success', 'Chamber ready!', 'Welcome to Sector 07. Find the first clue.');
+          window.location.href = 'game-room.html';
         }, 400);
       }
     }, 160);

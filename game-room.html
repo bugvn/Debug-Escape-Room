@@ -219,7 +219,7 @@ function act(id){
   if (id === 'door') {
     if (count() < 4) return toast(`The door is locked. Solve the other puzzles first (${count()} / 4).`);
     solved[4] = true; renderProgress(); over = 'won';
-    dlg({ icon:'🎉', title:'All 5 puzzles solved!', body:`You unlocked the door and escaped with <b>${fmt(t)}</b> left.`, actions:[OK] });
+    dlg({ icon:'🎉', title:'All 5 puzzles solved!', body:`You unlocked the door and escaped with <b>${fmt(t)}</b> left.`, actions:[{ l:'Continue', f:() => { location.href = 'submission-form.html'; } }] });
   }
 }
 document.querySelectorAll('[data-hs]').forEach(b => b.onclick = () => act(b.dataset.hs));
