@@ -1,597 +1,192 @@
 <!DOCTYPE html>
-
-<html lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REMEDIATE: Login &amp; Registration</title>
-<!-- Tailwind CSS CDN with Plugins -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Tailwind Configuration -->
-<script data-purpose="tailwind-config">
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            space: {
-              950: '#070913',
-              900: '#0a0d1a',
-              850: '#0f1426',
-              800: '#151c33',
-              700: '#1d2747',
-              600: '#2b3964',
-            },
-            pixel: {
-              cyan: '#5ce1e6',
-              glow: '#38bdf8',
-              lavender: '#b8c0ff',
-              periwinkle: '#8ea7e9',
-              pink: '#ff9ebb',
-              amber: '#ffd166',
-              emerald: '#06d6a0',
-            }
-          },
-          fontFamily: {
-            pixel: ['"Press Start 2P"', 'monospace'],
-            retro: ['"VT323"', 'monospace'],
-            sans: ['"Inter"', 'sans-serif'],
-          },
-          animation: {
-            'twinkle-slow': 'twinkle 4s ease-in-out infinite',
-            'twinkle-fast': 'twinkle 2s ease-in-out infinite',
-            'float-slow': 'float 6s ease-in-out infinite',
-            'pulse-glow': 'pulseGlow 2.5s ease-in-out infinite',
-          },
-          keyframes: {
-            twinkle: {
-              '0%, 100%': { opacity: '0.2', transform: 'scale(0.8)' },
-              '50%': { opacity: '1', transform: 'scale(1.2)' },
-            },
-            float: {
-              '0%, 100%': { transform: 'translateY(0px)' },
-              '50%': { transform: 'translateY(-8px)' },
-            },
-            pulseGlow: {
-              '0%, 100%': { boxShadow: '0 0 12px rgba(92, 225, 230, 0.4), inset 0 0 8px rgba(92, 225, 230, 0.2)' },
-              '50%': { boxShadow: '0 0 24px rgba(92, 225, 230, 0.7), inset 0 0 14px rgba(92, 225, 230, 0.4)' },
-            }
-          }
-        }
-      }
-    }
-  </script>
-<!-- Google Fonts for Retro Pixel Aesthetic -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
-<!-- Custom Pixel UI Styles -->
-<style data-purpose="pixel-borders-and-ui">
-    /* Pixelated borders mimicking classic 90s RPG dialogue boxes */
-    .pixel-box {
-      box-shadow: 
-        0 0 0 2px #0a0d1a,
-        0 0 0 4px #2b3964,
-        0 0 0 6px #5ce1e6,
-        0 12px 30px rgba(0, 0, 0, 0.85);
-    }
-    .pixel-box-inner {
-      box-shadow: inset 0 0 0 2px #1d2747;
-    }
-    .pixel-btn-border {
-      box-shadow: 
-        inset -3px -3px 0px 0px rgba(0,0,0,0.5),
-        inset 3px 3px 0px 0px rgba(255,255,255,0.25);
-    }
-    .pixel-btn-border:active {
-      box-shadow: 
-        inset 3px 3px 0px 0px rgba(0,0,0,0.6),
-        inset -2px -2px 0px 0px rgba(255,255,255,0.15);
-      transform: translateY(2px);
-    }
-    .pixel-input-border {
-      box-shadow: 
-        inset 2px 2px 0px 0px #070913,
-        0 0 0 2px #2b3964;
-    }
-    .pixel-input-border:focus-within {
-      box-shadow: 
-        inset 2px 2px 0px 0px #070913,
-        0 0 0 2px #5ce1e6,
-        0 0 10px rgba(92, 225, 230, 0.4);
-    }
-    /* Pixel art crisp rendering */
-    .pixel-art-img {
-      image-rendering: pixelated;
-      image-rendering: -moz-crisp-edges;
-      image-rendering: crisp-edges;
-    }
-  
-    .pixel-input-border.field-error, .pixel-input-border.field-error:focus-within {
-      box-shadow: inset 2px 2px 0px 0px #070913, 0 0 0 2px #fb7185, 0 0 10px rgba(251,113,133,0.35);
-    }
-  
-    .tab-btn { padding:10px 8px; font-family:'Press Start 2P',monospace; font-size:10px; text-transform:uppercase; background:#0a0d1a; color:#94a3b8; border:2px solid #2b3964; border-bottom-width:4px; cursor:pointer; }
-    .tab-btn:hover { color:#fff; }
-    .tab-btn[aria-selected="true"] { background:#151c33; color:#5ce1e6; border-color:#5ce1e6; }
-  </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="login.css">
 </head>
-<body class="bg-[#0a0d1a] text-slate-200 min-h-screen relative overflow-x-hidden flex flex-col font-sans select-none selection:bg-pixel-cyan selection:text-space-950">
-<!-- BEGIN: AmbientCosmicBackground -->
-<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" data-purpose="ambient-space-stars">
-<!-- Star Canvas Background for shimmering starry void -->
-<canvas class="absolute inset-0 w-full h-full opacity-70" id="starfield-canvas"></canvas>
-<!-- Ambient Floating Nebulae / Light Gradients -->
-<div class="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-cyan-900/20 blur-3xl"></div>
-<div class="absolute bottom-10 -right-24 w-[30rem] h-[30rem] rounded-full bg-indigo-900/20 blur-3xl"></div>
-<div class="absolute top-1/2 right-1/4 w-80 h-80 rounded-full bg-purple-950/25 blur-3xl"></div>
-<!-- Decorative Pixel Stars and Cross-Sparkles matching reference aesthetic -->
-<div class="absolute top-12 left-16 text-cyan-200 animate-twinkle-slow text-sm select-none font-pixel">✦</div>
-<div class="absolute top-36 left-[30%] text-white animate-twinkle-fast text-xs select-none font-pixel">★</div>
-<div class="absolute bottom-28 left-20 text-cyan-300 animate-twinkle-slow text-xs select-none font-pixel">✦</div>
-<div class="absolute top-20 right-24 text-pixel-lavender animate-twinkle-fast text-sm select-none font-pixel">✦</div>
-<div class="absolute bottom-36 right-32 text-white animate-twinkle-slow text-xs select-none font-pixel">★</div>
-<div class="absolute top-[60%] left-10 text-periwinkle animate-twinkle-fast text-xs select-none font-pixel">✦</div>
-<div class="absolute top-[45%] right-12 text-cyan-200 animate-twinkle-slow text-sm select-none font-pixel">★</div>
-</div>
-<!-- END: AmbientCosmicBackground -->
-<!-- BEGIN: TopBarNavigation -->
-<header class="relative z-10 w-full px-4 sm:px-8 py-3 border-b-2 border-space-700/60 bg-space-900/80 backdrop-blur-md" data-purpose="main-header">
-<div class="max-w-6xl mx-auto flex items-center justify-between">
-<!-- Brand & Title Badge -->
-<div class="flex items-center gap-3">
-<div class="w-7 h-7 bg-pixel-cyan/20 border-2 border-pixel-cyan flex items-center justify-center text-pixel-cyan text-xs font-pixel shadow-[0_0_8px_rgba(92,225,230,0.6)]">
-          &lt;&gt;
-        </div>
-<div>
-<span class="font-pixel text-[10px] sm:text-xs tracking-wider text-pixel-cyan uppercase drop-shadow-[0_0_5px_rgba(92,225,230,0.5)]">
-            Remediate
-          </span>
-<span class="hidden sm:inline text-xs text-space-600 font-pixel mx-2">/</span>
-<span class="hidden sm:inline font-pixel text-[9px] text-pixel-lavender uppercase tracking-wide">
-            Python Debugging Escape Room</span>
-</div>
-</div>
-<!-- Controls & Status Bar (Audio, Avatar status, Room info) -->
-<div class="flex items-center gap-3 sm:gap-5 text-xs font-mono">
+<body>
 
-<!-- Audio Mute Toggle Button -->
-<button aria-label="Toggle Cosmic Lo-Fi Music" class="flex items-center gap-1.5 px-2.5 py-1 bg-space-800 hover:bg-space-700 border border-space-600 text-pixel-cyan text-xs transition duration-150 active:scale-95" id="audio-toggle-btn" title="Toggle BGM" type="button">
-<svg class="w-3.5 h-3.5 fill-current" id="audio-icon-on" viewbox="0 0 24 24">
-<path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-2.5-2.23l-5.5 5h-4v12h4l5.5 5v-22z"></path>
-</svg>
-<span class="font-pixel text-[8px] uppercase tracking-wider">MUSIC ON</span>
-</button>
+<div class="sky" aria-hidden="true">
+  <canvas id="starfield-canvas"></canvas>
+  <div class="haze haze--teal"></div>
+  <div class="haze haze--indigo"></div>
+  <div class="haze haze--violet"></div>
+  <div class="spark spark--1">✦</div>
+  <div class="spark spark--2">★</div>
+  <div class="spark spark--3">✦</div>
+  <div class="spark spark--4">✦</div>
+  <div class="spark spark--5">★</div>
+  <div class="spark spark--6">✦</div>
+  <div class="spark spark--7">★</div>
 </div>
-</div>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <div class="brand">
+      <div class="brand__mark">&lt;&gt;</div>
+      <div>
+        <span class="brand__name">Remediate</span>
+        <span class="brand__slash only-wide">/</span>
+        <span class="brand__sub only-wide">Python Debugging Escape Room</span>
+      </div>
+    </div>
+    <div class="topbar__tools">
+      <button class="music-btn" id="audio-toggle-btn" type="button" title="Toggle BGM" aria-label="Toggle Cosmic Lo-Fi Music">
+        <svg viewBox="0 0 24 24"><path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-2.5-2.23l-5.5 5h-4v12h4l5.5 5v-22z"/></svg>
+        <span>MUSIC ON</span>
+      </button>
+    </div>
+  </div>
 </header>
-<!-- END: TopBarNavigation -->
-<!-- BEGIN: MainContentRegistration -->
-<main class="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8" data-purpose="registration-section">
-<div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-<!-- Right Column: Registration / Login Terminal Card -->
-<section class="lg:col-span-8 lg:col-start-3" data-purpose="registration-card">
-<div class="pixel-box bg-space-850/95 border-2 border-space-700 p-4 sm:p-5 relative backdrop-blur-md">
-<!-- Card Decorative Corner Accents -->
-<div class="absolute top-1 left-1 w-2 h-2 bg-pixel-cyan"></div>
-<div class="absolute top-1 right-1 w-2 h-2 bg-pixel-cyan"></div>
-<div class="absolute bottom-1 left-1 w-2 h-2 bg-pixel-cyan"></div>
-<div class="absolute bottom-1 right-1 w-2 h-2 bg-pixel-cyan"></div>
-<!-- Registration Header -->
-<div class="mb-3 border-b-2 border-space-700/80 pb-2.5">
-<h1 class="font-pixel text-base sm:text-lg text-white tracking-wide" id="form-title">LOG IN TO REMEDIATE</h1>
-</div>
-<!-- Registration Form -->
-<div aria-label="Account options" class="grid grid-cols-2 gap-2 mb-4" role="tablist">
-<button aria-selected="true" class="tab-btn" id="tab-login" role="tab" type="button">Log in</button>
-<button aria-selected="false" class="tab-btn" id="tab-create" role="tab" type="button">Create account</button>
-</div>
-<form action="#" class="space-y-3" id="escape-login-form" method="POST" novalidate="" onsubmit="event.preventDefault();">
-<div class="hidden border-2 border-rose-400/70 bg-rose-950/40 px-3 py-2 flex items-start gap-2" id="form-banner" role="alert">
-<span class="font-pixel text-[10px] text-rose-400 mt-0.5">!</span>
-<p class="font-mono text-xs text-rose-200" id="form-banner-text"></p>
-</div>
-<p class="font-mono text-[11px] text-slate-300"><span class="text-rose-400 font-bold">*</span> = required</p>
-<!-- Alternate sign-in moved ABOVE the manual fields: a shortcut path should sit before the form it bypasses, not inside it -->
-<button class="w-full flex items-center justify-center gap-2 py-2 bg-space-900 border border-space-600 hover:border-slate-400 text-slate-300 text-xs font-mono transition" id="google-signin-btn" type="button">
-<svg class="w-4 h-4" id="google-icon" viewbox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path></svg>
-<span id="google-btn-label">CONTINUE WITH GOOGLE</span>
-              </button>
-<div class="flex items-center gap-3 py-0.5" id="email-divider">
-<div class="flex-1 border-t border-space-700/80"></div>
-<span class="font-pixel text-[9px] text-slate-500 uppercase" id="divider-text">or log in with email</span>
-<div class="flex-1 border-t border-space-700/80"></div>
-</div>
-<!-- Requirement 0: ACCOUNT CREDENTIALS - email + password, required so mistake-pattern history can persist across sessions -->
-<div data-purpose="form-group-account" id="account-fields-group">
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-1">
-<div>
-<label class="block font-pixel text-[10px] text-pixel-lavender uppercase mb-1.5" for="account-email">
-                ACCOUNT EMAIL <span class="text-rose-400">*</span>
-</label>
-<div class="pixel-input-border flex items-center bg-space-950 px-3 py-2 transition" id="email-field-wrap">
-<span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">&gt;</span>
-<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-500 focus:ring-0 focus:outline-none" id="account-email" spellcheck="false" maxlength="50" autocomplete="email" autofocus name="accountEmail" placeholder="you@example.com" required type="email"/>
-</div>
-<p class="hidden mt-1.5 text-[11px] font-mono text-rose-400" id="email-error">Enter a valid email address.</p>
-<p class="hidden mt-1.5 text-[11px] font-mono text-pixel-amber" id="email-limit"></p>
-</div>
-<div>
-<div class="flex items-center justify-between mb-1.5">
-<label class="block font-pixel text-[10px] text-pixel-lavender uppercase" for="account-password">
-                  PASSWORD <span class="text-rose-400">*</span>
-</label>
-<button class="font-pixel text-[8px] text-slate-500 hover:text-pixel-cyan uppercase transition" id="forgot-password-btn" type="button">Forgot password?</button>
-</div>
-<div class="pixel-input-border flex items-center bg-space-950 px-3 py-2 transition" id="password-field-wrap">
-<span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">&gt;</span>
-<input class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-500 focus:ring-0 focus:outline-none" id="account-password" maxlength="32" autocomplete="current-password" minlength="8" name="accountPassword" placeholder="8+ characters" required type="password"/>
-<button aria-label="Show password" title="Show password" class="text-slate-500 hover:text-pixel-cyan ml-2 select-none" id="toggle-password-btn" type="button">👁</button>
-</div>
-<p class="hidden mt-1.5 text-[11px] font-mono text-rose-400" id="password-error">Must be at least 8 characters.</p>
-<p class="hidden mt-1.5 text-[11px] font-mono text-pixel-amber" id="password-limit"></p>
-</div>
-</div>
 
-</div>
-<div class="hidden space-y-3" id="create-only">
-<!-- Section divider: everything below applies no matter which sign-in method you picked above -->
+<main class="stage">
+  <div class="stage__grid">
+    <section class="card">
+      <div class="card__corner card__corner--tl"></div>
+      <div class="card__corner card__corner--tr"></div>
+      <div class="card__corner card__corner--bl"></div>
+      <div class="card__corner card__corner--br"></div>
 
-<!-- Requirement 1: PLAYER NAME input field -->
-<div data-purpose="form-group-player-name">
-<div class="flex items-center justify-between mb-1.5">
-<label class="block font-pixel text-[10px] text-pixel-lavender uppercase" for="player-name">PLAYER NAME / HANDLE <span class="text-rose-400">*</span></label>
-<span class="font-mono text-[10px] text-slate-400" id="name-count">0/20</span>
-</div>
-<div class="pixel-input-border flex items-center bg-space-950 px-3 py-2 transition" id="name-field-wrap">
-<span class="font-mono text-pixel-cyan text-sm mr-2 font-bold select-none">&gt;</span>
-<input aria-describedby="name-error" class="w-full bg-transparent border-0 p-0 text-sm sm:text-base text-white font-mono placeholder:text-slate-500 focus:ring-0 focus:outline-none" id="player-name" spellcheck="false" maxlength="20" autocomplete="off" name="playerName" placeholder="e.g. YourName99" type="text"/>
-</div>
-<p class="hidden mt-1.5 text-[11px] font-mono text-rose-400" id="name-error"></p>
-<p class="hidden mt-1.5 text-[11px] font-mono text-pixel-amber" id="name-limit"></p>
-</div>
+      <div class="card__head">
+        <h1 class="card__title" id="form-title">LOG IN TO REMEDIATE</h1>
+      </div>
 
-<div class="!mt-5" data-purpose="form-group-difficulty">
-<label class="block font-pixel text-[10px] text-pixel-lavender uppercase mb-1.5">
-                STARTING DIFFICULTY
-</label>
-<div aria-label="Difficulty Level Selection" class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="difficulty-group" role="radiogroup">
-<label class="pixel-input-border flex items-center justify-between px-3 py-2 bg-space-950 cursor-pointer transition select-none group has-[:checked]:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] has-[:checked]:bg-space-800">
-<input checked="" class="sr-only" name="difficulty" type="radio" value="BEGINNER"/>
-<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">BEGINNER</span>
-</label>
-<label class="pixel-input-border flex items-center justify-between px-3 py-2 bg-space-950 cursor-pointer transition select-none group has-[:checked]:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] has-[:checked]:bg-space-800">
-<input class="sr-only" name="difficulty" type="radio" value="INTERMEDIATE"/>
-<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">INTERMEDIATE</span>
-</label>
-<label class="pixel-input-border flex items-center justify-between px-3 py-2 bg-space-950 cursor-pointer transition select-none group has-[:checked]:[box-shadow:inset_2px_2px_0px_0px_#070913,0_0_0_2px_#5ce1e6,0_0_10px_rgba(92,225,230,0.4)] has-[:checked]:bg-space-800">
-<input class="sr-only" name="difficulty" type="radio" value="ADVANCED"/>
-<span class="font-pixel text-[9px] text-white group-hover:text-pixel-cyan">ADVANCED</span>
-</label>
-</div>
-</div>
-</div>
-<div class="!mt-5 flex flex-wrap items-start justify-between gap-x-6 gap-y-2" data-purpose="form-group-options" id="options-row">
-<div class="hidden space-y-1" id="agree-wrap">
-<label class="flex items-start gap-3 cursor-pointer select-none">
-<input class="sr-only peer" id="agree-rules" type="checkbox"/>
-<span class="pixel-input-border w-5 h-5 mt-0.5 bg-space-950 flex items-center justify-center shrink-0 font-pixel text-[10px] text-transparent peer-checked:text-pixel-cyan peer-focus-visible:ring-2 peer-focus-visible:ring-pixel-cyan" id="agree-rules-box">✓</span>
-<span class="font-mono text-xs text-slate-300">I agree to have my gameplay data recorded. <span class="text-rose-400">*</span></span>
-</label>
-<p class="hidden ml-8 text-[11px] font-mono text-rose-400" id="agree-error"></p>
-</div>
-<div id="remember-wrap"><label class="flex items-start gap-3 cursor-pointer select-none">
-<input class="sr-only peer" id="remember-me" type="checkbox"/>
-<span class="pixel-input-border w-5 h-5 mt-0.5 bg-space-950 flex items-center justify-center shrink-0 font-pixel text-[10px] text-transparent peer-checked:text-pixel-cyan peer-focus-visible:ring-2 peer-focus-visible:ring-pixel-cyan" id="remember-me-box">✓</span>
-<span class="font-mono text-xs text-slate-300">Remember me</span>
-</label></div>
-</div>
-<!-- Requirement 4: 'ENTER ESCAPE ROOM' / 'START ADVENTURE' Primary Button -->
-<div class="pt-1" data-purpose="form-submit-action">
-<button class="w-full pixel-btn-border py-3 sm:py-3.5 px-6 bg-gradient-to-r from-pixel-cyan via-[#6ae4e9] to-sky-400 hover:from-cyan-300 hover:to-sky-300 text-space-950 font-pixel text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-150 transform active:scale-[0.99] flex items-center justify-center gap-3 cursor-pointer shadow-[0_0_18px_rgba(92,225,230,0.6)]" id="start-game-btn" type="submit">
-<span>LOG IN</span>
-<span class="text-base font-bold animate-pulse">▶</span>
-</button>
-</div>
-</form>
-<!-- End Form -->
-</div>
-</section>
-</div>
+      <div class="tabs" id="tabs" role="tablist" aria-label="Account options">
+        <button class="tab-btn" id="tab-login" role="tab" type="button" aria-selected="true">Log in</button>
+        <button class="tab-btn" id="tab-create" role="tab" type="button" aria-selected="false">Create account</button>
+      </div>
+
+      <form class="form" id="escape-login-form" method="POST" action="#" novalidate>
+        <div class="banner hidden" id="form-banner" role="alert">
+          <span class="banner__bang">!</span>
+          <p class="banner__text" id="form-banner-text"></p>
+        </div>
+
+        <p class="required-note" id="required-note"><b>*</b> = required</p>
+
+        <button class="google-btn" id="google-signin-btn" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          <span id="google-btn-label">CONTINUE WITH GOOGLE</span>
+        </button>
+
+        <div class="divider" id="email-divider">
+          <span id="divider-text">or log in with email</span>
+        </div>
+
+        <div id="account-fields-group">
+          <div class="pair" id="account-pair">
+            <div id="email-col">
+              <label class="label" for="account-email">ACCOUNT EMAIL <span class="star">*</span></label>
+              <div class="frame" id="email-field-wrap">
+                <span class="frame__prompt">&gt;</span>
+                <input id="account-email" name="accountEmail" type="email" placeholder="you@example.com"
+                       maxlength="50" autocomplete="email" spellcheck="false" autofocus required>
+              </div>
+              <p class="msg msg--err hidden" id="email-error"></p>
+              <p class="msg msg--warn hidden" id="email-limit"></p>
+            </div>
+            <div>
+              <div class="label-row">
+                <label class="label" for="account-password">PASSWORD <span class="star">*</span></label>
+                <button class="link-btn" id="forgot-password-btn" type="button">Forgot password?</button>
+              </div>
+              <div class="frame" id="password-field-wrap">
+                <span class="frame__prompt">&gt;</span>
+                <input id="account-password" name="accountPassword" type="password" placeholder="8+ characters"
+                       minlength="8" maxlength="32" autocomplete="current-password" required>
+                <button class="eye" id="toggle-password-btn" type="button" title="Show password" aria-label="Show password">👁</button>
+              </div>
+              <p class="msg msg--err hidden" id="password-error"></p>
+              <p class="msg msg--warn hidden" id="password-limit"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="create-only hidden" id="create-only">
+          <div>
+            <div class="label-row">
+              <label class="label" for="player-name">PLAYER NAME / HANDLE <span class="star">*</span></label>
+              <span class="counter" id="name-count">0/20</span>
+            </div>
+            <div class="frame" id="name-field-wrap">
+              <span class="frame__prompt">&gt;</span>
+              <input id="player-name" name="playerName" type="text" placeholder="e.g. YourName99"
+                     maxlength="20" autocomplete="off" spellcheck="false" aria-describedby="name-error">
+            </div>
+            <p class="msg msg--err hidden" id="name-error"></p>
+            <p class="msg msg--warn hidden" id="name-limit"></p>
+          </div>
+
+          <div class="gap-lg">
+            <span class="label" style="margin-bottom:.375rem">STARTING DIFFICULTY</span>
+            <div class="levels" id="difficulty-group" role="radiogroup" aria-label="Difficulty Level Selection">
+              <label class="level">
+                <input class="sr-only" type="radio" name="difficulty" value="BEGINNER" checked>
+                <span class="level__tile">BEGINNER</span>
+              </label>
+              <label class="level">
+                <input class="sr-only" type="radio" name="difficulty" value="INTERMEDIATE">
+                <span class="level__tile">INTERMEDIATE</span>
+              </label>
+              <label class="level">
+                <input class="sr-only" type="radio" name="difficulty" value="ADVANCED">
+                <span class="level__tile">ADVANCED</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="options" id="options-row">
+          <div class="hidden" id="agree-wrap">
+            <label class="check">
+              <input class="sr-only" id="agree-rules" type="checkbox">
+              <span class="check__box" id="agree-rules-box">✓</span>
+              <span class="check__text">I agree to have my gameplay data recorded. <span class="star">*</span></span>
+            </label>
+            <p class="agree-error hidden" id="agree-error"></p>
+          </div>
+          <div id="remember-wrap">
+            <label class="check">
+              <input class="sr-only" id="remember-me" type="checkbox">
+              <span class="check__box" id="remember-me-box">✓</span>
+              <span class="check__text">Remember me</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <button class="go-btn" id="start-game-btn" type="submit">
+            <span>LOG IN</span>
+            <span class="go-btn__arrow">▶</span>
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
 </main>
-<!-- END: MainContentRegistration -->
 
-<!-- Starfield Canvas Script -->
-<script data-purpose="starfield-generator">
-    document.addEventListener('DOMContentLoaded', () => {
-      const canvas = document.getElementById('starfield-canvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-
-      let width = (canvas.width = window.innerWidth);
-      let height = (canvas.height = window.innerHeight);
-
-      window.addEventListener('resize', () => {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-        initStars();
-      });
-
-      const stars = [];
-      const STAR_COUNT = 140;
-
-      function initStars() {
-        stars.length = 0;
-        for (let i = 0; i < STAR_COUNT; i++) {
-          stars.push({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            size: Math.random() > 0.85 ? 3 : (Math.random() > 0.5 ? 2 : 1),
-            color: ['#ffffff', '#5ce1e6', '#b8c0ff', '#8ea7e9', '#ffd166'][Math.floor(Math.random() * 5)],
-            alpha: Math.random() * 0.9 + 0.1,
-            speed: Math.random() * 0.02 + 0.005,
-            direction: Math.random() > 0.5 ? 1 : -1
-          });
-        }
-      }
-
-      function draw() {
-        ctx.clearRect(0, 0, width, height);
-
-        for (let i = 0; i < stars.length; i++) {
-          const s = stars[i];
-          s.alpha += s.speed * s.direction;
-          if (s.alpha > 0.95 || s.alpha < 0.15) {
-            s.direction *= -1;
-          }
-
-          ctx.save();
-          ctx.globalAlpha = Math.max(0.1, Math.min(1, s.alpha));
-          ctx.fillStyle = s.color;
-          // Render crisp pixel stars
-          ctx.fillRect(Math.floor(s.x), Math.floor(s.y), s.size, s.size);
-          ctx.restore();
-        }
-
-        requestAnimationFrame(draw);
-      }
-
-      initStars();
-      draw();
-    });
-  </script>
-<!-- Dialog (one at a time, never stacked) and toast -->
-<div aria-labelledby="dialog-title" aria-modal="true" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-space-950/80 backdrop-blur-sm" id="dialog-overlay" role="dialog">
-<div class="pixel-box bg-space-850 w-full max-w-sm p-5 relative">
-<div class="absolute top-1 left-1 w-2 h-2 bg-pixel-cyan"></div><div class="absolute top-1 right-1 w-2 h-2 bg-pixel-cyan"></div><div class="absolute bottom-1 left-1 w-2 h-2 bg-pixel-cyan"></div><div class="absolute bottom-1 right-1 w-2 h-2 bg-pixel-cyan"></div>
-<span class="font-pixel text-[9px] uppercase tracking-widest block mb-1" id="dialog-tag"></span>
-<h2 class="font-pixel text-sm text-white mb-3 leading-relaxed" id="dialog-title"></h2>
-<p class="font-retro text-xl leading-snug text-slate-300 mb-5" id="dialog-body"></p>
-<div class="flex flex-col-reverse sm:flex-row gap-2" id="dialog-actions"></div>
+<div class="overlay hidden" id="dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+  <div class="dialog">
+    <div class="card__corner card__corner--tl"></div>
+    <div class="card__corner card__corner--tr"></div>
+    <div class="card__corner card__corner--bl"></div>
+    <div class="card__corner card__corner--br"></div>
+    <span class="dialog__tag" id="dialog-tag"></span>
+    <h2 class="dialog__title" id="dialog-title"></h2>
+    <p class="dialog__body" id="dialog-body"></p>
+    <div class="dialog__actions" id="dialog-actions"></div>
+  </div>
 </div>
-</div>
-<div class="hidden fixed bottom-4 right-4 z-50 max-w-xs bg-space-850 border-2 px-3 py-2 font-mono text-xs" id="toast" role="status"></div>
+<div class="toast hidden" id="toast" role="status"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
-<script data-purpose="ui-interactions">
-document.addEventListener('DOMContentLoaded', () => {
-  const $ = (id) => document.getElementById(id);
-  let googleSignedIn = false, mode = 'login';
-  const goHome = () => { window.location.href = 'index.html'; };
-
-  // ---------- Audio + password toggles ----------
-  const audioBtn = $('audio-toggle-btn'); let muted = false;
-  audioBtn.addEventListener('click', () => {
-    muted = !muted;
-    audioBtn.querySelector('span').textContent = muted ? 'MUSIC OFF' : 'MUSIC ON';
-    audioBtn.classList.toggle('text-slate-500', muted);
-    audioBtn.classList.toggle('text-pixel-cyan', !muted);
-  });
-  const pw = $('account-password'), pwBtn = $('toggle-password-btn');
-  pwBtn.addEventListener('click', () => {
-    const showing = pw.type === 'text';
-    pw.type = showing ? 'password' : 'text';
-    pwBtn.textContent = showing ? '👁' : '🙈';
-    pwBtn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password'); pwBtn.title = showing ? 'Show password' : 'Hide password';
-  });
-
-  // ---------- Dialog + toast ----------
-  const overlay = $('dialog-overlay');
-  function closeDialog() { overlay.classList.add('hidden'); }
-  function openDialog({ tag, color, title, body, actions }) {
-    $('dialog-tag').textContent = tag; $('dialog-tag').className = 'font-pixel text-[9px] uppercase tracking-widest block mb-1 ' + color;
-    $('dialog-title').textContent = title; $('dialog-body').textContent = body;
-    const box = $('dialog-actions'); box.innerHTML = '';
-    actions.forEach((a) => {
-      const b = document.createElement('button'); b.type = 'button'; b.textContent = a.label;
-      b.className = 'pixel-btn-border flex-1 py-2.5 px-4 font-pixel text-[10px] uppercase tracking-wider ' +
-        (a.primary ? 'bg-pixel-cyan text-space-950 font-bold hover:brightness-110' : 'bg-space-900 border border-space-600 text-slate-300 hover:border-slate-400');
-      b.addEventListener('click', () => { closeDialog(); if (a.onClick) a.onClick(); });
-      box.appendChild(b);
-    });
-    overlay.classList.remove('hidden'); box.querySelector('button').focus();
-  }
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDialog(); });
-  let toastTimer;
-  function toast(msg, ok = true) {
-    const t = $('toast'); t.textContent = (ok ? '✓ ' : '! ') + msg;
-    t.className = 'fixed bottom-4 right-4 z-50 max-w-xs bg-space-850 border-2 px-3 py-2 font-mono text-xs ' + (ok ? 'border-pixel-emerald text-pixel-emerald' : 'border-rose-400 text-rose-300');
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), 4000);
-  }
-
-  // ---------- Validation (each returns an error message or '') ----------
-  const rules = {
-    email(v) {
-      v = v.trim();
-      if (!v) return mode === 'login' ? 'Email is required. Enter the email you registered with.' : 'Email is required. Enter the email you want to use for your account.';           // missing
-      if (v.length > 50) return `Email is too long. Maximum is 50 characters, you entered ${v.length}.`;
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return 'Enter a valid email, like you@example.com.'; // type
-      return '';
-    },
-    password(v) {
-      if (!v) return 'Password is required.';
-      if (mode === 'login') return '';   // login only needs a password, the format rules apply when creating one
-      if (v.length < 8) return `Password must be at least 8 characters. You entered ${v.length}.`; // length
-      if (v.length > 32) return `Password is too long. Maximum is 32 characters, you entered ${v.length}.`;
-      if (!/[A-Za-z]/.test(v) || !/\d/.test(v)) return 'Use at least one letter and one number.';   // type
-      return '';
-    },
-    name(v) {
-      v = v.trim();
-      if (!v) return 'Player name is required. Pick a handle to show on your profile.';    // missing
-      if (v.length < 3) return `Player name must be at least 3 characters. You entered ${v.length}.`; // length
-      if (v.length > 20) return `Player name is too long. Maximum is 20 characters, you entered ${v.length}.`;
-      if (!/^[A-Za-z0-9_]+$/.test(v)) return 'Use only letters, numbers, and underscores (no spaces).'; // type
-      return '';
-    },
-    agree() { return $('agree-rules').checked ? '' : 'Please agree to data recording to continue.'; }
-  };
-  const fields = {
-    email:    { input: $('account-email'), wrap: $('email-field-wrap'),    err: $('email-error') },
-    password: { input: pw,                 wrap: $('password-field-wrap'), err: $('password-error') },
-    name:     { input: $('player-name'),   wrap: $('name-field-wrap'),     err: $('name-error') },
-    agree:    { input: $('agree-rules'),   wrap: $('agree-rules-box'),     err: $('agree-error') }
-  };
-  function check(key) {
-    const f = fields[key], msg = rules[key](key === 'agree' ? '' : f.input.value);
-    f.wrap.classList.toggle('field-error', !!msg);
-    f.err.textContent = msg ? '⚠ ' + msg : ''; f.err.classList.toggle('hidden', !msg);
-    f.input.setAttribute('aria-invalid', msg ? 'true' : 'false');
-    return !msg;
-  }
-  const touched = {};
-  ['email', 'password', 'name'].forEach((k) => {
-    fields[k].input.addEventListener('blur', () => { touched[k] = true; if (!googleSignedIn || k === 'name') check(k); });
-    fields[k].input.addEventListener('input', () => { if (touched[k]) check(k); $('form-banner').classList.add('hidden'); });
-  });
-  fields.agree.input.addEventListener('change', () => { if (touched.agree) check('agree'); });
-  fields.name.input.addEventListener('input', () => { $('name-count').textContent = fields.name.input.value.length + '/20'; });
-
-  // ---------- Live max-length notice ----------
-  const MAX = { email: 50, password: 32, name: 20 }, LABEL = { email: 'Email', password: 'Password', name: 'Player name' };
-  function limitNotice(k) {
-    const at = fields[k].input.value.length >= MAX[k], el = $(k + '-limit');
-    el.textContent = at ? `Maximum of ${MAX[k]} characters reached.` : '';
-    el.classList.toggle('hidden', !at);
-    if (k === 'name') { $('name-count').classList.toggle('text-pixel-amber', at); $('name-count').classList.toggle('text-slate-400', !at); }
-  }
-  ['email', 'password', 'name'].forEach((k) => fields[k].input.addEventListener('input', () => limitNotice(k)));
-
-  // ---------- Google sign-in (placeholder) ----------
-  const gBtn = $('google-signin-btn');
-  gBtn.addEventListener('click', async () => {
-    const { error } = await db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/index.html' } });
-    if (error) toast('Google sign-in failed: ' + error.message, false);
-  });
-  function check_clear(k) { fields[k].wrap.classList.remove('field-error'); fields[k].err.classList.add('hidden'); }
-
-  // ---------- Forgot password (confirmation dialog) ----------
-  $('forgot-password-btn').addEventListener('click', () => {
-    if (!check('email')) { fields.email.input.focus(); return; }
-    const email = fields.email.input.value.trim();
-    openDialog({
-      tag: 'Reset password', color: 'text-pixel-amber', title: 'SEND RESET LINK?',
-      body: `We will send a password reset link to ${email}.`,
-      actions: [
-        { label: 'Cancel' },
-        { label: 'Send link', primary: true, onClick: async () => {
-          const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/login.html' });
-          if (error) toast(error.message, false); else toast(`Reset link sent to ${email}. Check your inbox.`);
-        } }
-      ]
-    });
-  });
-
-  // ---------- Log in / Create account tabs ----------
-  const COPY = {
-    login:  { tag: 'Welcome back', title: 'LOG IN TO REMEDIATE',  divider: 'or log in with email',  btn: 'LOG IN',         pw: 'current-password' },
-    create: { tag: 'New player',   title: 'CREATE YOUR ACCOUNT',  divider: 'or sign up with email', btn: 'CREATE ACCOUNT', pw: 'new-password' }
-  };
-  gBtn.dataset.cls = gBtn.className;
-  function resetGoogle() {
-    if (!googleSignedIn) return;
-    googleSignedIn = false; gBtn.disabled = false; gBtn.className = gBtn.dataset.cls;
-    $('google-icon').classList.remove('grayscale', 'opacity-60'); $('google-btn-label').textContent = 'CONTINUE WITH GOOGLE';
-    ['email', 'password'].forEach((k) => { fields[k].input.disabled = false; });
-    pwBtn.disabled = false; $('account-fields-group').classList.remove('opacity-40', 'pointer-events-none'); $('email-divider').classList.remove('hidden');
-  }
-  function setMode(m) {
-    resetGoogle(); mode = m; const c = COPY[m];
-    $('tab-login').setAttribute('aria-selected', m === 'login'); $('tab-create').setAttribute('aria-selected', m === 'create');
-    $('form-title').textContent = c.title; $('divider-text').textContent = c.divider;
-    $('start-game-btn').querySelector('span').textContent = c.btn;
-    $('create-only').classList.toggle('hidden', m === 'login'); $('agree-wrap').classList.toggle('hidden', m === 'login');
-    $('forgot-password-btn').classList.toggle('hidden', m === 'create'); $('remember-wrap').classList.toggle('hidden', m === 'create');
-    pw.setAttribute('autocomplete', c.pw); $('form-banner').classList.add('hidden');
-    Object.values(fields).forEach((f) => { f.wrap.classList.remove('field-error'); f.err.classList.add('hidden'); f.input.setAttribute('aria-invalid', 'false'); });
-    Object.keys(touched).forEach((k) => delete touched[k]);
-  }
-  $('tab-login').addEventListener('click', () => setMode('login'));
-  $('tab-create').addEventListener('click', () => setMode('create'));
-
-  // ---------- Submit ----------
-  $('escape-login-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    touched.email = touched.password = touched.name = touched.agree = true;
-    const keys = mode === 'login' ? ['email', 'password'] : (googleSignedIn ? ['name', 'agree'] : ['email', 'password', 'name', 'agree']);
-    const results = keys.map((k) => [k, check(k)]);           // run every check so all errors show at once
-    const firstBad = results.find(([, ok]) => !ok);
-    const banner = $('form-banner'), bannerText = $('form-banner-text');
-    if (firstBad) {
-      const n = results.filter(([, ok]) => !ok).length;
-      bannerText.textContent = `${n} ${n === 1 ? 'field needs' : 'fields need'} your attention. Fix the highlighted ${n === 1 ? 'field' : 'fields'} and try again.`;
-      banner.classList.remove('hidden');
-      fields[firstBad[0]].input.focus();
-      return;
-    }
-    banner.classList.add('hidden');
-
-    const btn = $('start-game-btn'), original = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="animate-spin text-sm">◆</span><span>CHECKING ACCOUNT...</span>';
-    const restore = () => { btn.innerHTML = original; btn.disabled = false; };
-    const showErr = (msg, field) => {
-      bannerText.textContent = msg; banner.classList.remove('hidden');
-      if (field) { fields[field].wrap.classList.add('field-error'); fields[field].input.focus(); }
-    };
-    const email = fields.email.input.value.trim().toLowerCase();
-    try {
-      if (mode === 'login') {
-        const { error } = await db.auth.signInWithPassword({ email, password: pw.value });
-        restore();
-        if (error) {
-          if (/confirm/i.test(error.message)) showErr('Email not confirmed yet. Open the link we sent to your inbox, then log in.', 'email');
-          else { showErr('Email or password is incorrect. Check both and try again, or select Forgot password? to reset it.'); fields.password.wrap.classList.add('field-error'); pw.value = ''; pw.focus(); }
-          return;
-        }
-        openDialog({ tag: 'Logged in', color: 'text-pixel-emerald', title: 'WELCOME BACK!', body: 'Your progress and mistake history are loaded.',
-          actions: [{ label: 'Start playing', primary: true, onClick: goHome }] });
-        return;
-      }
-      const name = fields.name.input.value.trim();
-      const diff = document.querySelector('input[name="difficulty"]:checked').value;
-      const { data, error } = await db.auth.signUp({
-        email, password: pw.value,
-        options: { data: { player_name: name, difficulty: diff }, emailRedirectTo: location.origin + '/login.html' }
-      });
-      restore();
-      if (error) { showErr(error.message, 'email'); return; }
-      if (data.user && data.user.identities && data.user.identities.length === 0) {
-        showErr('An account with this email already exists. Select Log in, or use a different email.', 'email'); return;
-      }
-      if (!data.session) {
-        openDialog({ tag: 'Check your email', color: 'text-pixel-amber', title: 'CONFIRM YOUR EMAIL', body: `We sent a confirmation link to ${email}. Open it, then log in.`,
-          actions: [{ label: 'Go to log in', primary: true, onClick: () => setMode('login') }] });
-        return;
-      }
-      openDialog({
-        tag: 'Account ready', color: 'text-pixel-emerald', title: 'WELCOME, ' + name.toUpperCase() + '!',
-        body: `Your account is ready. Starting difficulty: ${diff.charAt(0) + diff.slice(1).toLowerCase()}. Your mistake history will be saved to your account.`,
-        actions: [{ label: 'Start playing', primary: true, onClick: goHome }]
-      });
-    } catch (err) {
-      restore();
-      showErr('Cannot reach server. Check internet and the keys in supabase-config.js.');
-    }
-  });
-});
-</script>
-</body></html>
+<script src="starfield.js"></script>
+<script src="login.js"></script>
+</body>
+</html>
