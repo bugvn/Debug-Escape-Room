@@ -2,7 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>REMEDIATE: Debugging Escape Room</title>
+<title>REMEDIATE: Escape Room</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -36,9 +36,91 @@
   .modal-title { font-family:'Press Start 2P',monospace; }
   #crtOverlay { background: repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0px, rgba(0,0,0,.28) 1px, transparent 1px, transparent 3px); }
 </style>
+<style id="cfg-css">
+:root{--cy:#7ae8ff;--ln:rgba(122,232,255,.25)}
+#crtOverlay{background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0,rgba(0,0,0,.28) 1px,transparent 1px,transparent 3px)}
+#vignette{background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.65) 100%)}
+.reduce-motion *,.reduce-motion *::before,.reduce-motion *::after{animation:none!important;transition:none!important}
+html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none}
+@keyframes sweep{to{top:100%}}
+.cfg{position:relative;display:grid;grid-template:auto 1fr auto/210px 1fr;grid-template-areas:"h h" "t b" "f f";width:min(940px,100%);height:min(620px,calc(100dvh - 1rem));background:radial-gradient(ellipse at 50% 0,#0d2230 0,#05090e 70%);border:1px solid var(--ln);box-shadow:0 0 0 1px #000,0 0 40px rgba(122,232,255,.14),0 20px 60px #000;overflow:hidden}
+.cfg::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:5;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px),radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.5))}
+.cfg::before{content:"";position:absolute;left:0;right:0;top:-80px;height:80px;pointer-events:none;z-index:6;background:linear-gradient(transparent,rgba(122,232,255,.07),transparent);animation:sweep 7s linear infinite}
+.cb{position:absolute;width:14px;height:14px;border:2px solid var(--cy);z-index:7;pointer-events:none}
+.c1{top:-1px;left:-1px;border-right:0;border-bottom:0}.c2{top:-1px;right:-1px;border-left:0;border-bottom:0}
+.c3{bottom:-1px;left:-1px;border-right:0;border-top:0}.c4{bottom:-1px;right:-1px;border-left:0;border-top:0}
+.cfg-h{grid-area:h;display:flex;justify-content:space-between;align-items:center;padding:.8rem 1rem;border-bottom:1px solid var(--ln);background:rgba(122,232,255,.05)}
+.cfg-h h2{font:12px 'Press Start 2P',monospace;color:#fff;text-shadow:0 0 10px var(--cy)}
+.cfg-sub{font:18px VT323,monospace;color:#5f8da3}
+.led{width:8px;height:8px;background:var(--cy);box-shadow:0 0 8px var(--cy);animation:blink 2s steps(1) infinite}
+.dirty{display:none;font:8px 'Press Start 2P',monospace;color:#ffb454}.dirty.on{display:inline}
+.cfg-x{color:#7d98a8;font-size:16px;padding:.2rem .5rem;border:1px solid transparent}.cfg-x:hover{color:#fff;border-color:var(--cy);box-shadow:0 0 10px rgba(122,232,255,.5)}
+.cfg-t{grid-area:t;display:flex;flex-direction:column;gap:2px;padding:.6rem;border-right:1px solid var(--ln);background:rgba(0,0,0,.35);overflow:auto}
+.tab{display:flex;align-items:center;gap:.7rem;padding:.8rem;font:9px 'Press Start 2P',monospace;text-transform:uppercase;color:#7d98a8;border:1px solid transparent;border-left:3px solid transparent;text-align:left;transition:.15s}
+.tab:hover{color:#fff;background:rgba(122,232,255,.08)}
+.tab[aria-selected=true]{color:var(--cy);background:linear-gradient(90deg,rgba(122,232,255,.2),transparent);border-left-color:var(--cy);text-shadow:0 0 8px var(--cy)}
+.tf{margin-top:auto;padding:.6rem;font:16px/1.2 VT323,monospace;color:#4f6b7a}
+.cfg-b{grid-area:b;overflow-y:auto;padding:1rem 1.25rem;scrollbar-width:thin;scrollbar-color:var(--cy) #05090e}
+.pane{display:none}.pane.on{display:block;animation:pop-in .2s ease-out}
+.sec{display:flex;align-items:center;gap:.6rem;margin:.9rem 0 .3rem;font:8px 'Press Start 2P',monospace;letter-spacing:.2em;color:var(--cy);text-transform:uppercase}
+.sec:first-child{margin-top:.1rem}.sec::after{content:"";flex:1;height:1px;background:var(--ln)}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.6rem 1rem;padding:.7rem .6rem;border-bottom:1px dashed rgba(122,232,255,.12);border-left:2px solid transparent;transition:.15s}
+.row:hover,.row:focus-within{background:rgba(122,232,255,.06);border-left-color:var(--cy)}
+.row>div:first-child{flex:1 1 10rem}.row>:last-child{flex:0 1 15rem}.row>.sw,.row>.key{flex:0 0 auto}.row>.dd{flex:0 0 11rem}
+.nm{font:22px/1 VT323,monospace;letter-spacing:.04em;color:#fff}.ds{font-size:11.5px;color:#7d98a8;margin-top:3px}.ds.note{padding:.8rem .6rem}
+.rng{display:flex;align-items:center;gap:.7rem}
+.val{min-width:3.6rem;text-align:right;font:22px VT323,monospace;color:var(--cy);border:1px solid var(--ln);background:#02070b;padding:0 .4rem}
+.rng input{--tr:repeating-linear-gradient(90deg,transparent 0 calc(5% - 1px),#02070b calc(5% - 1px) 5%),linear-gradient(90deg,var(--cy) var(--p,50%),#0b1a24 var(--p,50%));flex:1;min-width:0;height:22px;background:transparent;cursor:pointer;-webkit-appearance:none;appearance:none}
+.rng input::-webkit-slider-runnable-track{height:10px;border:1px solid var(--ln);background:var(--tr)}
+.rng input::-moz-range-track{height:10px;border:1px solid var(--ln);background:var(--tr)}
+.rng input::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:22px;margin-top:-7px;background:#fff;border:2px solid var(--cy);box-shadow:0 0 10px var(--cy)}
+.rng input::-moz-range-thumb{width:10px;height:18px;border-radius:0;background:#fff;border:2px solid var(--cy);box-shadow:0 0 10px var(--cy)}
+.rng input:hover::-webkit-slider-thumb,.rng input:active::-webkit-slider-thumb{background:var(--cy)}
+.rng input:hover::-moz-range-thumb,.rng input:active::-moz-range-thumb{background:var(--cy)}
+.rng input:focus{outline:0}.rng input:focus-visible::-webkit-slider-thumb{outline:2px dashed #fff;outline-offset:2px}
+.sw{position:relative;width:64px;height:28px;border:1px solid #35566a;background:#04101a;cursor:pointer;transition:.2s}
+.sw::before{content:"OFF";position:absolute;right:7px;top:8px;font:8px 'Press Start 2P',monospace;color:#4d6b7c}
+.sw i{position:absolute;top:3px;left:3px;width:20px;height:20px;background:#5d7a8b;transition:.2s}
+.sw:hover{border-color:var(--cy)}
+.sw[aria-checked=true]{border-color:var(--cy);background:rgba(122,232,255,.15);box-shadow:0 0 12px rgba(122,232,255,.35),inset 0 0 8px rgba(122,232,255,.2)}
+.sw[aria-checked=true]::before{content:"ON";right:auto;left:8px;color:var(--cy)}
+.sw[aria-checked=true] i{left:39px;background:var(--cy);box-shadow:0 0 10px var(--cy)}
+.sw:disabled{opacity:.35;pointer-events:none}
+.dd{position:relative}
+.dd-b{width:100%;display:flex;justify-content:space-between;align-items:center;padding:.35rem .6rem;border:1px solid #35566a;background:#04101a;color:#fff;font:20px VT323,monospace;text-align:left}
+.dd-b::after{content:"";border:5px solid transparent;border-top-color:var(--cy);margin-top:5px;transition:.15s}
+.dd-b:hover,.dd.open .dd-b{border-color:var(--cy);box-shadow:0 0 10px rgba(122,232,255,.3)}
+.dd.open .dd-b::after{transform:rotate(180deg);margin-top:-5px}
+.dd-l{display:none;position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:20;margin:0;padding:0;list-style:none;background:#061520;border:1px solid var(--cy);box-shadow:0 8px 24px #000;outline:0}
+.dd.open .dd-l{display:block}.dd.up .dd-l{top:auto;bottom:calc(100% + 2px)}
+.dd-l li{padding:.35rem .6rem;font:20px VT323,monospace;color:#a9c4d3;cursor:pointer}
+.dd-l li.act{background:rgba(122,232,255,.18);color:#fff}
+.dd-l li[aria-selected=true]{color:var(--cy)}.dd-l li[aria-selected=true]::before{content:"\25B8 "}
+.key{min-width:8rem;padding:.4rem .7rem;font:9px 'Press Start 2P',monospace;color:var(--cy);border:1px solid #35566a;background:#04101a;box-shadow:inset 0 -3px 0 #0b2a3a;transition:.15s}
+.key:hover{border-color:var(--cy);box-shadow:0 0 10px rgba(122,232,255,.35),inset 0 -3px 0 #0b2a3a}
+.key.on{color:#ffb454;border-color:#ffb454;animation:blink 1s steps(1) infinite}
+.cfg-f{grid-area:f;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:space-between;padding:.7rem 1rem;border-top:1px solid var(--ln);background:rgba(0,0,0,.4)}
+.fg{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}.askg{display:none}.ask .askg{display:flex}.ask .norm{display:none}
+.warn{font:20px VT323,monospace;color:#ffb454}
+.gb{position:relative;padding:.75rem 1rem;font:9px 'Press Start 2P',monospace;text-transform:uppercase;color:#bfefff;background:#071722;border:1px solid var(--ln);cursor:pointer;transition:.15s;box-shadow:inset -3px -3px 0 rgba(0,0,0,.5),inset 3px 3px 0 rgba(255,255,255,.1)}
+.gb:hover{color:#fff;border-color:var(--cy);box-shadow:0 0 0 1px var(--cy),0 0 18px rgba(122,232,255,.5),inset 0 0 14px rgba(122,232,255,.25)}
+.gb:active{transform:translateY(2px);background:#0d3347;box-shadow:inset 3px 3px 0 rgba(0,0,0,.6)}
+.gb.p{color:#04141c;background:var(--cy);border-color:#d8f8ff}.gb.p:hover{background:#b8f3ff;box-shadow:0 0 0 1px #fff,0 0 22px rgba(122,232,255,.8)}
+.gb.d{color:#ff9b9b;border-color:rgba(255,107,107,.4)}.gb.d:hover{color:#fff;border-color:#ff6b6b;box-shadow:0 0 0 1px #ff6b6b,0 0 18px rgba(255,107,107,.5),inset 0 0 14px rgba(255,107,107,.2)}
+.gb:disabled{opacity:.35;pointer-events:none}
+.cfg :focus-visible{outline:2px dashed #fff;outline-offset:2px}
+.cfg-sm{display:block;width:min(24rem,100%);height:auto;padding:1.5rem;text-align:center}
+@media(max-width:700px){
+ .cfg{grid-template:auto auto 1fr auto/1fr;grid-template-areas:"h" "t" "b" "f"}
+ .cfg-t{flex-direction:row;border-right:0;border-bottom:1px solid var(--ln);padding:.4rem}.tf,.cfg-sub{display:none}
+ .tab{flex:1;justify-content:center;padding:.6rem .3rem;font-size:7px;gap:.4rem;border-left-width:1px}.tab svg{display:none}
+ .cfg-b{padding:.6rem .7rem}.gb{padding:.65rem .7rem}}
+</style>
 </head>
 <body class="bg-[#020d1a] text-slate-200 min-h-screen relative overflow-x-hidden flex flex-col font-sans select-none selection:bg-cyan-300 selection:text-space-950">
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><filter id="cb-protanopia" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1.000 0.000 0.000 0 0 -0.255 1.255 0.000 0 0 0.303 -0.545 1.242 0 0 0 0 0 1 0"/></filter><filter id="cb-deuteranopia" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1.000 0.000 0.000 0 0 -0.438 1.438 0.000 0 0 0.262 -0.562 1.300 0 0 0 0 0 1 0"/></filter><filter id="cb-tritanopia" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1.050 -0.382 0.332 0 0 0.000 1.234 -0.234 0 0 0.000 0.000 1.000 0 0 0 0 0 1 0"/></filter></defs></svg>
+<div id="vignette" class="fixed inset-0 z-[89] pointer-events-none"></div>
 <!-- CRT scanline overlay (controlled by Settings) -->
 <div id="crtOverlay" class="fixed inset-0 z-[90] pointer-events-none"></div>
 
@@ -46,8 +128,8 @@
 <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
   <div class="absolute inset-0 bg-[#0a0d1a]"></div>
   <canvas class="absolute inset-0 w-full h-full opacity-70" id="starfield-canvas"></canvas>
-  <div class="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-cyan-900/20 blur-3xl"></div>
-  <div class="absolute bottom-10 -right-24 w-[30rem] h-[30rem] rounded-full bg-indigo-900/20 blur-3xl"></div>
+  <div class="fx-blob absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-cyan-900/20 blur-3xl"></div>
+  <div class="fx-blob absolute bottom-10 -right-24 w-[30rem] h-[30rem] rounded-full bg-indigo-900/20 blur-3xl"></div>
   <div class="absolute top-12 left-16 text-cyan-200 animate-[twinkle_4s_ease-in-out_infinite] text-sm font-pixel">✦</div>
   <div class="absolute top-36 left-[30%] text-white animate-[twinkle_2s_ease-in-out_infinite] text-xs font-pixel">★</div>
   <div class="absolute bottom-28 left-20 text-cyan-300 animate-[twinkle_4s_ease-in-out_infinite] text-xs font-pixel">✦</div>
@@ -68,7 +150,7 @@
     </div>
     <div class="flex items-center gap-2 sm:gap-5">
       <button class="px-2.5 py-1 bg-[#0b2335] hover:bg-[#112d42] border border-cyan-400/40 text-cyan-200 font-pixel text-[8px] uppercase tracking-wider active:scale-95" onclick="openModal('rulesModal')" type="button">Rules</button>
-      <button class="px-2.5 py-1 bg-[#0b2335] hover:bg-[#112d42] border border-cyan-400/40 text-cyan-100 font-pixel text-[8px] uppercase tracking-wider active:scale-95" onclick="openModal('settingsModal')" type="button">Settings</button>
+      <button class="px-2.5 py-1 bg-[#0b2335] hover:bg-[#112d42] border border-cyan-400/40 text-cyan-100 font-pixel text-[8px] uppercase tracking-wider active:scale-95" onclick="openSettings()" type="button">Settings</button>
       <a href="login.html" class="px-2.5 py-1 bg-cyan-400 hover:brightness-110 border border-cyan-200 text-[#061d29] font-pixel text-[8px] uppercase tracking-wider active:scale-95"><span class="hidden sm:inline">Register / </span>Login</a>
     </div>
   </div>
@@ -78,7 +160,7 @@
 <main class="relative z-10 flex-1 flex items-center justify-center px-4 py-12 sm:px-6 md:px-8">
   <div class="w-full max-w-5xl">
     <div class="mx-auto max-w-4xl border-2 border-cyan-400/60 bg-[#081b2b]/80 px-4 py-8 shadow-[0_0_28px_rgba(122,232,255,0.1)] backdrop-blur-sm sm:px-8 sm:py-10 lg:px-12 lg:py-12">
-      <div class="mb-5 text-center text-[8px] font-pixel uppercase tracking-[0.35em] text-[#7ef9ff]">Isometric Kitchen Chamber · Sector 07</div>
+      
       <h1 class="text-center font-pixel text-3xl sm:text-4xl md:text-5xl lg:text-[4rem] leading-[1.15] tracking-tight text-white">
         <span class="block text-[#dffcff]" style="text-shadow:0 0 12px rgba(223,252,255,.9),0 0 24px rgba(122,232,255,.55);">REMEDIATE:</span>
         <span class="mt-2 block text-[#7ae8ff]" style="text-shadow:0 0 12px rgba(122,232,255,.9),0 0 26px rgba(122,232,255,.65);">ESCAPE ROOM</span>
@@ -92,7 +174,7 @@
           </span>
         </button>
       </div>
-      <div class="mt-5 text-center text-[8px] font-pixel uppercase tracking-[0.3em] text-[#7ef9ff]/80">[ Press Space or Click to Launch ]</div>
+      <div id="launchHint" class="mt-5 text-center text-[8px] font-pixel uppercase tracking-[0.3em] text-[#7ef9ff]/80">[ Press Space or Click to Launch ]</div>
     </div>
   </div>
 </main>
@@ -116,48 +198,32 @@
   </div>
 </div>
 
-<!-- DIALOG: Settings -->
-<div class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-md flex items-center justify-center p-4" id="settingsModal">
-  <div class="pixel-box anim-pop bg-[#081b2b] max-w-md w-full p-6 sm:p-8 relative">
-    <button aria-label="Close Settings" class="absolute top-3 right-4 text-purple-300 hover:text-white font-pixel text-sm" onclick="cancelSettings()">✕</button>
-    <div class="flex items-center gap-3 mb-5"><span class="text-xl">⚙️</span><h2 class="modal-title text-base text-purple-300">SETTINGS</h2></div>
-    <div class="space-y-5 text-sm">
-      <div>
-        <div class="flex justify-between text-xs font-mono text-purple-200 mb-1"><span>CHILL PIXEL BGM</span><span id="bgmVal">80%</span></div>
-        <input id="bgmRange" class="w-full accent-purple-500 cursor-pointer" max="100" min="0" type="range" value="80" oninput="$('bgmVal').textContent=this.value+'%'"/>
-      </div>
-      <div>
-        <div class="flex justify-between text-xs font-mono text-purple-200 mb-1"><span>SOUND EFFECTS</span><span id="sfxVal">95%</span></div>
-        <input id="sfxRange" class="w-full accent-cyan-400 cursor-pointer" max="100" min="0" type="range" value="95" oninput="$('sfxVal').textContent=this.value+'%'"/>
-      </div>
-      <div class="flex items-center justify-between pt-2">
-        <span class="text-xs font-mono text-slate-300">RETRO CRT SCANLINES</span>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input id="crtToggle" checked class="sr-only peer" type="checkbox" onchange="$('crtOverlay').style.display=this.checked?'block':'none'"/>
-          <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-        </label>
-      </div>
-    </div>
-    <div class="mt-6 pt-4 border-t border-slate-700 flex items-center justify-between gap-3">
-      <button class="text-xs text-red-300 hover:underline" onclick="openModal('confirmModal')">Reset to default</button>
-      <div class="flex gap-3">
-        <button class="btn btn-ghost pixel-btn-border" onclick="cancelSettings()">CANCEL</button>
-        <button class="btn btn-primary pixel-btn-border" onclick="saveSettings()">SAVE</button>
-      </div>
-    </div>
+<!-- DIALOG: Settings (rows are generated from SCHEMA in the script below) -->
+<div class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="cfgTitle">
+  <div class="cfg anim-pop" id="cfgPanel">
+    <i class="cb c1"></i><i class="cb c2"></i><i class="cb c3"></i><i class="cb c4"></i>
+    <header class="cfg-h">
+      <div class="flex items-center gap-3"><span class="led"></span><h2 id="cfgTitle">SYSTEM CONFIG</h2><span class="cfg-sub">// TERMINAL 07<span class="caret">_</span></span></div>
+      <div class="flex items-center gap-3"><span class="dirty" id="dirty">&#9679; UNSAVED</span><button class="cfg-x" type="button" aria-label="Close settings" data-act="back">&#10005;</button></div>
+    </header>
+    <nav class="cfg-t" id="cfgTabs" role="tablist" aria-orientation="vertical" aria-label="Settings categories"><div class="tf" id="cfgTabFoot">BUILD 0.7.2<br/>SECTOR 07 &middot; ONLINE<br/>&uarr;&darr; NAV &middot; ESC BACK</div></nav>
+    <section class="cfg-b" id="cfgBody"></section>
+    <footer class="cfg-f" id="cfgFoot">
+      <div class="fg norm"><button class="gb d" type="button" data-act="reset">Reset to Default</button></div>
+      <div class="fg norm"><button class="gb" type="button" id="btnBack" data-act="back">Back</button><button class="gb p" type="button" id="btnSave" data-act="save">Save Changes</button></div>
+      <div class="fg askg"><span class="warn">Discard unsaved changes?</span></div>
+      <div class="fg askg"><button class="gb" type="button" id="btnKeep" data-act="keep">Keep Editing</button><button class="gb d" type="button" data-act="discard">Discard</button></div>
+    </footer>
   </div>
 </div>
 
 <!-- DIALOG: Confirm reset -->
-<div class="fixed inset-0 z-[55] hidden bg-black/75 backdrop-blur-md flex items-center justify-center p-4" id="confirmModal">
-  <div class="pixel-box anim-pop bg-[#081b2b] max-w-sm w-full p-6 sm:p-8 text-center">
-    <div class="text-4xl mb-3">⚠️</div>
-    <h2 class="modal-title text-sm text-amber-300 mb-3">RESET SETTINGS?</h2>
-    <p class="text-sm text-slate-300 leading-relaxed">Music, sound effects and scanlines will go back to their default values.</p>
-    <div class="flex gap-3 mt-6">
-      <button class="btn btn-ghost pixel-btn-border flex-1" onclick="openModal('settingsModal')">NO</button>
-      <button class="btn btn-danger pixel-btn-border flex-1" onclick="resetSettings()">YES, RESET</button>
-    </div>
+<div class="fixed inset-0 z-[55] hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4" id="confirmModal" role="alertdialog" aria-modal="true" aria-labelledby="cfTitle">
+  <div class="cfg cfg-sm anim-pop">
+    <i class="cb c1"></i><i class="cb c2"></i><i class="cb c3"></i><i class="cb c4"></i>
+    <h2 id="cfTitle" class="font-pixel text-sm text-amber-300 mb-3">RESET ALL SETTINGS?</h2>
+    <p class="text-sm text-slate-300 leading-relaxed">Audio, display, controls and gameplay options will return to their defaults and be saved.</p>
+    <div class="flex gap-3 mt-6 relative z-10"><button class="gb flex-1" type="button" id="cfNo" onclick="openModal('settingsModal')">No</button><button class="gb d flex-1" type="button" onclick="resetSettings()">Yes, Reset</button></div>
   </div>
 </div>
 
@@ -168,8 +234,6 @@
   <div class="flex justify-between w-64 sm:w-80 font-retro text-xl text-slate-300"><span id="loadMsg">Initializing...</span><span id="loadPct">0%</span></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="supabase-config.js"></script>
 <!-- Starfield -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -180,7 +244,7 @@
     const stars = [];
     function initStars() {
       stars.length = 0;
-      for (let i = 0; i < 140; i++) stars.push({
+      for (let i = 0; i < ({low:50,medium:90,high:140,ultra:240}[document.documentElement.dataset.quality]||140); i++) stars.push({
         x: Math.random()*width, y: Math.random()*height,
         size: Math.random() > .85 ? 3 : (Math.random() > .5 ? 2 : 1),
         color: ['#ffffff','#5ce1e6','#b8c0ff','#8ea7e9','#ffd166'][Math.floor(Math.random()*5)],
@@ -190,7 +254,7 @@
     (function draw() {
       ctx.clearRect(0,0,width,height);
       for (const s of stars) {
-        s.alpha += s.speed*s.direction;
+        if (!document.documentElement.classList.contains('reduce-motion')) s.alpha += s.speed*s.direction;
         if (s.alpha > .95 || s.alpha < .15) s.direction *= -1;
         ctx.globalAlpha = Math.max(.1, Math.min(1, s.alpha));
         ctx.fillStyle = s.color;
@@ -199,6 +263,8 @@
       ctx.globalAlpha = 1;
       requestAnimationFrame(draw);
     })();
+    let lq = document.documentElement.dataset.quality;
+    document.addEventListener('remediate:settings', e => { if (e.detail.quality !== lq) { lq = e.detail.quality; initStars(); } });
     initStars();
   });
 </script>
@@ -206,8 +272,6 @@
 <script>
   const $ = (id) => document.getElementById(id);
   const MODALS = ['rulesModal', 'settingsModal', 'confirmModal'];
-  const DEFAULTS = { bgm: 80, sfx: 95, crt: true };
-  let saved = { ...DEFAULTS };
   let launching = false;
 
   /* Dialog helpers */
@@ -237,23 +301,231 @@
     setTimeout(remove, ms);
   }
 
-  /* Settings */
-  function applySettings(s) {
-    $('bgmRange').value = s.bgm; $('bgmVal').textContent = s.bgm + '%';
-    $('sfxRange').value = s.sfx; $('sfxVal').textContent = s.sfx + '%';
-    $('crtToggle').checked = s.crt; $('crtOverlay').style.display = s.crt ? 'block' : 'none';
+  /* ===== Settings =====
+     Data flow:  SCHEMA -> build() creates tabs/rows once
+                 user input -> set(k,v) -> draft[k]=v -> apply(draft) (live preview) + render() (UI <- draft)
+                 Save -> saved=draft -> localStorage ; Back/Discard -> apply(saved)
+     Other pages: read localStorage 'remediate.settings.v1' or listen for the 'remediate:settings' event. */
+  const KEY = 'remediate.settings.v1';
+  const DEF = { master: 100, bgm: 80, sfx: 95, uiSounds: true, quality: 'high', crt: true, vignette: true, colorblind: 'off',
+    reduceMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, difficulty: 'standard', hints: true, timer: true, captions: true,
+    keys: { interact: 'Space', hint: 'KeyH', inventory: 'KeyI' } };
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const cap = x => x[0].toUpperCase() + x.slice(1);
+  const kn = c => c === 'Space' ? 'SPACE' : c.replace(/^(Key|Digit|Arrow)/, '').toUpperCase();
+  function load() { try { const x = JSON.parse(localStorage.getItem(KEY)); return x ? { ...clone(DEF), ...x, keys: { ...DEF.keys, ...x.keys } } : clone(DEF); } catch { return clone(DEF); } }
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch {} }
+  let saved = load(), draft = clone(saved), openDD = null, rb = null, opener = null;
+  const dirty = () => JSON.stringify(draft) !== JSON.stringify(saved);
+
+  const SCHEMA = [
+    { id: 'audio', name: 'Audio', icon: '<path d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/>', rows: [
+      ['sec', 'Volume'],
+      ['range', 'master', 'Master Volume', 'Overall output level.'],
+      ['range', 'bgm', 'Music', 'Chill pixel BGM. Release the slider to preview.'],
+      ['range', 'sfx', 'Sound Effects', 'Clicks, pings and puzzle feedback.'],
+      ['sec', 'Interface'],
+      ['switch', 'uiSounds', 'UI Sounds', 'Hover and click blips in menus.'] ] },
+    { id: 'display', name: 'Display', icon: '<path d="M3 4h18v12H3V4zm2 2v8h14V6H5zM8 19h8v2H8z"/>', rows: [
+      ['sec', 'Screen'],
+      ['fs', 'fullscreen', 'Fullscreen', 'Takes effect immediately; not saved.'],
+      ['select', 'quality', 'Graphics Quality', 'Low trims stars and background glow.', 'low,medium,high,ultra'],
+      ['sec', 'Effects'],
+      ['switch', 'crt', 'CRT Scanlines', 'Retro terminal scanline overlay.'],
+      ['switch', 'vignette', 'Vignette', 'Darkens the screen edges.'],
+      ['sec', 'Accessibility'],
+      ['select', 'colorblind', 'Colorblind Assist', 'Color-shift filter for red, green or blue weakness.', 'off,protanopia,deuteranopia,tritanopia'],
+      ['switch', 'reduceMotion', 'Reduce Motion', 'Stops twinkling stars and menu animations.'] ] },
+    { id: 'controls', name: 'Controls', icon: '<path d="M2 6h20v12H2V6zm2 2v8h16V8H4zm2 1h2v2H6V9zm4 0h2v2h-2V9zm4 0h2v2h-2V9zM7 13h10v2H7v-2z"/>', rows: [
+      ['sec', 'Keyboard'],
+      ['key', 'interact', 'Interact / Launch', 'Starts the game and inspects objects.'],
+      ['key', 'hint', 'Request Hint', 'Opens the hint terminal in-game.'],
+      ['key', 'inventory', 'Inventory', 'Shows collected clues and shards.'],
+      ['note', 'Click a key box, then press the new key. Esc is reserved and always goes back.'] ] },
+    { id: 'gameplay', name: 'Gameplay', icon: '<path d="M10 3h4v3h3v4h-2a2 2 0 1 0 0 4h2v4h-4v-2a2 2 0 1 0-4 0v2H6v-4h2a2 2 0 1 0 0-4H6V6h4z"/>', rows: [
+      ['sec', 'Rules'],
+      ['select', 'difficulty', 'Difficulty', 'Puzzle complexity and hint cost.', 'cozy,standard,hardcore'],
+      ['sec', 'Assistance'],
+      ['switch', 'hints', 'Hints', 'Allow the hint button during puzzles.'],
+      ['switch', 'timer', 'Show Timer', 'Display the escape countdown.'],
+      ['switch', 'captions', 'Captions', 'Text captions for sound cues.'] ] },
+  ];
+
+  /* ----- UI sounds (Web Audio, no asset files; replace tone() calls with <audio> if you prefer) ----- */
+  const Snd = (() => {
+    let c, m, s, b, cur = saved, lt = 0, ok = false;
+    ['pointerdown', 'keydown'].forEach(t => addEventListener(t, () => ok = true, { once: true }));
+    const g = v => (v / 100) ** 2;
+    const lv = () => { if (!c) return; m.gain.value = g(cur.master); s.gain.value = g(cur.sfx); b.gain.value = g(cur.bgm); };
+    const ctx = () => {
+      if (!c) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return;
+        c = new A(); m = c.createGain(); s = c.createGain(); b = c.createGain(); s.connect(m); b.connect(m); m.connect(c.destination); lv(); }
+      if (c.state === 'suspended') c.resume(); return c;
+    };
+    const tone = (f, d = .06, v = .1, type = 'square', f2 = f, t0 = 0, bgm = false) => {
+      const x = ctx(); if (!x) return; const o = x.createOscillator(), e = x.createGain(), t = x.currentTime + t0;
+      o.type = type; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f2, t + d);
+      e.gain.setValueAtTime(v, t); e.gain.exponentialRampToValueAtTime(.001, t + d);
+      o.connect(e); e.connect(bgm ? b : s); o.start(t); o.stop(t + d + .02);
+    };
+    const P = {
+      hover: () => tone(1400, .03, .03, 'triangle', 1800),
+      click: () => tone(300, .07, .1, 'square', 140),
+      on: () => { tone(500, .07, .08, 'square', 700); tone(800, .08, .08, 'square', 1000, .07); },
+      off: () => { tone(700, .07, .08, 'square', 450); tone(450, .08, .08, 'square', 250, .07); },
+      tick: v => tone(500 + v * 8, .03, .06, 'sine'),
+      save: () => [520, 660, 880].forEach((f, i) => tone(f, .12, .09, 'triangle', f, i * .08)),
+      deny: () => tone(180, .12, .1, 'sawtooth', 90),
+      bgm: () => [220, 277, 330].forEach(f => tone(f, .6, .12, 'sine', f, 0, true)),
+    };
+    return {
+      levels(x) { cur = x; lv(); },
+      play(n, force, a) { if (!ok || (!force && !draft.uiSounds)) return; if (n === 'tick') { const t = performance.now(); if (t - lt < 50) return; lt = t; } P[n](a); },
+    };
+  })();
+
+  /* ----- apply: push a settings object to the page ----- */
+  function apply(x) {
+    const r = document.documentElement;
+    r.dataset.quality = x.quality; r.classList.toggle('reduce-motion', x.reduceMotion);
+    r.style.filter = x.colorblind === 'off' ? '' : `url(#cb-${x.colorblind})`;
+    $('crtOverlay').style.display = x.crt ? 'block' : 'none';
+    $('vignette').style.display = x.vignette ? 'block' : 'none';
+    Snd.levels(x);
+    document.dispatchEvent(new CustomEvent('remediate:settings', { detail: x }));
   }
-  function saveSettings() {
-    saved = { bgm: +$('bgmRange').value, sfx: +$('sfxRange').value, crt: $('crtToggle').checked };
-    closeModal('settingsModal');
-    showToast('success', 'Settings saved', 'Your preferences have been updated.');
+  const labels = () => { $('launchHint').textContent = `[ Press ${kn(saved.keys.interact)} or Click to Launch ]`; };
+
+  /* ----- build UI from SCHEMA ----- */
+  const el = (t, c, html) => { const e = document.createElement(t); if (c) e.className = c; if (html != null) e.innerHTML = html; return e; };
+  function row([t, k, label, desc, opts]) {
+    if (t === 'sec') return el('div', 'sec', k);
+    if (t === 'note') return el('div', 'ds note', k);
+    const r = el('div', 'row', `<div><div class="nm" id="l-${k}">${label}</div><div class="ds">${desc}</div></div>`); let c;
+    if (t === 'range') { c = el('div', 'rng', `<input type="range" min="0" max="100" data-k="${k}" aria-labelledby="l-${k}"><output class="val" id="v-${k}"></output>`); }
+    else if (t === 'switch' || t === 'fs') { c = el('button', 'sw', '<i></i>'); c.type = 'button'; c.setAttribute('role', 'switch'); c.setAttribute('aria-labelledby', 'l-' + k); t === 'fs' ? c.dataset.fs = 1 : c.dataset.k = k; }
+    else if (t === 'key') { c = el('button', 'key'); c.type = 'button'; c.dataset.bind = k; c.setAttribute('aria-labelledby', 'l-' + k); }
+    else { c = el('div', 'dd', `<button type="button" class="dd-b" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="l-${k}"></button><ul class="dd-l" role="listbox" tabindex="-1" aria-labelledby="l-${k}">${opts.split(',').map(o => `<li role="option" id="o-${k}-${o}" data-v="${o}">${cap(o)}</li>`).join('')}</ul>`); c.dataset.k = k; }
+    r.appendChild(c); return r;
   }
-  function cancelSettings() { applySettings(saved); closeModal('settingsModal'); }
-  function resetSettings() {
-    saved = { ...DEFAULTS }; applySettings(saved); closeModal('confirmModal');
-    showToast('warning', 'Settings reset', 'Default values restored.');
+  SCHEMA.forEach(p => {
+    const tb = el('button', 'tab', `<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" fill-rule="evenodd">${p.icon}</svg><span>${p.name}</span>`);
+    tb.type = 'button'; tb.id = 'tab-' + p.id; tb.dataset.pane = p.id; tb.setAttribute('role', 'tab'); tb.setAttribute('aria-controls', 'pane-' + p.id);
+    $('cfgTabs').insertBefore(tb, $('cfgTabFoot'));
+    const pn = el('div', 'pane'); pn.id = 'pane-' + p.id; pn.setAttribute('role', 'tabpanel'); pn.setAttribute('aria-labelledby', tb.id);
+    p.rows.forEach(r => pn.appendChild(row(r))); $('cfgBody').appendChild(pn);
+  });
+
+  /* ----- render: draft -> UI ----- */
+  function render() {
+    $('cfgPanel').querySelectorAll('[data-k]').forEach(e => {
+      const k = e.dataset.k, v = draft[k];
+      if (e.type === 'range') { e.value = v; e.style.setProperty('--p', v + '%'); $('v-' + k).textContent = v + '%'; }
+      else if (e.classList.contains('sw')) e.setAttribute('aria-checked', v);
+      else { e.querySelector('.dd-b').textContent = cap(v); e.querySelectorAll('li').forEach(li => li.setAttribute('aria-selected', li.dataset.v === v)); }
+    });
+    $('cfgPanel').querySelectorAll('[data-bind]').forEach(b => { if (b !== rb) b.textContent = kn(draft.keys[b.dataset.bind]); });
+    const f = $('cfgPanel').querySelector('[data-fs]'), d = dirty();
+    f.setAttribute('aria-checked', !!document.fullscreenElement); f.disabled = !document.documentElement.requestFullscreen;
+    $('dirty').classList.toggle('on', d); $('btnSave').disabled = !d;
   }
-  applySettings(saved);
+  function set(k, v) { draft[k] = v; apply(draft); render(); }
+
+  /* ----- tabs ----- */
+  function tab(id, focus) {
+    ddClose();
+    document.querySelectorAll('.tab').forEach(t => { const on = t.dataset.pane === id; t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1; if (focus && on) t.focus(); });
+    document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + id)); $('cfgBody').scrollTop = 0;
+  }
+
+  /* ----- custom dropdown ----- */
+  function ddClose() { if (!openDD) return; openDD.classList.remove('open', 'up'); openDD.querySelector('.dd-b').setAttribute('aria-expanded', 'false'); openDD = null; }
+  function ddAct(dd, li) { dd.querySelectorAll('li').forEach(x => x.classList.toggle('act', x === li)); dd.querySelector('.dd-l').setAttribute('aria-activedescendant', li.id); li.scrollIntoView({ block: 'nearest' }); }
+  function ddOpen(dd) {
+    ddClose(); dd.classList.add('open'); dd.querySelector('.dd-b').setAttribute('aria-expanded', 'true'); openDD = dd;
+    const l = dd.querySelector('.dd-l'), r = l.getBoundingClientRect(), p = $('cfgBody').getBoundingClientRect();
+    if (r.bottom > p.bottom && dd.getBoundingClientRect().top - r.height > p.top) dd.classList.add('up');
+    ddAct(dd, dd.querySelector('[aria-selected=true]')); l.focus();
+  }
+  function ddPick(dd, li) { set(dd.dataset.k, li.dataset.v); ddClose(); dd.querySelector('.dd-b').focus(); }
+
+  /* ----- key rebinding ----- */
+  function startRebind(b) { rbStop(); rb = b; b.classList.add('on'); b.textContent = 'PRESS A KEY...'; }
+  function rbStop() { if (!rb) return; rb.classList.remove('on'); rb = null; render(); }
+  addEventListener('keydown', e => {
+    if (!rb) return; e.preventDefault(); e.stopPropagation();
+    if (/^(Shift|Control|Alt|Meta|OS)/.test(e.code)) return;
+    if (e.code === 'Escape') return rbStop();
+    if (['Tab', 'Enter', 'NumpadEnter'].includes(e.code)) { Snd.play('deny', 1); return showToast('warning', 'Key reserved', 'Tab and Enter are used by the menus.'); }
+    const a = rb.dataset.bind, other = Object.keys(draft.keys).find(x => x !== a && draft.keys[x] === e.code);
+    if (other) draft.keys[other] = draft.keys[a];   // swap on conflict
+    draft.keys[a] = e.code; rbStop(); Snd.play('on', 1);
+  }, true);
+
+  /* ----- fullscreen (live state, not part of draft) ----- */
+  function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => showToast('error', 'Fullscreen blocked', 'Your browser refused the request.')); }
+  document.addEventListener('fullscreenchange', render);
+
+  /* ----- open / close / save / reset ----- */
+  const ask = on => { $('cfgFoot').classList.toggle('ask', on); (on ? $('btnKeep') : $('btnBack')).focus(); };
+  function openSettings() { opener = document.activeElement; draft = clone(saved); apply(draft); render(); openModal('settingsModal'); document.querySelector('.tab[aria-selected=true]').focus(); }
+  function back() { if ($('cfgFoot').classList.contains('ask')) return ask(false); dirty() ? ask(true) : leave(); }
+  function leave() { ddClose(); rbStop(); $('cfgFoot').classList.remove('ask'); draft = clone(saved); apply(saved); closeModal('settingsModal'); opener && opener.focus(); }
+  function save() { saved = clone(draft); persist(); labels(); Snd.play('save', 1); leave(); showToast('success', 'Settings saved', 'Your preferences have been updated.'); }
+  function resetSettings() { saved = clone(DEF); persist(); draft = clone(saved); apply(draft); render(); labels(); openModal('settingsModal'); showToast('warning', 'Settings reset', 'Default values restored.'); }
+  const cancelSettings = back;
+  const act = a => ({ back, save, keep: () => ask(false), discard: leave, reset: () => { openModal('confirmModal'); $('cfNo').focus(); } })[a]();
+
+  /* ----- events ----- */
+  const PN = $('cfgPanel');
+  PN.addEventListener('input', e => { const x = e.target; if (x.type !== 'range') return; set(x.dataset.k, +x.value); Snd.play('tick', 1, +x.value); });
+  PN.addEventListener('change', e => { if (e.target.dataset.k === 'bgm') Snd.play('bgm', 1); });
+  PN.addEventListener('click', e => {
+    const q = s => e.target.closest(s);
+    if (q('[data-act]')) return act(q('[data-act]').dataset.act);
+    if (q('.tab')) return tab(q('.tab').dataset.pane);
+    if (q('.key')) return startRebind(q('.key'));
+    if (q('.dd-b')) { const dd = q('.dd'); return dd === openDD ? ddClose() : ddOpen(dd); }
+    if (q('.dd-l li')) return ddPick(q('.dd'), q('li'));
+    const sw = q('.sw') || (!q('.rng') && q('.row') && q('.row').querySelector('.sw'));
+    if (sw) { if (sw.dataset.fs) return toggleFS(); const v = !draft[sw.dataset.k]; set(sw.dataset.k, v); Snd.play(v ? 'on' : 'off', 1); }
+  });
+  PN.addEventListener('focusout', e => { if (e.target === rb) rbStop(); });
+  PN.addEventListener('keydown', e => {
+    const l = e.target.closest('.dd-l');
+    if (l) {
+      const dd = l.parentNode, it = [...l.children], i = it.findIndex(x => x.classList.contains('act')), go = n => { e.preventDefault(); ddAct(dd, it[(n + it.length) % it.length]); };
+      if (e.key === 'ArrowDown') go(i + 1); else if (e.key === 'ArrowUp') go(i - 1); else if (e.key === 'Home') go(0); else if (e.key === 'End') go(-1);
+      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ddPick(dd, it[i]); }
+      else if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); ddClose(); dd.querySelector('.dd-b').focus(); }
+      return;
+    }
+    if (e.target.matches('.dd-b') && e.key === 'ArrowDown') { e.preventDefault(); ddOpen(e.target.parentNode); }
+    const t = e.target.closest('.tab'), d = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+    if (t && d) { e.preventDefault(); const all = [...document.querySelectorAll('.tab')]; tab(all[(all.indexOf(t) + d + all.length) % all.length].dataset.pane, true); }
+  });
+  document.addEventListener('click', e => { if (openDD && !e.target.closest('.dd')) ddClose(); });
+
+  /* Sound hooks: hover + click on every button/link */
+  let lh;
+  document.addEventListener('mouseover', e => { const x = e.target.closest('button,a[href],[role=option]'); if (x !== lh) { lh = x; if (x && !x.disabled) Snd.play('hover'); } });
+  document.addEventListener('click', e => { const x = e.target.closest('button,a[href]'); if (x && !x.classList.contains('sw') && !x.disabled) Snd.play('click'); }, true);
+
+  /* Keyboard: Esc steps back one level; Tab is trapped in the open dialog; interact key launches */
+  addEventListener('keydown', e => {
+    if (rb) return;
+    const open = MODALS.find(m => !$(m).classList.contains('hidden'));
+    if (e.key === 'Escape' && open) { open === 'settingsModal' ? back() : open === 'confirmModal' ? openModal('settingsModal') : closeModal(open); return; }
+    if (e.key === 'Tab' && open) {
+      const f = [...$(open).querySelectorAll('button,a[href]')].filter(x => !x.disabled && x.tabIndex >= 0 && x.offsetParent), i = f.indexOf(document.activeElement);
+      if (f.length && e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (f.length && !e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+      return;
+    }
+    if (e.code === saved.keys.interact && !open && e.target === document.body) { e.preventDefault(); handlePlayGame(); }
+  });
+
+  tab('audio'); apply(saved); render(); labels();
 
   /* Play Now: loading feedback */
   function startLoading() {
@@ -272,39 +544,16 @@
           $('loadingOverlay').classList.add('hidden');
           $('loadBar').style.width = '0%'; $('loadPct').textContent = '0%';
           launching = false;
-          window.location.href = 'game-room.html';
+          showToast('success', 'Chamber ready!', 'Welcome to Sector 07. Find the first clue.');
         }, 400);
       }
     }, 160);
   }
-  async function handlePlayGame() {
-    const u = await getUser();
-    if (!u) {
-      showToast('warning', 'Login required', 'Log in first so your progress is saved.');
-      setTimeout(() => { location.href = 'login.html'; }, 1200);
-      return;
-    }
+  function handlePlayGame() {
     const btn = $('playNowBtn');
     btn.classList.add('scale-90');
     setTimeout(() => { btn.classList.remove('scale-90'); startLoading(); }, 150);
   }
 
-  /* Keyboard: Space launches, Esc closes dialogs */
-  window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); handlePlayGame(); }
-    if (e.key === 'Escape') { if (!$('settingsModal').classList.contains('hidden')) cancelSettings(); MODALS.forEach(closeModal); }
-  });
-</script>
-<script>
-  /* Auth state in header */
-  (async () => {
-    const link = document.querySelector('a[href="login.html"]');
-    const u = await getUser();
-    if (!u || !link) return;
-    const p = await getProfile(u.id);
-    link.textContent = 'Log out (' + (p ? p.player_name : 'player') + ')';
-    link.href = '#';
-    link.addEventListener('click', (e) => { e.preventDefault(); logout(); });
-  })();
 </script>
 </body></html>
