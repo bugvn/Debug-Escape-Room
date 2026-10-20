@@ -1,343 +1,186 @@
 <!DOCTYPE html>
-
-<html lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>REMEDIATE: Debug Report</title>
-<!-- Tailwind CSS v3 -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Google Fonts: Press Start 2P + VT323 (same pair as the other pages) -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;display=swap" rel="stylesheet"/>
-<script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            space: {
-              950: '#070a14',
-              900: '#0a0d1a',
-              850: '#101426',
-              800: '#161b33',
-              700: '#232a4e',
-            },
-            hearth: {
-              cyan: '#38e1ff',
-              cyanGlow: '#00f2fe',
-              lavender: '#a594f9',
-              lavenderDark: '#6b5ca5',
-              peach: '#f7a8b8',
-              peachBright: '#ff9ebb',
-              gold: '#ffd166',
-              mint: '#06d6a0',
-              crimson: '#ff5c8a',
-            }
-          },
-          fontFamily: {
-            pixel: ['"Press Start 2P"', 'monospace'],
-            retro: ['VT323', 'monospace'],
-            body: ['VT323', 'monospace'],
-          },
-          boxShadow: {
-            'pixel-cyan': '0 0 0 2px #38e1ff, 0 0 16px rgba(56, 225, 255, 0.4)',
-            'pixel-lavender': '0 0 0 2px #a594f9, 0 0 16px rgba(165, 148, 249, 0.35)',
-            'pixel-peach': '0 0 0 2px #f7a8b8, 0 0 16px rgba(247, 168, 184, 0.35)',
-            'pixel-card': 'inset 0 0 0 2px #2d355f, 0 10px 25px -5px rgba(0, 0, 0, 0.7)',
-          }
-        }
-      }
-    }
-  </script>
-<style data-purpose="pixel-aesthetics">
-    /* Pixel box: same triple-ring square frame as the login / home / game room pages */
-    .pixel-box {
-      box-shadow:
-        0 0 0 2px #0a0d1a,
-        0 0 0 4px #2b3964,
-        0 0 0 6px #5ce1e6,
-        0 12px 30px rgba(0, 0, 0, 0.85);
-    }
-    .crt-scanlines {
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-      background-size: 100% 3px, 3px 100%;
-      pointer-events: none;
-    }
-    .pixel-corner-glow {
-      box-shadow: 0 0 25px rgba(56, 225, 255, 0.2);
-    }
-    .star-bg {
-      background-image: 
-        radial-gradient(1px 1px at 25px 35px, #fff, rgba(0,0,0,0)),
-        radial-gradient(1.5px 1.5px at 85px 140px, #a594f9, rgba(0,0,0,0)),
-        radial-gradient(1px 1px at 160px 80px, #38e1ff, rgba(0,0,0,0)),
-        radial-gradient(1.5px 1.5px at 240px 220px, #fff, rgba(0,0,0,0)),
-        radial-gradient(1px 1px at 350px 110px, #f7a8b8, rgba(0,0,0,0)),
-        radial-gradient(2px 2px at 450px 290px, #38e1ff, rgba(0,0,0,0)),
-        radial-gradient(1px 1px at 580px 180px, #fff, rgba(0,0,0,0));
-      background-repeat: repeat;
-      background-size: 600px 350px;
-    }
-    /* Stepped pulse animation for retro feel */
-    @keyframes pixel-blink {
-      0%, 49% { opacity: 1; }
-      50%, 100% { opacity: 0; }
-    }
-    .blink-cursor {
-      animation: pixel-blink 1s infinite steps(1);
-    }
-  </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="test-summary.css">
 </head>
-<body class="bg-space-950 text-slate-200 font-body min-h-screen relative overflow-x-hidden star-bg selection:bg-hearth-cyan selection:text-space-950">
-<!-- Scanline CRT Overlay -->
-<div class="fixed inset-0 crt-scanlines z-50 pointer-events-none opacity-40"></div>
-<!-- Space Ambience Lights -->
-<div class="fixed top-0 left-1/4 w-96 h-96 bg-hearth-cyan/10 rounded-full blur-3xl pointer-events-none"></div>
-<div class="fixed bottom-10 right-1/4 w-96 h-96 bg-hearth-lavender/10 rounded-full blur-3xl pointer-events-none"></div>
-<div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col min-h-screen justify-between">
-<!-- BEGIN: MainHeader -->
-<header class="mb-8" data-purpose="header-section">
-<div class="flex flex-col md:flex-row items-center justify-between border-b-2 border-space-700/80 pb-5 gap-4">
-<!-- Logo and Room Identity -->
-<div class="flex items-center space-x-4">
-<div class="w-12 h-12 bg-hearth-cyan/20 border-2 border-hearth-cyan flex items-center justify-center text-hearth-cyan text-sm font-pixel shadow-[0_0_8px_rgba(56,225,255,0.6)]">
-&lt;&gt;
-</div>
-<div>
-<h1 class="text-2xl sm:text-3xl font-pixel tracking-wide text-white">
-              Debug Report
-</h1>
-</div>
-</div>
-<!-- Profile Menu -->
-<div class="flex items-center gap-3 text-base font-retro">
-<div class="flex items-center gap-2 bg-space-900/90 border border-space-700 px-3 py-2 text-slate-300 hover:border-hearth-lavender transition-colors cursor-pointer">
-<div class="relative w-5 h-5 bg-space-800 border border-hearth-lavender flex items-center justify-center font-pixel text-[10px] text-hearth-lavender">
-                ?
-                <span class="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 bg-hearth-gold border border-space-950"></span>
-</div>
-<span id="playerName">Player</span>
-<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4 L6 8 L10 4"/></svg>
-</div>
-</div>
-</div>
-</header>
-<!-- END: MainHeader -->
-<!-- BEGIN: PrimaryDashboardContent -->
-<main class="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-grow" data-purpose="dashboard-grid">
-<!-- LEFT COLUMN: single unified box, divided into 3 sections by horizontal rules -->
-<div class="lg:col-span-5 flex flex-col" data-purpose="score-metrics-panel">
-<div class="pixel-box border-2 bg-space-900/95 border-hearth-cyan/60 flex flex-col h-full">
+<body>
 
-<!-- SECTION A: Room Snapshot -->
+<div class="scanlines"></div>
+<div class="glow glow--cyan"></div>
+<div class="glow glow--violet"></div>
 
+<div class="page">
 
-<!-- Divider -->
-<div class="border-t-2 border-space-700 mx-4"></div>
+  <header class="top">
+    <div class="top__row">
+      <div class="identity">
+        <div class="identity__mark">&lt;&gt;</div>
+        <h1 class="identity__title">Debug Report</h1>
+      </div>
+      <div class="player">
+        <div class="player__avatar">?<i></i></div>
+        <span id="playerName">Player</span>
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4 L6 8 L10 4"/></svg>
+      </div>
+    </div>
+  </header>
 
-<!-- SECTION B: Score -->
-<div class="p-4 relative overflow-hidden flex-grow flex flex-col justify-center">
-<div class="relative">
-<div class="absolute top-8 -right-10 w-36 h-36 rounded-full bg-hearth-cyan/15 blur-md pointer-events-none"></div>
-<div class="absolute top-8 -left-10 w-36 h-36 rounded-full bg-hearth-lavender/15 blur-md pointer-events-none"></div>
-<div class="mt-3 mb-6 relative text-center">
-<p class="font-retro text-base tracking-widest text-slate-400 uppercase">Evaluation Report</p>
-<p class="font-pixel text-sm sm:text-base text-white tracking-widest mt-3">FINAL</p>
-<div class="font-pixel text-5xl sm:text-6xl text-hearth-cyan tracking-tight drop-shadow-[0_0_12px_rgba(56,225,255,0.8)] my-1" id="scoreVal">--</div>
-<p class="font-pixel text-sm sm:text-base text-white tracking-widest">SCORE</p>
-</div>
-<!-- Prominent Rank Banner -->
-<div class="bg-space-850/90 border-2 border-hearth-lavender/50 p-4 mb-5 flex items-center relative">
-<div class="flex items-center space-x-3">
-<span class="text-3xl font-pixel text-hearth-gold" id="rankLetter">-</span>
-<div>
-<p class="font-pixel text-sm text-hearth-lavender font-bold" id="rankTitle">LOADING...</p>
-<p class="text-base text-slate-400 font-retro uppercase" id="rankSub"></p>
-</div>
-</div>
-</div>
-<!-- Secondary Metrics Grid -->
-<div class="grid grid-cols-2 gap-4">
-<div class="bg-space-800/80 border border-space-700 p-3">
-<div class="text-sm font-retro text-slate-400 mb-1">TIME TAKEN</div>
-<div class="font-pixel text-lg sm:text-xl text-hearth-peach" id="timeVal">--</div>
-<div class="text-sm font-retro text-emerald-400 mt-1 uppercase" id="timeSub"></div>
-</div>
-<div class="bg-space-800/80 border border-space-700 p-3">
-<div class="text-sm font-retro text-slate-400 mb-1">ACCURACY</div>
-<div class="font-pixel text-lg sm:text-xl text-hearth-cyan" id="accVal">--</div>
-<div class="text-sm font-retro text-hearth-lavender mt-1 uppercase" id="accSub"></div>
-</div>
-</div>
-</div>
+  <main class="board">
+
+    <div class="board__left">
+      <div class="summary pixel-box">
+        <div class="rule"></div>
+
+        <div class="score">
+          <div class="score__inner">
+            <div class="score__halo score__halo--r"></div>
+            <div class="score__halo score__halo--l"></div>
+            <div class="score__head">
+              <p class="score__kicker">Evaluation Report</p>
+              <p class="score__word score__word--top">FINAL</p>
+              <div class="score__num" id="scoreVal">--</div>
+              <p class="score__word">SCORE</p>
+            </div>
+
+            <div class="rank">
+              <div class="rank__body">
+                <span class="rank__letter" id="rankLetter">-</span>
+                <div>
+                  <p class="rank__title" id="rankTitle">LOADING...</p>
+                  <p class="rank__sub" id="rankSub"></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="stats">
+              <div class="stat">
+                <div class="stat__label">TIME TAKEN</div>
+                <div class="stat__value stat__value--peach" id="timeVal">--</div>
+                <div class="stat__sub stat__sub--green" id="timeSub"></div>
+              </div>
+              <div class="stat">
+                <div class="stat__label">ACCURACY</div>
+                <div class="stat__value stat__value--cyan" id="accVal">--</div>
+                <div class="stat__sub stat__sub--violet" id="accSub"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rule"></div>
+
+        <div class="patterns">
+          <p class="patterns__title">Mistake Pattern Log</p>
+          <div id="mistakeList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="board__right">
+
+      <section class="panel panel--errors pixel-box">
+        <div class="panel__head">
+          <div class="panel__name">
+            <span class="panel__square"></span>
+            <h3 class="panel__heading">COMMON MISTAKES</h3>
+          </div>
+          <span class="panel__count">3 FOUND</span>
+        </div>
+        <div class="panel__list">
+        <div class="entry entry--err">
+          <div class="entry__row">
+            <span class="entry__tag">ERR #01</span>
+            <div>
+              <h4 class="entry__title">Off-by-One in Loop Termination</h4>
+              <p class="entry__text">Array index out of bounds on <span class="hl-peach">Kettle sensor</span> logic iteration. Triggered panic routine during boil cycle.</p>
+            </div>
+          </div>
+        </div>
+        <div class="entry entry--err">
+          <div class="entry__row">
+            <span class="entry__tag">ERR #02</span>
+            <div>
+              <h4 class="entry__title">Unhandled Null Pointer Exception</h4>
+              <p class="entry__text">Encountered in <span class="hl-cyan">Star Map Parser</span> when query window telemetry returned unmapped constellation coordinates.</p>
+            </div>
+          </div>
+        </div>
+        <div class="entry entry--err">
+          <div class="entry__row">
+            <span class="entry__tag">ERR #03</span>
+            <div>
+              <h4 class="entry__title">Suboptimal Time Complexity</h4>
+              <p class="entry__text">Detected in <span class="hl-violet">Door Lock Permutation</span> brute calculation. Nested O(N!) factorial scan delayed exit hatch unseal.</p>
+            </div>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <section class="panel panel--recs pixel-box">
+        <div class="panel__head">
+          <div class="panel__name">
+            <span class="panel__square"></span>
+            <h3 class="panel__heading">RECOMMENDATIONS</h3>
+          </div>
+          <span class="panel__count">3 SUGGESTIONS</span>
+        </div>
+        <div class="panel__list">
+        <div class="entry entry--rec">
+          <div class="entry__row">
+            <span class="entry__tag">REC #01</span>
+            <div>
+              <h4 class="entry__title">Practice Boundary Condition Checking</h4>
+              <p class="entry__text">Reinforce edge constraints in recursive algorithms to prevent stack overflows and one-off edge index overflows.</p>
+            </div>
+          </div>
+        </div>
+        <div class="entry entry--rec">
+          <div class="entry__row">
+            <span class="entry__tag">REC #02</span>
+            <div>
+              <h4 class="entry__title">Strengthen Error Handling &amp; Null Checks</h4>
+              <p class="entry__text">Implement optional unwrapping and defensive fallbacks in data streams before parsing incoming star chamber payloads.</p>
+            </div>
+          </div>
+        </div>
+        <div class="entry entry--rec">
+          <div class="entry__row">
+            <span class="entry__tag">REC #03</span>
+            <div>
+              <h4 class="entry__title">Review Big-O Notation for Hash Set Lookups</h4>
+              <p class="entry__text">Leverage O(1) hash sets for key combination lookups to replace nested iterative permutations across chamber mechanisms.</p>
+            </div>
+          </div>
+        </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <div class="actions">
+    <div class="actions__row">
+      <button class="act act--go" onclick="location.href='game-room.html'">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M2 1 L11 6 L2 11 Z"/></svg> PLAY NEXT ROOM
+      </button>
+      <button class="act act--menu" onclick="location.href='index.html'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg> MAIN MENU
+      </button>
+      <button class="act act--share">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 1 L11 8 L1 8 Z"/></svg> SHARE SCORE
+      </button>
+    </div>
+  </div>
+
 </div>
 
-<!-- Divider -->
-<div class="border-t-2 border-space-700 mx-4"></div>
-
-<!-- SECTION C: Mistake Pattern Log -->
-<div class="p-6 flex-grow flex flex-col justify-center" data-purpose="mistake-pattern-panel">
-<p class="font-pixel text-[11px] tracking-widest text-hearth-lavender uppercase mb-5">Mistake Pattern Log</p>
-<div class="space-y-5" id="mistakeList"></div>
-</div>
-
-</div>
-</div>
-<!-- END: Left Column -->
-<!-- RIGHT COLUMN: Mistakes, Recommendations & Actions (7 Cols) -->
-<div class="lg:col-span-7 flex flex-col gap-6 h-full" data-purpose="analysis-and-actions">
-<!-- SECTION 2: COMMON MISTAKES -->
-<div class="pixel-box border-2 p-6 bg-space-900/90 border-hearth-crimson/50" data-purpose="common-mistakes-section">
-<div class="flex items-center justify-between mb-4 border-b border-space-700/80 pb-3">
-<div class="flex items-center space-x-2">
-<span class="w-3 h-3 bg-hearth-crimson inline-block"></span>
-<h3 class="font-pixel text-sm sm:text-base text-hearth-peach tracking-wide">
-                COMMON MISTAKES
-              </h3>
-</div>
-<span class="text-base font-retro text-hearth-crimson bg-hearth-crimson/10 px-2 py-0.5 border border-hearth-crimson/30">
-              3 FOUND
-            </span>
-</div>
-<div class="space-y-3 font-body">
-<!-- Mistake 1 -->
-<div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-crimson border border-space-700 hover:border-hearth-crimson/60 transition-colors">
-<div class="flex items-start gap-3">
-<span class="font-retro text-base text-hearth-crimson bg-space-950 px-2 py-1 font-bold border border-hearth-crimson/40 shrink-0">
-                  ERR #01
-                </span>
-<div>
-<h4 class="font-pixel text-xs text-slate-100 mb-1 uppercase">
-                    Off-by-One in Loop Termination
-                  </h4>
-<p class="text-base text-slate-300 font-retro">
-                    Array index out of bounds on <span class="text-hearth-peach">Kettle sensor</span> logic iteration. Triggered panic routine during boil cycle.
-                  </p>
-</div>
-</div>
-</div>
-<!-- Mistake 2 -->
-<div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-crimson border border-space-700 hover:border-hearth-crimson/60 transition-colors">
-<div class="flex items-start gap-3">
-<span class="font-retro text-base text-hearth-crimson bg-space-950 px-2 py-1 font-bold border border-hearth-crimson/40 shrink-0">
-                  ERR #02
-                </span>
-<div>
-<h4 class="font-pixel text-xs text-slate-100 mb-1 uppercase">
-                    Unhandled Null Pointer Exception
-                  </h4>
-<p class="text-base text-slate-300 font-retro">
-                    Encountered in <span class="text-hearth-cyan">Star Map Parser</span> when query window telemetry returned unmapped constellation coordinates.
-                  </p>
-</div>
-</div>
-</div>
-<!-- Mistake 3 -->
-<div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-crimson border border-space-700 hover:border-hearth-crimson/60 transition-colors">
-<div class="flex items-start gap-3">
-<span class="font-retro text-base text-hearth-crimson bg-space-950 px-2 py-1 font-bold border border-hearth-crimson/40 shrink-0">
-                  ERR #03
-                </span>
-<div>
-<h4 class="font-pixel text-xs text-slate-100 mb-1 uppercase">
-                    Suboptimal Time Complexity
-                  </h4>
-<p class="text-base text-slate-300 font-retro">
-                    Detected in <span class="text-hearth-lavender">Door Lock Permutation</span> brute calculation. Nested O(N!) factorial scan delayed exit hatch unseal.
-                  </p>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- SECTION 3: RECOMMENDATIONS -->
-<div class="pixel-box border-2 p-6 bg-space-900/90 border-hearth-lavender/50 flex-grow flex flex-col" data-purpose="recommendations-section">
-<div class="flex items-center justify-between mb-4 border-b border-space-700/80 pb-3">
-<div class="flex items-center space-x-2">
-<span class="w-3 h-3 bg-hearth-lavender inline-block"></span>
-<h3 class="font-pixel text-sm sm:text-base text-hearth-lavender tracking-wide">
-                RECOMMENDATIONS
-              </h3>
-</div>
-<span class="text-base font-retro text-hearth-cyan bg-hearth-cyan/10 px-2 py-0.5 border border-hearth-cyan/30">
-              3 SUGGESTIONS
-            </span>
-</div>
-<div class="space-y-3 font-body">
-<!-- Recommendation 1 -->
-<div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-lavender border border-space-700 hover:border-hearth-lavender/70 transition-colors">
-<div class="flex items-start gap-3">
-<span class="font-retro text-base text-hearth-lavender bg-space-950 px-2 py-1 font-bold border border-hearth-lavender/40 shrink-0">
-                  REC #01
-                </span>
-<div>
-<h4 class="font-pixel text-xs text-slate-100 mb-1 uppercase">
-                    Practice Boundary Condition Checking
-                  </h4>
-<p class="text-base text-slate-300 font-retro">
-                    Reinforce edge constraints in recursive algorithms to prevent stack overflows and one-off edge index overflows.
-                  </p>
-</div>
-</div>
-</div>
-<!-- Recommendation 2 -->
-<div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-lavender border border-space-700 hover:border-hearth-lavender/70 transition-colors">
-<div class="flex items-start gap-3">
-<span class="font-retro text-base text-hearth-lavender bg-space-950 px-2 py-1 font-bold border border-hearth-lavender/40 shrink-0">
-                  REC #02
-                </span>
-<div>
-<h4 class="font-pixel text-xs text-slate-100 mb-1 uppercase">
-                    Strengthen Error Handling &amp; Null Checks
-                  </h4>
-<p class="text-base text-slate-300 font-retro">
-                    Implement optional unwrapping and defensive fallbacks in data streams before parsing incoming star chamber payloads.
-                  </p>
-</div>
-</div>
-</div>
-<!-- Recommendation 3 -->
-<div class="p-3.5 bg-space-850/90 border-l-4 border-l-hearth-lavender border border-space-700 hover:border-hearth-lavender/70 transition-colors">
-<div class="flex items-start gap-3">
-<span class="font-retro text-base text-hearth-lavender bg-space-950 px-2 py-1 font-bold border border-hearth-lavender/40 shrink-0">
-                  REC #03
-                </span>
-<div>
-<h4 class="font-pixel text-xs text-slate-100 mb-1 uppercase">
-                    Review Big-O Notation for Hash Set Lookups
-                  </h4>
-<p class="text-base text-slate-300 font-retro">
-                    Leverage O(1) hash sets for key combination lookups to replace nested iterative permutations across chamber mechanisms.
-                  </p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- END: Right Column -->
-</main>
-<!-- END: PrimaryDashboardContent -->
-<!-- SECTION 4: ACTIONS (now full-width, spans both columns) -->
-<div class="pt-8 mt-2 border-t border-space-800/60" data-purpose="actions-footer">
-<div class="flex flex-col sm:flex-row items-stretch gap-4">
-<!-- Play Next Room -->
-<button onclick="location.href='game-room.html'" class="flex-1 py-4 px-6 bg-hearth-cyan hover:bg-hearth-cyanGlow text-space-950 font-pixel text-xs uppercase tracking-wider font-bold transition-all transform hover:-translate-y-0.5 active:translate-y-0 shadow-pixel-cyan border-2 border-white flex items-center justify-center gap-2">
-<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M2 1 L11 6 L2 11 Z"/></svg> PLAY NEXT ROOM
-            </button>
-<!-- Review Replay -->
-<button onclick="location.href='index.html'" class="flex-1 py-4 px-6 bg-space-850 hover:bg-space-800 text-hearth-lavender hover:text-white font-pixel text-xs uppercase tracking-wider transition-all border-2 border-hearth-lavender/60 hover:border-hearth-lavender shadow-pixel-lavender flex items-center justify-center gap-2">
-<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg> MAIN MENU
-            </button>
-<!-- Share Score -->
-<button class="flex-1 py-4 px-6 bg-space-850 hover:bg-space-800 text-hearth-peach hover:text-white font-pixel text-xs uppercase tracking-wider transition-all border-2 border-hearth-peach/60 hover:border-hearth-peach shadow-pixel-peach flex items-center justify-center gap-2">
-<svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 1 L11 8 L1 8 Z"/></svg> SHARE SCORE
-            </button>
-</div>
-</div>
-<!-- BEGIN: SystemFooter -->
-<!-- END: SystemFooter -->
-</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
 <script>
@@ -357,7 +200,7 @@
   if (!s) {
     $('rankTitle').textContent = 'NO GAME DATA';
     $('rankSub').textContent = 'Play a room first';
-    $('mistakeList').innerHTML = '<p class="font-retro text-lg text-slate-400">Nothing logged yet.</p>';
+    $('mistakeList').innerHTML = '<p class="empty-note">Nothing logged yet.</p>';
     return;
   }
   const { data: subsRaw } = await db.from('submissions').select('*').eq('session_id', s.id);
@@ -385,12 +228,12 @@
   const keys = Object.keys(tags), max = Math.max(3, ...keys.map(k => tags[k]));
   $('mistakeList').innerHTML = keys.length ? keys.map(k => `
     <div>
-      <div class="flex items-center justify-between font-retro text-sm mb-1.5">
-        <span class="text-slate-300 uppercase">${esc(k)}</span>
-        <span class="text-hearth-crimson">${tags[k]} ${tags[k] === 1 ? 'HIT' : 'HITS'}</span>
+      <div class="pattern__head">
+        <span class="pattern__name">${esc(k)}</span>
+        <span class="pattern__hits">${tags[k]} ${tags[k] === 1 ? 'HIT' : 'HITS'}</span>
       </div>
-      <div class="w-full h-3 bg-space-950 border border-space-700"><div class="h-full bg-hearth-crimson" style="width:${Math.round(100 * tags[k] / max)}%"></div></div>
-    </div>`).join('') : '<p class="font-retro text-lg text-slate-400">No mistakes logged. Clean run.</p>';
+      <div class="pattern__track"><div class="pattern__fill" style="width:${Math.round(100 * tags[k] / max)}%"></div></div>
+    </div>`).join('') : '<p class="empty-note">No mistakes logged. Clean run.</p>';
 })();
 </script>
 </body></html>
