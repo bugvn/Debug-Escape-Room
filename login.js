@@ -146,7 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const LOCK_KEY = 'remediate.lockUntil';
   const MAX_TRIES = 5;
   const LOCK_MS = 30000;
-  let failedTries = 0;
+  const TRIES_KEY = 'remediate.failedTries';
+  let failedTries = Number(sessionStorage.getItem(TRIES_KEY)) || 0;
   const lockLeft = () => Math.max(0, (Number(sessionStorage.getItem(LOCK_KEY)) || 0) - Date.now());
   function countFailure() {
     failedTries += 1;
@@ -154,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
       failedTries = 0;
       sessionStorage.setItem(LOCK_KEY, String(Date.now() + LOCK_MS));
     }
+    sessionStorage.setItem(TRIES_KEY, String(failedTries));
   }
 
   // ---------- modes ----------
@@ -176,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('tabs').classList.toggle('hidden', isReset);
     $('google-signin-btn').classList.toggle('hidden', isReset);
+    $('google-note').classList.toggle('hidden', m !== 'login');
     $('email-divider').classList.toggle('hidden', isReset);
     $('email-col').classList.toggle('hidden', isReset);
     $('account-pair').classList.toggle('pair--single', isReset);
@@ -199,20 +202,38 @@ document.addEventListener('DOMContentLoaded', () => {
   $('tab-create').addEventListener('click', () => setMode('create'));
 
   // ---------- google ----------
-  $('google-signin-btn').addEventListener('click', async () => {
+  const googleBtn = $('google-signin-btn');
+  const googleLabel = $('google-btn-label');
+  const resetGoogleBtn = () => {
+    googleBtn.disabled = false;
+    googleLabel.textContent = 'CONTINUE WITH GOOGLE';
+  };
+  // back button from the Google page can restore this page frozen (bfcache)
+  window.addEventListener('pageshow', (e) => { if (e.persisted) resetGoogleBtn(); });
+
+  googleBtn.addEventListener('click', async () => {
     if (mode === 'create') {
       touched.agree = true;
       if (!check('agree')) return;
     }
     setRemember(mode === 'create' ? true : $('remember-me').checked);
-    const { error } = await db.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: pageUrl('index.html'),
-        queryParams: { prompt: 'select_account' }
-      }
-    });
-    if (error) toast('Google sign-in failed: ' + error.message, false);
+    googleBtn.disabled = true;
+    googleLabel.textContent = 'OPENING GOOGLE...';
+    try {
+      const { error } = await db.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          // come back here, not index.html: this page shows any Google error,
+          // then sends a signed-in user home (see bottom of file)
+          redirectTo: pageUrl('login.html'),
+          queryParams: { prompt: 'select_account' }
+        }
+      });
+      if (error) throw error;
+    } catch (err) {
+      resetGoogleBtn();
+      showErr('Google sign-in failed. Check your connection and try again.');
+    }
   });
 
   // ---------- forgot password ----------
@@ -298,6 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
         failedTries = 0;
+        sessionStorage.removeItem(TRIES_KEY);
         sessionStorage.removeItem(LOCK_KEY);
         openDialog({
           tag: 'Logged in', tone: 'ok', title: 'WELCOME BACK!',
@@ -320,17 +342,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       restore();
-      if (error) { showErr(error.message, 'email'); return; }
-
-      // supabase answers with an empty identities list when the email is already registered
-      if (data.user && data.user.identities && data.user.identities.length === 0) {
-        showErr('An account with this email already exists. Select Log in, or use a different email.', 'email');
-        return;
-      }
-      if (!data.session) {
+      // Same answer whether or not the email is already registered, so nobody can
+      // use this form to find out who has an account. (Supabase returns no session
+      // and an empty identities list for an existing email.)
+      const alreadyUsed = (error && /already registered/i.test(error.message)) ||
+        (data && data.user && data.user.identities && data.user.identities.length === 0);
+      if (error && !alreadyUsed) { showErr(error.message, 'email'); return; }
+      if (alreadyUsed || !data.session) {
         openDialog({
           tag: 'Check your email', tone: 'warn', title: 'CONFIRM YOUR EMAIL',
-          body: `We sent a confirmation link to ${email}. Open it, then log in.`,
+          body: `If ${email} can be used for a new account, a confirmation link is on its way. Open it, then log in. Already registered? Log in or use Forgot password.`,
           actions: [{ label: 'Go to log in', primary: true, onClick: () => setMode('login') }]
         });
         return;
