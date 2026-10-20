@@ -1,304 +1,426 @@
 <!DOCTYPE html>
-
 <html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>REMEDIATE: Cozy Starlight Escape Room</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"/>
 <style>
-  .font-pixel { font-family: 'Press Start 2P', monospace; }
-  .font-digital { font-family: 'VT323', monospace; }
-  .pixel-box {
-    border: 3px solid #6366f1;
-    box-shadow: 0 0 10px rgba(99,102,241,.4), inset 0 0 10px rgba(99,102,241,.2);
-    backdrop-filter: blur(8px);
-    background: rgba(10,15,30,.86);
-  }
-  .pixel-btn { border: 2px solid #a855f7; box-shadow: 0 4px 0 #6b21a8; transition: all .1s ease-in-out; }
-  .pixel-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #6b21a8; }
-  .pixel-btn.sec { border-color: #64748b; box-shadow: 0 4px 0 #334155; }
-  .pixel-btn.dan { border-color: #f87171; box-shadow: 0 4px 0 #7f1d1d; }
-  .pixel-btn:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid #22d3ee; outline-offset: 2px; }
+*{box-sizing:border-box}
+body{margin:0;height:100vh;width:100vw;overflow:hidden;background:#000;color:#f1f5f9;user-select:none;display:flex;justify-content:center;align-items:center;font-family:monospace}
+button{font-family:inherit}
+.hidden{display:none!important}
+.pix{font-family:'Press Start 2P',monospace}
+.dig{font-family:'VT323',monospace}
+#room{position:relative;width:100%;height:100%;max-width:1920px;max-height:1080px;aspect-ratio:16/9;margin:0 auto;overflow:hidden;background:#020617;display:flex;align-items:center;justify-content:center}
+#room>img{width:100%;height:100%;object-fit:contain;pointer-events:none}
+@media(min-width:768px){#room>img{object-fit:cover}}
+.box{border:3px solid #6366f1;box-shadow:0 0 10px rgba(99,102,241,.4),inset 0 0 10px rgba(99,102,241,.2);backdrop-filter:blur(8px);background:rgba(10,15,30,.86)}
+.btn{font:12px 'Press Start 2P',monospace;padding:12px 16px;border-radius:4px;cursor:pointer;border:2px solid #a855f7;box-shadow:0 4px 0 #6b21a8;background:#6b21a8;color:#fde047;transition:all .1s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #6b21a8}
+.btn.sec{border-color:#64748b;box-shadow:0 4px 0 #334155;background:#1e293b;color:#e2e8f0}
+.btn.dan{border-color:#f87171;box-shadow:0 4px 0 #7f1d1d;background:#7f1d1d;color:#fee2e2}
+button:focus-visible,input:focus-visible{outline:3px solid #22d3ee;outline-offset:2px}
 
-  @keyframes pulse-ring { 0%{transform:scale(.85);opacity:.9} 50%{transform:scale(1.25);opacity:.4} 100%{transform:scale(.85);opacity:.9} }
-  .hotspot-pulse { animation: pulse-ring 2.2s infinite ease-in-out; }
-  .hotspot-tag { opacity:0; transform:translateY(4px); transition:all .2s ease; pointer-events:none; white-space:nowrap; }
-  .hotspot-group:hover .hotspot-tag, .hotspot-group:focus-visible .hotspot-tag, .labels-on .hotspot-tag { opacity:1; transform:translateY(0); }
+/* hotspots */
+#hotspots{position:absolute;inset:0;z-index:10}
+.hs{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;cursor:pointer;background:none;border:0;padding:0}
+.hs .wrap{position:relative;display:flex;align-items:center;justify-content:center;width:34px;height:34px}
+.hs .ping{position:absolute;width:100%;height:100%;border-radius:50%;background:var(--ping);animation:pulse 2.2s infinite ease-in-out}
+.hs .core{position:relative;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--core);border:1px solid var(--bd);font-size:10px;color:#fff;font-weight:bold;box-shadow:0 0 10px var(--ping)}
+.tag{opacity:0;transform:translateY(4px);transition:all .2s;pointer-events:none;white-space:nowrap;margin-top:4px;padding:4px 8px;background:rgba(15,23,42,.9);border:1px solid var(--tagb);border-radius:4px;font:10px 'Press Start 2P',monospace;color:var(--tag)}
+.hs:hover .tag,.hs:focus-visible .tag,.labels-on .tag{opacity:1;transform:none}
+.cyan{--ping:rgba(34,211,238,.4);--core:rgba(6,182,212,.9);--bd:#a5f3fc;--tag:#67e8f9;--tagb:rgba(34,211,238,.8)}
+.amber{--ping:rgba(251,191,36,.4);--core:rgba(245,158,11,.9);--bd:#fde68a;--tag:#fcd34d;--tagb:rgba(251,191,36,.8)}
+.emerald{--ping:rgba(52,211,153,.4);--core:rgba(16,185,129,.9);--bd:#a7f3d0;--tag:#6ee7b7;--tagb:rgba(52,211,153,.8)}
+.rose{--ping:rgba(244,63,94,.4);--core:rgba(225,29,72,.9);--bd:#fda4af;--tag:#fda4af;--tagb:rgba(244,63,94,.8)}
+@keyframes pulse{0%{transform:scale(.85);opacity:.9}50%{transform:scale(1.25);opacity:.4}100%{transform:scale(.85);opacity:.9}}
+@keyframes ping{75%,100%{transform:scale(2);opacity:0}}
 
-  /* Hover tooltips for HUD buttons */
-  [data-tip] { position: relative; }
-  [data-tip]::after {
-    content: attr(data-tip); position:absolute; top:calc(100% + 8px); right:0; white-space:nowrap; opacity:0; pointer-events:none;
-    background:rgba(15,23,42,.95); border:1px solid #67e8f9; color:#a5f3fc; font:10px 'Press Start 2P',monospace; padding:5px 8px; border-radius:4px; transition:opacity .15s;
-  }
-  [data-tip].tip-top::after { top:auto; bottom:calc(100% + 8px); right:auto; left:0; }
-  [data-tip]:hover::after, [data-tip]:focus-visible::after { opacity:1; }
+/* HUD */
+.hud{position:absolute;z-index:20}
+#progress{top:24px;left:24px;padding:12px 20px;border-radius:6px;min-width:280px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.row .l{font-size:10px;color:#a5b4fc;letter-spacing:.05em;display:flex;align-items:center;gap:6px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;animation:ping 1s cubic-bezier(0,0,.2,1) infinite}
+#prog-text{font-size:11px;color:#fcd34d;font-weight:bold}
+#nodes{display:flex;gap:6px;margin:8px 0}
+.node{height:10px;width:20px;border-radius:2px;border:1px solid #475569;background:rgba(51,65,85,.8)}
+.node.solved{background:#22d3ee;border-color:#a5f3fc;box-shadow:0 0 6px #22d3ee}
+.node.active{background:rgba(251,191,36,.8);border-color:#fcd34d;animation:pulse 2.2s infinite}
+.bar{width:100%;height:6px;background:#0f172a;border-radius:99px;overflow:hidden;border:1px solid rgba(49,46,129,.6);margin-top:4px}
+#prog-bar{height:100%;width:0;border-radius:99px;background:linear-gradient(to right,#6366f1,#22d3ee,#34d399);transition:width .5s}
+#timer-box{top:24px;left:50%;transform:translateX(-50%);padding:10px 32px;border-radius:8px;display:flex;flex-direction:column;align-items:center;border:2px solid rgba(34,211,238,.8);box-shadow:0 0 20px rgba(34,211,238,.35)}
+#timer-label{font-size:9px;color:#67e8f9;letter-spacing:.1em;margin-bottom:2px}
+#timer{font-size:clamp(36px,4.5vw,60px);letter-spacing:.1em;line-height:1;color:#22d3ee;text-shadow:0 0 12px rgba(34,211,238,.9)}
+#controls{top:24px;right:24px;display:flex;gap:8px}
+.hbtn{font:10px 'Press Start 2P',monospace;color:#cbd5e1;padding:8px 12px;border-radius:4px;cursor:pointer;transition:color .15s,background .15s}
+.hbtn:hover{background:rgba(30,27,75,.8);color:#67e8f9}
+#btn-menu:hover{color:#fcd34d}
+#hint-wrap{bottom:24px;left:24px}
+#btn-hint{background:rgba(88,28,135,.9);padding:14px 20px;border-radius:6px;display:flex;align-items:center;gap:8px;letter-spacing:.05em}
+#inv{bottom:24px;right:24px;padding:10px 16px;border-radius:6px;display:flex;align-items:center;gap:12px}
+#inv .lbl{font-size:10px;color:#a5b4fc;letter-spacing:.05em;margin-right:4px}
+.slot{width:44px;height:44px;background:rgba(2,6,23,.6);border:2px dashed rgba(51,65,85,.8);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:24px}
+.slot span{color:#475569;font-size:9px}
+.slot.filled{border-style:solid;border-color:#fbbf24}
+[data-tip]{position:relative}
+[data-tip]::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);right:0;white-space:nowrap;opacity:0;pointer-events:none;background:rgba(15,23,42,.95);border:1px solid #67e8f9;color:#a5f3fc;font:10px 'Press Start 2P',monospace;padding:5px 8px;border-radius:4px;transition:opacity .15s}
+[data-tip].tip-top::after{top:auto;bottom:calc(100% + 8px);right:auto;left:0}
+[data-tip]:hover::after,[data-tip]:focus-visible::after{opacity:1}
 
-  /* Progress nodes */
-  .node { height:.625rem; width:1.25rem; border-radius:2px; border:1px solid #475569; background:rgba(51,65,85,.8); }
-  .node.solved { background:#22d3ee; border-color:#a5f3fc; box-shadow:0 0 6px #22d3ee; }
-  .node.active { background:rgba(251,191,36,.8); border-color:#fcd34d; animation:pulse-ring 2.2s infinite; }
+/* toast + dialogs */
+#toast{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:30;padding:12px 20px;border-radius:6px;font:12px 'Press Start 2P',monospace;line-height:1.6;color:#a5f3fc;text-align:center;max-width:70%}
+#toast.warn{color:#fca5a5;border-color:#ef4444}
+#modal{position:absolute;inset:0;z-index:40;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center}
+.dialog{width:90%;max-width:448px;max-height:92%;overflow-y:auto;padding:24px;border-radius:8px}
+.dialog.wide{max-width:680px}
+.dialog h2{font:14px/1.6 'Press Start 2P',monospace;color:#fcd34d;margin:0 0 16px}
+.dbody{font:24px/1.25 'VT323',monospace;color:#e2e8f0}
+.dbody p{margin:0 0 10px}
+.dbody label{display:flex;align-items:center;gap:12px;margin-bottom:12px;cursor:pointer}
+.dbody input[type=checkbox]{width:20px;height:20px;accent-color:#a855f7}
+#da{display:flex;justify-content:flex-end;gap:12px;margin-top:20px}
+.code{margin:0 0 8px;padding:10px 14px;background:#020617;border:1px solid #334155;border-radius:4px;font:22px/1.2 'VT323',monospace;color:#a5f3fc;white-space:pre;overflow-x:auto;user-select:text}
+.err{color:#fca5a5}
+.opt{display:block;width:100%;text-align:left;margin-top:6px;padding:6px 10px;background:#1e1b4b;border:2px solid #6366f1;border-radius:4px;color:#e2e8f0;font:22px 'VT323',monospace;cursor:pointer}
+.opt:hover:not(:disabled){border-color:#22d3ee}
+.opt.bad{border-color:#ef4444;color:#fca5a5;opacity:.7}
+.opt.good{border-color:#4ade80;color:#bbf7d0}
+.fb{margin:10px 0 0;min-height:1.2em}
+.fb.ok{color:#86efac}.fb.no{color:#fca5a5}
+.orange{--ping:rgba(249,115,22,.55);--core:rgba(234,88,12,.95);--bd:#fed7aa;--tag:#fdba74;--tagb:rgba(251,146,60,.9)}
+.violet{--ping:rgba(167,139,250,.4);--core:rgba(139,92,246,.9);--bd:#ddd6fe;--tag:#c4b5fd;--tagb:rgba(167,139,250,.8)}
+.exp{color:#fcd34d}
+.editor{display:block;width:100%;background:#020617;border:2px solid #334155;border-radius:4px;padding:10px 14px;font:22px/1.2 'VT323',monospace;color:#a5f3fc;resize:none;user-select:text;tab-size:4;white-space:pre;overflow:auto}
+.editor:focus{border-color:#22d3ee;outline:none}
+.con{margin-top:8px;min-height:64px;padding:8px 14px;background:#0b1120;border:1px dashed #475569;border-radius:4px;font:22px/1.2 'VT323',monospace;white-space:pre-wrap;color:#e2e8f0;user-select:text}
+.con .ok{color:#86efac}
+.btn:disabled{opacity:.5;cursor:wait}
 
-  /* Timer states */
-  #timer-box.low { border-color:#ef4444; animation:blink 1s steps(2) infinite; }
-  @keyframes blink { 50% { box-shadow:0 0 28px rgba(239,68,68,.9); } }
-  @media (prefers-reduced-motion: reduce) { .hotspot-pulse, .node.active, #timer-box.low { animation:none; } }
+@media(max-width:639px){
+#progress{top:16px;left:16px;padding:10px 14px;min-width:240px}
+#timer-box{top:16px;padding:8px 24px}
+#controls{top:16px;right:16px}
+#hint-wrap{bottom:16px;left:16px}
+#inv{bottom:16px;right:16px}
+#inv .lbl{display:none}
+}
+@media(prefers-reduced-motion:reduce){.ping,.node.active,.dot{animation:none}}
 </style>
 </head>
-<body class="bg-black text-slate-100 h-screen w-screen overflow-hidden select-none flex flex-col justify-center items-center">
-<main id="room" class="relative w-full h-full max-w-[1920px] max-h-[1080px] aspect-[16/9] mx-auto overflow-hidden bg-slate-950 flex items-center justify-center">
+<body>
+<main id="room">
+<img alt="Cozy starlit room with a window, refrigerator, tea table and exit door" src="room_door_closed_no_girl.png"/>
 
-<img alt="Cozy starlit room with a window, refrigerator, tea table and exit door" class="w-full h-full object-contain md:object-cover pointer-events-none select-none" src="room_door_closed_no_girl.png"/>
-
-<!-- Hotspots (each has a hover/focus label naming the object) -->
-<div id="hotspots" class="absolute inset-0 z-10 pointer-events-auto">
-  <button data-hs="window" aria-label="Window, Star Matrix puzzle" class="hotspot-group absolute top-[16%] left-[49%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer">
-    <div class="relative flex items-center justify-center w-9 h-9">
-      <span class="absolute inline-flex w-full h-full rounded-full bg-cyan-400/40 hotspot-pulse"></span>
-      <span class="relative inline-flex items-center justify-center rounded-full w-6 h-6 bg-cyan-500/90 text-[10px] text-white font-bold border border-cyan-200 shadow-lg shadow-cyan-500/50">✦</span>
-    </div>
-    <div id="tag-window" class="hotspot-tag mt-1 px-2 py-1 bg-slate-900/90 border border-cyan-400/80 rounded text-[10px] font-pixel text-cyan-300 shadow"></div>
-  </button>
-  <button data-hs="fridge" aria-label="Refrigerator, code lock" class="hotspot-group absolute top-[43%] left-[43.5%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer">
-    <div class="relative flex items-center justify-center w-8 h-8">
-      <span class="absolute inline-flex w-full h-full rounded-full bg-amber-400/40 hotspot-pulse"></span>
-      <span class="relative inline-flex items-center justify-center rounded-full w-5 h-5 bg-amber-500/90 text-[9px] text-white font-bold border border-amber-200 shadow-lg shadow-amber-500/50">🔒</span>
-    </div>
-    <div id="tag-fridge" class="hotspot-tag mt-1 px-2 py-1 bg-slate-900/90 border border-amber-400/80 rounded text-[10px] font-pixel text-amber-300 shadow"></div>
-  </button>
-  <button data-hs="tea" aria-label="Tea table, tea cipher" class="hotspot-group absolute top-[65%] left-[46.5%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer">
-    <div class="relative flex items-center justify-center w-9 h-9">
-      <span class="absolute inline-flex w-full h-full rounded-full bg-emerald-400/40 hotspot-pulse"></span>
-      <span class="relative inline-flex items-center justify-center rounded-full w-6 h-6 bg-emerald-500/90 text-[11px] text-white font-bold border border-emerald-200 shadow-lg shadow-emerald-500/50">☕</span>
-    </div>
-    <div id="tag-tea" class="hotspot-tag mt-1 px-2 py-1 bg-slate-900/90 border border-emerald-400/80 rounded text-[10px] font-pixel text-emerald-300 shadow"></div>
-  </button>
-  <button data-hs="door" aria-label="Exit door, keypad" class="hotspot-group absolute top-[47%] left-[80%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer">
-    <div class="relative flex items-center justify-center w-8 h-8">
-      <span class="absolute inline-flex w-full h-full rounded-full bg-rose-500/40 hotspot-pulse"></span>
-      <span class="relative inline-flex items-center justify-center rounded-full w-5 h-5 bg-rose-600/90 text-[10px] text-white font-bold border border-rose-300 shadow-lg shadow-rose-500/50">🔑</span>
-    </div>
-    <div id="tag-door" class="hotspot-tag mt-1 px-2 py-1 bg-slate-900/90 border border-rose-500/80 rounded text-[10px] font-pixel text-rose-300 shadow"></div>
-  </button>
+<div id="hotspots">
+<button class="hs orange" data-hs="window" aria-label="Window, Star Matrix puzzle" style="top:16%;left:49%"><div class="wrap"><span class="ping"></span><span class="core">✦</span></div><div id="tag-window" class="tag"></div></button>
+<button class="hs amber" data-hs="fridge" aria-label="Refrigerator, code lock" style="top:43%;left:43.5%"><div class="wrap"><span class="ping"></span><span class="core">🔒</span></div><div id="tag-fridge" class="tag"></div></button>
+<button class="hs emerald" data-hs="tea" aria-label="Tea table, tea cipher" style="top:65%;left:46.5%"><div class="wrap"><span class="ping"></span><span class="core">☕</span></div><div id="tag-tea" class="tag"></div></button>
+<button class="hs violet" data-hs="clock" aria-label="Wall clock, chime counter" style="top:26%;left:39.5%"><div class="wrap"><span class="ping"></span><span class="core">🕰️</span></div><div id="tag-clock" class="tag"></div></button>
+<button class="hs rose" data-hs="door" aria-label="Exit door" style="top:47%;left:80%"><div class="wrap"><span class="ping"></span><span class="core">🔑</span></div><div id="tag-door" class="tag"></div></button>
 </div>
 
-<!-- Upper left: progress -->
-<header class="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 pixel-box px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-md min-w-[240px] sm:min-w-[280px]">
-  <div class="flex items-center justify-between gap-2 mb-1.5">
-    <div class="text-[9px] sm:text-[10px] font-pixel text-indigo-300 tracking-wider flex items-center gap-1.5">
-      <span class="inline-block w-2 h-2 rounded-full bg-green-400 animate-ping"></span>ROOM PROGRESS
-    </div>
-    <span id="prog-text" class="font-pixel text-[10px] sm:text-xs text-amber-300 font-bold">2 / 5 SOLVED</span>
-  </div>
-  <div id="nodes" class="flex items-center gap-1.5 my-2">
-    <span class="node" title="Wall Clock"></span><span class="node" title="Cat Basket"></span><span class="node" title="Star Window"></span><span class="node" title="Tea Cipher"></span><span class="node" title="Exit Keypad"></span>
-  </div>
-  <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-indigo-900/60 mt-1">
-    <div id="prog-bar" class="bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400 h-full rounded-full transition-all duration-500" style="width:40%"></div>
-  </div>
+<header id="progress" class="hud box">
+<div class="row"><div class="l pix"><span class="dot"></span>ROOM PROGRESS</div><span id="prog-text" class="pix">0 / 4 SOLVED</span></div>
+<div id="nodes"><span class="node" title="Star Window"></span><span class="node" title="Code Lock"></span><span class="node" title="Tea Cipher"></span><span class="node" title="Wall Clock"></span></div>
+<div class="bar"><div id="prog-bar"></div></div>
 </header>
 
-<!-- Upper center: timer -->
-<div id="timer-box" class="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 z-20 pixel-box px-6 py-2 sm:px-8 sm:py-2.5 rounded-lg flex flex-col items-center justify-center border-2 border-red-500/80 shadow-[0_0_20px_rgba(239,68,68,0.35)]" role="timer">
-  <div id="timer-label" class="text-[8px] sm:text-[9px] font-pixel text-red-400 tracking-widest mb-0.5">TIME REMAINING</div>
-  <span id="timer" class="font-digital text-4xl sm:text-5xl lg:text-6xl font-black tracking-widest leading-none text-red-500 drop-shadow-[0_0_12px_rgba(239,68,68,0.9)]">28:45</span>
+<div id="timer-box" class="hud box" role="timer">
+<div id="timer-label" class="pix">TIME ELAPSED</div>
+<span id="timer" class="dig">00:00</span>
 </div>
 
-<!-- Upper right: controls -->
-<aside class="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 flex gap-2">
-  <button id="btn-sound" data-tip="Turn sound effects on or off" aria-pressed="true" class="pixel-box px-3 py-2 rounded text-[10px] font-pixel hover:bg-indigo-950/80 text-slate-300 hover:text-cyan-300 transition-colors">🔊 SOUND: ON</button>
-  <button id="btn-menu" data-tip="Open game menu" class="pixel-box px-3 py-2 rounded text-[10px] font-pixel hover:bg-indigo-950/80 text-slate-300 hover:text-amber-300 transition-colors">⚙️ MENU</button>
+<aside id="controls" class="hud">
+<button id="btn-sound" class="hbtn box" data-tip="Turn sound effects on or off" aria-pressed="true">🔊 SOUND: ON</button>
+<button id="btn-menu" class="hbtn box" data-tip="Open game menu">⚙️ MENU</button>
 </aside>
 
-<!-- Lower left: hints -->
-<div class="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 z-20">
-  <button id="btn-hint" data-tip="Ask for a hint (uses 1 hint)" class="tip-top pixel-btn bg-purple-900/90 hover:bg-purple-800 text-yellow-300 font-pixel text-[10px] sm:text-xs tracking-wider px-4 py-3 sm:px-5 sm:py-3.5 rounded-md flex items-center gap-2 cursor-pointer shadow-lg">
-    <span class="text-base sm:text-lg">💡</span><span id="hint-label">HINTS [3/3 REMAINING]</span>
-  </button>
+<div id="hint-wrap" class="hud">
+<button id="btn-hint" class="btn tip-top" data-tip="Ask for a hint (uses 1 hint)"><span style="font-size:18px">💡</span><span id="hint-label">HINTS [3/3 REMAINING]</span></button>
 </div>
 
-<!-- Lower right: inventory -->
-<footer id="inv" class="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 pixel-box px-4 py-2 sm:py-2.5 rounded-md flex items-center gap-3">
-  <span class="font-pixel text-[9px] sm:text-[10px] text-indigo-300 tracking-wider mr-1 hidden sm:inline-block">INVENTORY:</span>
-  <div class="slot w-10 h-10 sm:w-11 sm:h-11 bg-slate-950/60 border-2 border-dashed border-slate-700/80 rounded flex items-center justify-center text-2xl"><span class="text-slate-600 font-pixel text-[9px]">+</span></div>
-  <div class="slot w-10 h-10 sm:w-11 sm:h-11 bg-slate-950/60 border-2 border-dashed border-slate-700/80 rounded flex items-center justify-center text-2xl"><span class="text-slate-600 font-pixel text-[9px]">+</span></div>
-  <div class="slot w-10 h-10 sm:w-11 sm:h-11 bg-slate-950/60 border-2 border-dashed border-slate-700/80 rounded flex items-center justify-center text-2xl"><span class="text-slate-600 font-pixel text-[9px]">+</span></div>
-  <div class="slot w-10 h-10 sm:w-11 sm:h-11 bg-slate-950/60 border-2 border-dashed border-slate-700/80 rounded flex items-center justify-center text-2xl"><span class="text-slate-600 font-pixel text-[9px]">+</span></div>
+<footer id="inv" class="hud box">
+<span class="lbl pix">INVENTORY:</span>
+<div class="slot"><span class="pix">+</span></div><div class="slot"><span class="pix">+</span></div><div class="slot"><span class="pix">+</span></div><div class="slot"><span class="pix">+</span></div>
 </footer>
 
-<!-- Non-blocking notice (one at a time) -->
-<div id="toast" role="status" aria-live="polite" class="hidden absolute bottom-6 left-1/2 -translate-x-1/2 z-30 pixel-box px-5 py-3 rounded-md font-pixel text-[10px] sm:text-xs text-cyan-200 text-center max-w-[70%]"></div>
-
-<!-- Modal layer: only one dialog can exist at a time -->
-<div id="modal" class="hidden absolute inset-0 z-40 bg-black/65 items-center justify-center"></div>
+<div id="toast" class="box hidden" role="status" aria-live="polite"></div>
+<div id="modal" class="hidden"></div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
 <script>
+(() => {
 const $ = id => document.getElementById(id);
-requireLogin();
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+try { requireLogin(); } catch (e) { console.error(e); }
 sessionStorage.removeItem('lastSessionId');
+
+/* ---------- Timer (counts up from 00:00) ---------- */
+const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+const startTs = Date.now();
+let elapsed = 0;
+function tick(){ if (over) return; elapsed = Math.floor((Date.now() - startTs) / 1000); $('timer').textContent = fmt(elapsed); }
+setInterval(tick, 1000);
+
+/* ---------- State: items collected = puzzles solved ---------- */
+const PUZ = ['window', 'fridge', 'tea', 'clock'];
+const got = []; // puzzle ids solved, in order (one inventory item each)
+const drafts = {}; // the player's unsaved edits per puzzle
+let hints = 3, over = null, sound = true, labels = false, toastT, escFn = null;
+const count = () => got.length;
+
+/* ---------- Save result (time_total_sec = elapsed; time_left_sec kept at 0 for the existing table) ---------- */
 let sessionSaved = false;
 async function saveSession(result){
-  if (sessionSaved) return; sessionSaved = true;
-  try {
-    const { data, error } = await db.from('game_sessions').insert({
-      result, solved_count: count(), hints_used: 3 - hints, time_total_sec: T_TOTAL, time_left_sec: t
-    }).select('id').single();
-    if (error) throw error;
-    sessionStorage.setItem('lastSessionId', data.id);
-  } catch (e) { console.error(e); toast('Could not save result. Check connection.', true); }
+if (sessionSaved) return; sessionSaved = true;
+try {
+const { data, error } = await db.from('game_sessions').insert({
+result, solved_count: count(), hints_used: 3 - hints, time_total_sec: elapsed, time_left_sec: 0
+}).select('id').single();
+if (error) throw error;
+sessionStorage.setItem('lastSessionId', data.id);
+} catch (e) { console.error(e); toast('Could not save result. Check connection.', true); }
 }
-const HS = { window:['Window','Star Matrix'], fridge:['Refrigerator','Code Lock'], tea:['Tea Table','Tea Cipher'], door:['Exit Door','Keypad'] };
-const solved = [true, true, false, false, false];   // clock, cat, window, tea, door
-const HS_NODE = { window:2, tea:3, door:4 };
-let hints = 3, fridgeOpen = false, over = null, sound = true, labels = false, warned = false, toastT;
 
-/* ---------- Dialog manager: opening a dialog replaces the current one ---------- */
-let escFn = null;
-function closeDlg(){ $('modal').classList.add('hidden'); $('modal').classList.remove('flex'); $('modal').innerHTML=''; escFn=null; }
-function dlg({icon='', title, body, actions}){
-  const M = $('modal');
-  M.innerHTML = `<div class="pixel-box rounded-lg p-5 sm:p-6 w-[90%] max-w-md" role="dialog" aria-modal="true" aria-labelledby="dt">
-    <h2 id="dt" class="font-pixel text-xs sm:text-sm text-amber-300 mb-4 leading-relaxed">${icon} ${title}</h2>
-    <div class="font-digital text-2xl leading-snug text-slate-200">${body}</div>
-    <div id="da" class="flex justify-end gap-3 mt-6"></div></div>`;
-  actions.forEach(a => {
-    const b = document.createElement('button');
-    b.textContent = a.l;
-    b.className = 'pixel-btn font-pixel text-[10px] sm:text-xs px-4 py-3 rounded ' + (a.k==='dan' ? 'dan bg-red-900 text-red-100' : a.k==='sec' ? 'sec bg-slate-800 text-slate-200' : 'bg-purple-800 text-yellow-300');
-    b.onclick = () => { closeDlg(); a.f && a.f(); };
-    $('da').append(b);
-  });
-  M.classList.remove('hidden'); M.classList.add('flex');
-  escFn = () => closeDlg();
-  $('da').lastElementChild.focus();
+/* ---------- Real Python (Pyodide) in a Web Worker, so an infinite loop cannot freeze the page ---------- */
+const WORKER_SRC = `importScripts('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js');
+const ready = loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/' });
+ready.then(() => postMessage({ ready: true }), e => postMessage({ fatal: String(e) }));
+onmessage = async e => {
+const py = await ready; let out = '';
+py.setStdout({ batched: s => out += s + '\\n' });
+py.setStderr({ batched: s => out += s + '\\n' });
+try { await py.runPythonAsync(e.data); postMessage({ out }); }
+catch (err) { postMessage({ out, err: String(err.message || err) }); }
+};`;
+let worker, pending = null, pyReady = false, pyFail = false, pyErr = '';
+function refreshRun(){
+const b = $('run'); if (!b) return;
+b.disabled = !pyReady;
+b.textContent = pyFail ? 'PYTHON FAILED TO LOAD' : pyReady ? '▶ RUN' : 'LOADING PYTHON...';
+}
+function startWorker(){
+pyReady = false;
+try {
+worker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type:'text/javascript' })));
+worker.onmessage = e => {
+const d = e.data;
+if (d.ready) { pyReady = true; refreshRun(); }
+else if (d.fatal) { pyFail = true; pyErr = d.fatal; refreshRun(); }
+else if (pending) { pending(d); pending = null; }
+};
+worker.onerror = e => { pyFail = true; pyErr = e.message || 'worker error'; refreshRun(); };
+} catch (e) { worker = null; pyFail = true; pyErr = String(e); refreshRun(); }
+}
+startWorker();
+function runPy(code){
+return new Promise(res => {
+if (!worker) return res({ err:'Python is not available: ' + pyErr });
+const timer = setTimeout(() => { worker.terminate(); startWorker(); pending = null; res({ err:'TimeoutError: the code ran for more than 5 seconds. Check for an infinite loop.' }); }, 5000);
+pending = d => { clearTimeout(timer); res(d); };
+worker.postMessage(code);
+});
+}
+const cleanErr = m => {
+const L = m.split('\n'), i = L.findIndex(l => l.includes('<exec>'));
+return (i < 0 ? m.trim() : 'Traceback (most recent call last):\n' + L.slice(i).join('\n').trim()).replace(/<exec>/g, 'main.py');
+};
+
+/* ---------- The 4 puzzles: buggy Python the player edits and runs ---------- */
+const P = {
+window: { icon:'✦', name:'Window', title:'Star Matrix', reward:['🌠','Star Map'],
+story:'The star matrix should add up the brightness of five stars, but the program crashes. Fix the code and run it.',
+expect:'14', must:/for\s/,
+code:`stars = [3, 1, 4, 1, 5]
+total = 0
+for i in range(len(stars) + 1):
+total += stars[i]
+print(total)`,
+why:'The loop went one index too far. A list of 5 items has valid indexes 0 to 4.',
+hint:'Check the range() call. The last valid index of a 5-item list is 4.' },
+fridge: { icon:'🔒', name:'Refrigerator', title:'Code Lock', reward:['🗝️','Silver Key'],
+story:'The lock needs the digit that comes after 7. Fix the code and run it.',
+expect:'Lock code: 8', must:/digit/,
+code:`digit = "7"
+code = digit + 1
+print("Lock code:", code)`,
+why:'"7" is a string. It must be converted with int() before a number can be added to it.',
+hint:'The error says a str and an int cannot be added. Convert one of them first.' },
+tea: { icon:'☕', name:'Tea Table', title:'Tea Cipher', reward:['📜','Cipher Note'],
+story:'The program should find the cup marked "black", but it will not even start. Fix the code and run it.',
+expect:'Cipher cup found: black', must:/for\s/,
+code:`cups = ["green", "black", "oolong"]
+for tea in cups:
+if tea = "black":
+print("Cipher cup found:", tea)`,
+why:'A single = assigns a value. Comparing two values needs ==.',
+hint:'Python compares values with two equals signs, not one.' },
+clock: { icon:'🕰️', name:'Wall Clock', title:'Chime Counter', reward:['⚙️','Clock Gear'],
+story:'At 15:00 the clock should chime 3 times, but the program crashes. Fix the code and run it.',
+expect:'Chimes: 3', must:/ring_hours/,
+code:`def ring_hours(hour):
+chimes = hour % 12
+return chimes
+
+ring_hours(15)
+print("Chimes:", chimes)`,
+why:'chimes only exists inside the function. Store the returned value in a variable outside it.',
+hint:'The variable chimes is created inside the function. Save the value that ring_hours returns.' }
+};
+
+/* ---------- Dialog manager ---------- */
+function closeDlg(){ $('modal').classList.add('hidden'); $('modal').innerHTML = ''; escFn = null; }
+function addBtn(a){
+const b = document.createElement('button');
+b.textContent = a.l; b.className = 'btn ' + (a.k || ''); b.disabled = !!a.dis;
+if (a.id) b.id = a.id;
+b.onclick = () => { if (!a.keep) closeDlg(); a.f && a.f(); };
+$('da').append(b); return b;
+}
+function dlg({ icon='', title, body, actions, wide }){
+$('modal').innerHTML = `<div class="box dialog${wide ? ' wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="dt">
+<h2 id="dt">${icon} ${title}</h2><div class="dbody">${body}</div><div id="da"></div></div>`;
+actions.forEach(addBtn);
+$('modal').classList.remove('hidden');
+escFn = closeDlg;
+$('da').lastElementChild.focus();
 }
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && escFn) escFn();
-  if (e.key === 'Tab' && !$('modal').classList.contains('hidden')) {
-    const f = [...$('modal').querySelectorAll('button,input')], i = f.indexOf(document.activeElement);
-    e.preventDefault(); f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
-  }
+if (e.key === 'Escape' && escFn) escFn();
+if (e.key === 'Tab' && e.target.tagName !== 'TEXTAREA' && !$('modal').classList.contains('hidden')) {
+const f = [...$('modal').querySelectorAll('button:not(:disabled),input,textarea')], i = f.indexOf(document.activeElement);
+e.preventDefault(); f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+}
 });
-const OK = { l:'OK', k:'pri' };
+const OK = { l:'OK' };
 
-/* ---------- Toast ---------- */
 function toast(msg, warn){
-  const t = $('toast');
-  t.textContent = msg;
-  t.className = 'absolute bottom-6 left-1/2 -translate-x-1/2 z-30 pixel-box px-5 py-3 rounded-md font-pixel text-[10px] sm:text-xs text-center max-w-[70%] ' + (warn ? 'text-red-300 !border-red-500' : 'text-cyan-200');
-  clearTimeout(toastT); toastT = setTimeout(() => t.classList.add('hidden'), 4000);
+const t = $('toast');
+t.textContent = msg; t.className = 'box' + (warn ? ' warn' : '');
+clearTimeout(toastT); toastT = setTimeout(() => t.classList.add('hidden'), 4000);
 }
 
-/* ---------- Progress ---------- */
-const count = () => solved.filter(Boolean).length;
-function renderProgress(){
-  const n = count(), firstOpen = solved.indexOf(false);
-  [...$('nodes').children].forEach((el, i) => el.className = 'node ' + (solved[i] ? 'solved' : i === firstOpen ? 'active' : ''));
-  $('prog-text').textContent = `${n} / 5 SOLVED`;
-  $('prog-bar').style.width = `${n * 20}%`;
-  for (const k in HS) {
-    const done = solved[HS_NODE[k]];
-    $('tag-' + k).textContent = HS[k][0] + ' · ' + HS[k][1] + (done ? ' ✔ Solved' : '');
-  }
-  $('tag-fridge').textContent = 'Refrigerator · Code Lock' + (fridgeOpen ? ' (empty)' : '');
-}
-function solve(i, name){
-  solved[i] = true; renderProgress();
-  toast(`Puzzle solved: ${name}. Room progress ${count()} / 5`);
+/* ---------- Progress + inventory (both drawn from the same list: got) ---------- */
+function renderAll(){
+const n = count(), firstOpen = PUZ.findIndex(k => !got.includes(k));
+[...$('nodes').children].forEach((el, i) => el.className = 'node ' + (got.includes(PUZ[i]) ? 'solved' : i === firstOpen ? 'active' : ''));
+$('prog-text').textContent = `${n} / 4 SOLVED`;
+$('prog-bar').style.width = `${n * 25}%`;
+PUZ.forEach(k => $('tag-' + k).textContent = P[k].name + ' · ' + P[k].title + (got.includes(k) ? ' ✔ Solved' : ''));
+$('tag-door').textContent = 'Exit Door · ' + (n === 4 ? 'Ready to open' : `Locked (${n} / 4 items)`);
+document.querySelectorAll('.slot').forEach((s, i) => {
+const k = got[i];
+if (k) { s.textContent = P[k].reward[0]; s.title = P[k].reward[1]; s.classList.add('filled'); }
+});
 }
 
-/* ---------- Inventory ---------- */
-function addItem(icon, name){
-  const s = [...document.querySelectorAll('.slot')].find(x => !x.dataset.item);
-  if (!s) return toast('Inventory is full.');
-  s.dataset.item = name; s.title = name; s.textContent = icon;
-  s.className = s.className.replace('border-dashed border-slate-700/80', 'border-solid border-amber-400');
-  toast(`Item added to inventory: ${name}`);
-}
-
-/* ---------- Hotspots ---------- */
+/* ---------- Puzzle pop-up: edit the code, press Run ---------- */
 function act(id){
-  if (over) return toast(over === 'time' ? 'Time is up. The room is closed.' : 'You already escaped the room.');
-  if (id === 'window') return solved[2] ? toast('Star Matrix is already solved.') : solve(2, 'Star Matrix');
-  if (id === 'tea')    return solved[3] ? toast('Tea Cipher is already solved.') : solve(3, 'Tea Cipher');
-  if (id === 'fridge') {
-    if (fridgeOpen) return toast('The refrigerator is empty.');
-    fridgeOpen = true; renderProgress(); return addItem('🗝️', 'Silver Key');
-  }
-  if (id === 'door') {
-    if (count() < 4) return toast(`The door is locked. Solve the other puzzles first (${count()} / 4).`);
-    solved[4] = true; renderProgress(); over = 'won';
-    const savedP = saveSession('won');
-    dlg({ icon:'🎉', title:'All 5 puzzles solved!', body:`You unlocked the door and escaped with <b>${fmt(t)}</b> left.`, actions:[{ l:'Continue', f:async () => { await savedP; location.href = 'submission-form.html'; } }] });
-  }
+if (over) return toast(over === 'won' ? 'You already escaped the room.' : 'You left the room.');
+if (id === 'door') return count() < 4 ? toast(`The door is locked. Fix all 4 puzzles to collect every item (${count()} / 4).`) : win();
+if (got.includes(id)) return toast(`Already solved. You have the ${P[id].reward[1]}.`);
+openPuzzle(id);
 }
-document.querySelectorAll('[data-hs]').forEach(b => b.onclick = () => act(b.dataset.hs));
+function openPuzzle(id){
+const p = P[id];
+dlg({ icon:p.icon, title:p.title, wide:true,
+body:`<p>${p.story}</p><p class="exp">Expected output: <b>${esc(p.expect)}</b></p>
+<textarea id="ed" class="editor" spellcheck="false" rows="7" aria-label="Python code editor"></textarea>
+<div id="con" class="con" aria-live="polite">Console output appears here after you press Run.</div>`,
+actions:[ { l:'LOADING PYTHON...', id:'run', keep:1, dis:1, f:() => run(id) },
+{ l:'Reset Code', k:'sec', keep:1, f:() => { $('ed').value = p.code; drafts[id] = p.code; $('con').textContent = 'Code reset.'; } },
+{ l:'Close', k:'sec' } ] });
+const ed = $('ed');
+ed.value = drafts[id] ?? p.code;
+ed.oninput = () => drafts[id] = ed.value;
+ed.onkeydown = e => {
+if (e.key === 'Tab') { e.preventDefault(); const s = ed.selectionStart; ed.setRangeText(' ', s, ed.selectionEnd, 'end'); ed.oninput(); }
+if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && pyReady) run(id);
+};
+refreshRun(); ed.focus();
+if (pyFail) $('con').textContent = 'Python could not start in this browser (' + pyErr + ').';
+}
+async function run(id){
+const p = P[id], code = $('ed').value, btn = $('run');
+btn.disabled = true; btn.textContent = 'RUNNING...';
+const d = await runPy(code), con = $('con');
+if (!con) return;
+const out = (d.out || '').trim();
+let html = out ? esc(out) + '\n' : '';
+if (d.err) html += `<span class="err">${esc(cleanErr(d.err))}</span>`;
+else if (out !== p.expect) html += `<span class="err">It ran, but the output is not what the lock expects.</span>`;
+else if (!p.must.test(code)) html += `<span class="err">The output matches, but keep the original code and fix the bug in it.</span>`;
+else {
+got.push(id); renderAll();
+con.innerHTML = html + `<span class="ok">✔ Correct! ${esc(p.why)}\nItem unlocked: ${p.reward[0]} ${p.reward[1]}</span>`;
+$('ed').readOnly = true; $('da').innerHTML = ''; addBtn({ l:'Continue' }).focus();
+return toast(`Item unlocked: ${p.reward[1]} (${count()} / 4)`);
+}
+con.innerHTML = html; refreshRun();
+}
+function win(){
+over = 'won'; elapsed = Math.floor((Date.now() - startTs) / 1000); $('timer').textContent = fmt(elapsed);
+const savedP = saveSession('won');
+dlg({ icon:'🎉', title:'Door unlocked!', body:`You used all 4 items to unlock the door and escaped in <b>${fmt(elapsed)}</b>.`,
+actions:[{ l:'Continue', f:async () => { await savedP; location.href = 'submission-form.html'; } }] });
+}
+$('hotspots').addEventListener('click', e => {
+const b = e.target.closest('[data-hs]');
+if (!b) return;
+try { act(b.dataset.hs); } catch (err) { console.error(err); toast('Error: ' + err.message, true); }
+});
 
 /* ---------- Hints ---------- */
 function renderHints(){ $('hint-label').textContent = `HINTS [${hints}/3 REMAINING]`; $('btn-hint').style.opacity = hints ? 1 : .6; }
-function hintText(){
-  if (!solved[2]) return 'Look closely at the moonlit window. The stars form a pattern that has to be matched.';
-  if (!solved[3]) return 'The tea set on the table holds a cipher. Compare the cup symbols with the teapot.';
-  if (!solved[4]) return 'Every other puzzle is solved. Head to the exit door and use the keypad.';
-  return 'The room is complete. Use the exit door.';
-}
+function hintText(){ const k = PUZ.find(x => !got.includes(x)); return k ? P[k].hint : 'You have all 4 items. Head to the exit door.'; }
 $('btn-hint').onclick = () => {
-  if (over) return toast('Hints are unavailable once the game has ended.');
-  if (!hints) return dlg({ icon:'💡', title:'No hints remaining', body:'All 3 hints have been used.', actions:[OK] });
-  dlg({ icon:'💡', title:'Use a hint?', body:`<b>${hints} of 3</b> hints remaining.<br>A used hint cannot be returned.`,
-    actions:[ { l:'Cancel', k:'sec' }, { l:'Use Hint', f:() => {
-      hints--; renderHints();
-      dlg({ icon:'💡', title:'Hint', body:`${hintText()}<p class="mt-3 text-amber-300">Hints remaining: <b>${hints} of 3</b></p>`, actions:[OK] });
-    } } ] });
+if (over) return toast('Hints are unavailable once the game has ended.');
+if (!hints) return dlg({ icon:'💡', title:'No hints remaining', body:'All 3 hints have been used.', actions:[OK] });
+dlg({ icon:'💡', title:'Use a hint?', body:`<b>${hints} of 3</b> hints remaining.<br>A used hint cannot be returned.`,
+actions:[ { l:'Cancel', k:'sec' }, { l:'Use Hint', f:() => {
+hints--; renderHints();
+dlg({ icon:'💡', title:'Hint', body:`${hintText()}<p style="margin-top:12px;color:#fcd34d">Hints remaining: <b>${hints} of 3</b></p>`, actions:[OK] });
+} } ] });
 };
 
 /* ---------- Sound + Menu ---------- */
 function setSound(v){ sound = v; $('btn-sound').textContent = v ? '🔊 SOUND: ON' : '🔇 SOUND: OFF'; $('btn-sound').setAttribute('aria-pressed', v); }
 function setLabels(v){ labels = v; $('hotspots').classList.toggle('labels-on', v); }
 $('btn-sound').onclick = () => setSound(!sound);
-function openMenu(){
-  dlg({ icon:'⚙️', title:'Game menu', body:`
-    <label class="flex items-center gap-3 mb-3 cursor-pointer"><input id="cb-sound" type="checkbox" class="w-5 h-5 accent-purple-500" ${sound?'checked':''}> Sound effects</label>
-    <label class="flex items-center gap-3 cursor-pointer"><input id="cb-labels" type="checkbox" class="w-5 h-5 accent-purple-500" ${labels?'checked':''}> Always show object labels</label>`,
-    actions:[ { l:'Leave Room', k:'dan', f:confirmLeave }, { l:'Resume' } ] });
-  $('cb-sound').onchange = e => setSound(e.target.checked);
-  $('cb-labels').onchange = e => setLabels(e.target.checked);
-}
+$('btn-menu').onclick = () => {
+dlg({ icon:'⚙️', title:'Game menu', body:`
+<label><input id="cb-sound" type="checkbox" ${sound ? 'checked' : ''}> Sound effects</label>
+<label><input id="cb-labels" type="checkbox" ${labels ? 'checked' : ''}> Always show object labels</label>`,
+actions:[ { l:'Leave Room', k:'dan', f:confirmLeave }, { l:'Resume' } ] });
+$('cb-sound').onchange = e => setSound(e.target.checked);
+$('cb-labels').onchange = e => setLabels(e.target.checked);
+};
 function confirmLeave(){
-  dlg({ icon:'🚪', title:'Leave the room?', body:`Your progress (<b>${count()} / 5</b> solved) will be lost.`,
-    actions:[ { l:'Stay', k:'sec' }, { l:'Leave Room', k:'dan', f:() => {
-      over = 'left'; saveSession('left');
-      $('modal').innerHTML = '';
-      dlg({ icon:'👋', title:'You left the room', body:'Start a new attempt whenever you are ready.', actions:[{ l:'Enter Again', f:() => location.reload() }] });
-      escFn = null;
-    } } ] });
+dlg({ icon:'🚪', title:'Leave the room?', body:`Your progress (<b>${count()} / 4</b> solved) will be lost.`,
+actions:[ { l:'Stay', k:'sec' }, { l:'Leave Room', k:'dan', f:() => {
+over = 'left'; saveSession('left');
+dlg({ icon:'👋', title:'You left the room', body:'Start a new attempt whenever you are ready.', actions:[{ l:'Enter Again', f:() => location.reload() }] });
+escFn = null;
+} } ] });
 }
-$('btn-menu').onclick = openMenu;
 
-/* ---------- Timer (start value can be set with ?time=mm:ss for testing) ---------- */
-const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
-let t = (() => { const p = new URLSearchParams(location.search).get('time'); if (!p) return 1725; const a = p.split(':').map(Number); return a.length > 1 ? a[0]*60 + a[1] : (a[0] || 1725); })();
-const T_TOTAL = t;
-function renderTime(){
-  $('timer').textContent = fmt(t);
-  const low = t <= 300 && t > 0;
-  $('timer-box').classList.toggle('low', low);
-  $('timer-label').textContent = low ? '⚠ LOW TIME' : 'TIME REMAINING';
-  if (low && !warned && !over) { warned = true; toast('Warning: less than 5 minutes remaining!', true); }
+/* Placement helper: open room.html?place=1, then click the spot where the wall clock icon should be */
+if (new URLSearchParams(location.search).has('place')) {
+$('room').addEventListener('click', e => {
+if (e.target.closest('[data-hs],.hud,#modal')) return;
+const r = $('room').getBoundingClientRect();
+const x = ((e.clientX - r.left) / r.width * 100).toFixed(1), y = ((e.clientY - r.top) / r.height * 100).toFixed(1);
+const c = document.querySelector('[data-hs="clock"]'); c.style.left = x + '%'; c.style.top = y + '%';
+toast(`Wall clock icon position: top:${y}%;left:${x}%`); clearTimeout(toastT);
+});
 }
-function tick(){
-  if (over) return;
-  t = Math.max(0, t - 1); renderTime();
-  if (t === 0) { over = 'time'; saveSession('time'); dlg({ icon:'⏰', title:'Time is up', body:'The timer reached 00:00 before the room was solved.', actions:[OK] }); }
-}
-setInterval(tick, 1000);
-renderTime(); renderProgress(); renderHints();
-if (t === 0) { t = 0; over = 'time'; saveSession('time'); dlg({ icon:'⏰', title:'Time is up', body:'The timer reached 00:00 before the room was solved.', actions:[OK] }); }
+
+renderAll(); renderHints();
+})();
 </script>
 </body></html>
