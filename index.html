@@ -168,6 +168,8 @@
   <div class="flex justify-between w-64 sm:w-80 font-retro text-xl text-slate-300"><span id="loadMsg">Initializing...</span><span id="loadPct">0%</span></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
 <!-- Starfield -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -275,7 +277,13 @@
       }
     }, 160);
   }
-  function handlePlayGame() {
+  async function handlePlayGame() {
+    const u = await getUser();
+    if (!u) {
+      showToast('warning', 'Login required', 'Log in first so your progress is saved.');
+      setTimeout(() => { location.href = 'login.html'; }, 1200);
+      return;
+    }
     const btn = $('playNowBtn');
     btn.classList.add('scale-90');
     setTimeout(() => { btn.classList.remove('scale-90'); startLoading(); }, 150);
@@ -286,5 +294,17 @@
     if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); handlePlayGame(); }
     if (e.key === 'Escape') { if (!$('settingsModal').classList.contains('hidden')) cancelSettings(); MODALS.forEach(closeModal); }
   });
+</script>
+<script>
+  /* Auth state in header */
+  (async () => {
+    const link = document.querySelector('a[href="login.html"]');
+    const u = await getUser();
+    if (!u || !link) return;
+    const p = await getProfile(u.id);
+    link.textContent = 'Log out (' + (p ? p.player_name : 'player') + ')';
+    link.href = '#';
+    link.addEventListener('click', (e) => { e.preventDefault(); logout(); });
+  })();
 </script>
 </body></html>

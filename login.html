@@ -369,10 +369,11 @@
 </div>
 </div>
 <div class="hidden fixed bottom-4 right-4 z-50 max-w-xs bg-space-850 border-2 px-3 py-2 font-mono text-xs" id="toast" role="status"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
 <script data-purpose="ui-interactions">
 document.addEventListener('DOMContentLoaded', () => {
   const $ = (id) => document.getElementById(id);
-  const DEMO_EMAIL = 'demo@ue.edu.ph', DEMO_PASS = 'Debug1234'; // demo account, used to show the wrong-credentials message
   let googleSignedIn = false, mode = 'login';
   const goHome = () => { window.location.href = 'index.html'; };
 
@@ -476,24 +477,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Google sign-in (placeholder) ----------
   const gBtn = $('google-signin-btn');
-  gBtn.addEventListener('click', () => {
-    if (mode === 'login') {
-      openDialog({ tag: 'Logged in', color: 'text-pixel-emerald', title: 'WELCOME BACK!', body: 'You are signed in with Google. Your progress and mistake history are loaded.',
-        actions: [{ label: 'Start playing', primary: true, onClick: goHome }] });
-      return;
-    }
-    googleSignedIn = true;
-    gBtn.disabled = true;
-    gBtn.classList.remove('bg-space-900', 'border-space-600', 'hover:border-slate-400', 'text-slate-300');
-    gBtn.classList.add('bg-space-950', 'border-emerald-500/60', 'text-emerald-400', 'cursor-default', 'opacity-80');
-    $('google-icon').classList.add('grayscale', 'opacity-60');
-    $('google-btn-label').textContent = '✓ SIGNED IN WITH GOOGLE';
-    ['email', 'password'].forEach((k) => { fields[k].input.value = ''; fields[k].input.disabled = true; check_clear(k); });
-    pwBtn.disabled = true;
-    $('account-fields-group').classList.add('opacity-40', 'pointer-events-none');
-    $('email-divider').classList.add('hidden'); $('forgot-password-btn').classList.add('hidden');
-    toast('Signed in with Google. Finish your player setup below.');
-    fields.name.input.focus();
+  gBtn.addEventListener('click', async () => {
+    const { error } = await db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/index.html' } });
+    if (error) toast('Google sign-in failed: ' + error.message, false);
   });
   function check_clear(k) { fields[k].wrap.classList.remove('field-error'); fields[k].err.classList.add('hidden'); }
 
@@ -506,7 +492,10 @@ document.addEventListener('DOMContentLoaded', () => {
       body: `We will send a password reset link to ${email}.`,
       actions: [
         { label: 'Cancel' },
-        { label: 'Send link', primary: true, onClick: () => toast(`Reset link sent to ${email}. Check your inbox.`) }
+        { label: 'Send link', primary: true, onClick: async () => {
+          const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/login.html' });
+          if (error) toast(error.message, false); else toast(`Reset link sent to ${email}. Check your inbox.`);
+        } }
       ]
     });
   });
@@ -539,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('tab-create').addEventListener('click', () => setMode('create'));
 
   // ---------- Submit ----------
-  $('escape-login-form').addEventListener('submit', (e) => {
+  $('escape-login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     touched.email = touched.password = touched.name = touched.agree = true;
     const keys = mode === 'login' ? ['email', 'password'] : (googleSignedIn ? ['name', 'agree'] : ['email', 'password', 'name', 'agree']);
@@ -558,32 +547,50 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = $('start-game-btn'), original = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<span class="animate-spin text-sm">◆</span><span>CHECKING ACCOUNT...</span>';
-    setTimeout(() => {
-      btn.innerHTML = original; btn.disabled = false;
-      const email = fields.email.input.value.trim().toLowerCase();
+    const restore = () => { btn.innerHTML = original; btn.disabled = false; };
+    const showErr = (msg, field) => {
+      bannerText.textContent = msg; banner.classList.remove('hidden');
+      if (field) { fields[field].wrap.classList.add('field-error'); fields[field].input.focus(); }
+    };
+    const email = fields.email.input.value.trim().toLowerCase();
+    try {
       if (mode === 'login') {
-        if (email === DEMO_EMAIL && pw.value !== DEMO_PASS) {
-          bannerText.textContent = 'Email or password is incorrect. Check both and try again, or select Forgot password? to reset it.';
-          banner.classList.remove('hidden');
-          fields.password.wrap.classList.add('field-error'); pw.value = ''; pw.focus();
+        const { error } = await db.auth.signInWithPassword({ email, password: pw.value });
+        restore();
+        if (error) {
+          if (/confirm/i.test(error.message)) showErr('Email not confirmed yet. Open the link we sent to your inbox, then log in.', 'email');
+          else { showErr('Email or password is incorrect. Check both and try again, or select Forgot password? to reset it.'); fields.password.wrap.classList.add('field-error'); pw.value = ''; pw.focus(); }
           return;
         }
         openDialog({ tag: 'Logged in', color: 'text-pixel-emerald', title: 'WELCOME BACK!', body: 'Your progress and mistake history are loaded.',
           actions: [{ label: 'Start playing', primary: true, onClick: goHome }] });
         return;
       }
-      if (!googleSignedIn && email === DEMO_EMAIL) {
-        bannerText.textContent = 'An account with this email already exists. Select Log in, or use a different email.';
-        banner.classList.remove('hidden'); fields.email.wrap.classList.add('field-error'); fields.email.input.focus();
+      const name = fields.name.input.value.trim();
+      const diff = document.querySelector('input[name="difficulty"]:checked').value;
+      const { data, error } = await db.auth.signUp({
+        email, password: pw.value,
+        options: { data: { player_name: name, difficulty: diff }, emailRedirectTo: location.origin + '/login.html' }
+      });
+      restore();
+      if (error) { showErr(error.message, 'email'); return; }
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        showErr('An account with this email already exists. Select Log in, or use a different email.', 'email'); return;
+      }
+      if (!data.session) {
+        openDialog({ tag: 'Check your email', color: 'text-pixel-amber', title: 'CONFIRM YOUR EMAIL', body: `We sent a confirmation link to ${email}. Open it, then log in.`,
+          actions: [{ label: 'Go to log in', primary: true, onClick: () => setMode('login') }] });
         return;
       }
-      const diff = document.querySelector('input[name="difficulty"]:checked').value;
       openDialog({
-        tag: 'Account ready', color: 'text-pixel-emerald', title: 'WELCOME, ' + fields.name.input.value.trim().toUpperCase() + '!',
+        tag: 'Account ready', color: 'text-pixel-emerald', title: 'WELCOME, ' + name.toUpperCase() + '!',
         body: `Your account is ready. Starting difficulty: ${diff.charAt(0) + diff.slice(1).toLowerCase()}. Your mistake history will be saved to your account.`,
         actions: [{ label: 'Start playing', primary: true, onClick: goHome }]
       });
-    }, 900);
+    } catch (err) {
+      restore();
+      showErr('Cannot reach server. Check internet and the keys in supabase-config.js.');
+    }
   });
 });
 </script>

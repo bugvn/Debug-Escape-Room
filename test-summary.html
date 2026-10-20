@@ -116,7 +116,7 @@
                 ?
                 <span class="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 bg-hearth-gold border border-space-950"></span>
 </div>
-<span>Luna</span>
+<span id="playerName">Player</span>
 <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4 L6 8 L10 4"/></svg>
 </div>
 </div>
@@ -143,16 +143,16 @@
 <div class="mt-3 mb-6 relative text-center">
 <p class="font-retro text-base tracking-widest text-slate-400 uppercase">Evaluation Report</p>
 <p class="font-pixel text-sm sm:text-base text-white tracking-widest mt-3">FINAL</p>
-<div class="font-pixel text-5xl sm:text-6xl text-hearth-cyan tracking-tight drop-shadow-[0_0_12px_rgba(56,225,255,0.8)] my-1">100</div>
+<div class="font-pixel text-5xl sm:text-6xl text-hearth-cyan tracking-tight drop-shadow-[0_0_12px_rgba(56,225,255,0.8)] my-1" id="scoreVal">--</div>
 <p class="font-pixel text-sm sm:text-base text-white tracking-widest">SCORE</p>
 </div>
 <!-- Prominent Rank Banner -->
 <div class="bg-space-850/90 border-2 border-hearth-lavender/50 p-4 mb-5 flex items-center relative">
 <div class="flex items-center space-x-3">
-<span class="text-3xl font-pixel text-hearth-gold">S</span>
+<span class="text-3xl font-pixel text-hearth-gold" id="rankLetter">-</span>
 <div>
-<p class="font-pixel text-sm text-hearth-lavender font-bold">RANK S - MASTER CODER</p>
-<p class="text-base text-slate-400 font-retro uppercase">Top 3.8% of Players</p>
+<p class="font-pixel text-sm text-hearth-lavender font-bold" id="rankTitle">LOADING...</p>
+<p class="text-base text-slate-400 font-retro uppercase" id="rankSub"></p>
 </div>
 </div>
 </div>
@@ -160,13 +160,13 @@
 <div class="grid grid-cols-2 gap-4">
 <div class="bg-space-800/80 border border-space-700 p-3">
 <div class="text-sm font-retro text-slate-400 mb-1">TIME TAKEN</div>
-<div class="font-pixel text-lg sm:text-xl text-hearth-peach">21m 15s</div>
-<div class="text-sm font-retro text-emerald-400 mt-1 uppercase">faster than avg</div>
+<div class="font-pixel text-lg sm:text-xl text-hearth-peach" id="timeVal">--</div>
+<div class="text-sm font-retro text-emerald-400 mt-1 uppercase" id="timeSub"></div>
 </div>
 <div class="bg-space-800/80 border border-space-700 p-3">
 <div class="text-sm font-retro text-slate-400 mb-1">ACCURACY</div>
-<div class="font-pixel text-lg sm:text-xl text-hearth-cyan">92%</div>
-<div class="text-sm font-retro text-hearth-lavender mt-1 uppercase">23 / 25 Nodes Clean</div>
+<div class="font-pixel text-lg sm:text-xl text-hearth-cyan" id="accVal">--</div>
+<div class="text-sm font-retro text-hearth-lavender mt-1 uppercase" id="accSub"></div>
 </div>
 </div>
 </div>
@@ -178,26 +178,7 @@
 <!-- SECTION C: Mistake Pattern Log -->
 <div class="p-6 flex-grow flex flex-col justify-center" data-purpose="mistake-pattern-panel">
 <p class="font-pixel text-[11px] tracking-widest text-hearth-lavender uppercase mb-5">Mistake Pattern Log</p>
-<div class="space-y-5">
-<div>
-<div class="flex items-center justify-between font-retro text-sm mb-1.5">
-<span class="text-slate-300 uppercase">Boundary / Off-by-One</span>
-<span class="text-hearth-crimson">2 HITS</span>
-</div>
-<div class="w-full h-3 bg-space-950 border border-space-700">
-<div class="h-full bg-hearth-crimson" style="width: 66%"></div>
-</div>
-</div>
-<div>
-<div class="flex items-center justify-between font-retro text-sm mb-1.5">
-<span class="text-slate-300 uppercase">Null / Undefined Checks</span>
-<span class="text-hearth-lavender">1 HIT</span>
-</div>
-<div class="w-full h-3 bg-space-950 border border-space-700">
-<div class="h-full bg-hearth-lavender" style="width: 33%"></div>
-</div>
-</div>
-</div>
+<div class="space-y-5" id="mistakeList"></div>
 </div>
 
 </div>
@@ -357,4 +338,59 @@
 <!-- BEGIN: SystemFooter -->
 <!-- END: SystemFooter -->
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script>
+(async function(){
+  const $ = id => document.getElementById(id);
+  const esc = t => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const mmss = sec => Math.floor(sec/60) + 'm ' + String(sec%60).padStart(2,'0') + 's';
+  const u = await requireLogin(); if (!u) return;
+  const p = await getProfile(u.id);
+  if (p) $('playerName').textContent = p.player_name;
+
+  const sid = sessionStorage.getItem('lastSessionId');
+  let q = db.from('game_sessions').select('*');
+  q = sid ? q.eq('id', sid) : q.order('created_at', { ascending: false });
+  const { data: sess } = await q.limit(1);
+  const s = sess && sess[0];
+  if (!s) {
+    $('rankTitle').textContent = 'NO GAME DATA';
+    $('rankSub').textContent = 'Play a room first';
+    $('mistakeList').innerHTML = '<p class="font-retro text-lg text-slate-400">Nothing logged yet.</p>';
+    return;
+  }
+  const { data: subsRaw } = await db.from('submissions').select('*').eq('session_id', s.id);
+  const subs = subsRaw || [];
+  const { count: attempts } = await db.from('game_sessions').select('id', { count: 'exact', head: true });
+
+  const total = subs.length, good = subs.filter(x => x.is_correct).length, bad = total - good;
+  const timeBonus = Math.round(30 * s.time_left_sec / Math.max(1, s.time_total_sec));
+  // score: 10 per room puzzle (max 50) + time bonus (max 30) + 20 for a correct code fix - 3 per hint - 2 per wrong submit
+  const score = Math.max(0, Math.min(100, s.solved_count * 10 + timeBonus + (good > 0 ? 20 : 0) - s.hints_used * 3 - bad * 2));
+  const RANKS = [[90,'S','MASTER CODER'],[75,'A','SENIOR DEBUGGER'],[60,'B','JUNIOR DEBUGGER'],[40,'C','ROOKIE'],[0,'D','NEEDS PRACTICE']];
+  const r = RANKS.find(x => score >= x[0]);
+
+  $('scoreVal').textContent = score;
+  $('rankLetter').textContent = r[1];
+  $('rankTitle').textContent = 'RANK ' + r[1] + ' - ' + r[2];
+  $('rankSub').textContent = 'Attempt #' + (attempts || 1) + ' · ' + ({won:'Escaped', time:'Time up', left:'Left room'}[s.result]);
+  $('timeVal').textContent = mmss(s.time_total_sec - s.time_left_sec);
+  $('timeSub').textContent = 'Limit ' + mmss(s.time_total_sec);
+  $('accVal').textContent = total ? Math.round(100 * good / total) + '%' : '--';
+  $('accSub').textContent = total ? good + ' / ' + total + ' Submits Correct' : 'No submissions';
+
+  const tags = {};
+  subs.filter(x => !x.is_correct).forEach(x => { const k = x.mistake_tag || 'Other'; tags[k] = (tags[k] || 0) + 1; });
+  const keys = Object.keys(tags), max = Math.max(3, ...keys.map(k => tags[k]));
+  $('mistakeList').innerHTML = keys.length ? keys.map(k => `
+    <div>
+      <div class="flex items-center justify-between font-retro text-sm mb-1.5">
+        <span class="text-slate-300 uppercase">${esc(k)}</span>
+        <span class="text-hearth-crimson">${tags[k]} ${tags[k] === 1 ? 'HIT' : 'HITS'}</span>
+      </div>
+      <div class="w-full h-3 bg-space-950 border border-space-700"><div class="h-full bg-hearth-crimson" style="width:${Math.round(100 * tags[k] / max)}%"></div></div>
+    </div>`).join('') : '<p class="font-retro text-lg text-slate-400">No mistakes logged. Clean run.</p>';
+})();
+</script>
 </body></html>

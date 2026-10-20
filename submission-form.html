@@ -117,7 +117,7 @@
 
   <div class="appbar">
     <span class="word">SUBMISSION FORM</span>
-    <div class="guest"><span class="q">?</span> Luna ▾</div>
+    <div class="guest"><span class="q">?</span> <span id="playerName">Player</span> ▾</div>
   </div>
 
   <div class="stage" id="screen">
@@ -188,9 +188,27 @@
     <div class="panel dlg" id="dlg" role="dialog" aria-modal="true"></div>
   </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
 <script>
   // Where the player goes after a correct submission (teammate's page in the same repo)
   var NEXT_PAGE = 'test-summary.html';
+  requireLogin().then(function(u){
+    if (!u) return;
+    getProfile(u.id).then(function(p){ if (p) document.getElementById('playerName').textContent = p.player_name; });
+  });
+  async function saveSubmission(ok){
+    var sid = sessionStorage.getItem('lastSessionId');
+    var res = await db.from('submissions').insert({
+      session_id: sid ? Number(sid) : null,
+      puzzle: 'PUZZLE 02: RECURSIVE KETTLE LOOP',
+      code: answer.value,
+      is_correct: ok,
+      mistake_tag: ok ? null : 'Infinite Recursion'
+    });
+    if (res.error) console.error(res.error);
+    return !res.error;
+  }
 
   var overlay = document.getElementById('overlay');
   var dlg = document.getElementById('dlg');
@@ -275,8 +293,10 @@
       text:'You are about to submit your fix for Puzzle 02. You can still edit your code again if the test fails.',
       buttons:[
         {label:'CANCEL', kind:'ghost', onClick:closeDialog},
-        {label:'▶ YES, SUBMIT', kind:'go', onClick:function(){
-          if (isCorrect(answer.value)){
+        {label:'▶ YES, SUBMIT', kind:'go', onClick:async function(){
+          var ok = isCorrect(answer.value);
+          await saveSubmission(ok);
+          if (ok){
             badge.textContent = 'SOLVED';
             render({
               tone:'cyan', title:'KETTLE STABILIZED', badge:'SUCCESS',
