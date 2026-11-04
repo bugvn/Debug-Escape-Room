@@ -263,9 +263,13 @@
     document.querySelector('#progress .value').textContent = 'CHAMBER ' + String(solved).padStart(2,'0') + ' / 04';
     document.querySelectorAll('#progress .dot').forEach(function(d,i){ d.classList.toggle('on', i < solved); });
     document.querySelector('#countdown .label').textContent = 'TIME ELAPSED';
-    document.querySelector('#countdown .value').textContent = typeof el === 'number'
-      ? String(Math.floor(el/60)).padStart(2,'0') + ':' + String(el%60).padStart(2,'0') : '--:--';
     document.querySelector('#keys .value').textContent = solved + ' / 4';
+    var timerEl = document.querySelector('#countdown .value');
+    var baseElapsed = typeof el === 'number' ? el : 0;
+    var startTs = Date.now();
+    function fmt(s){ return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); }
+    timerEl.textContent = fmt(baseElapsed);
+    setInterval(function(){ timerEl.textContent = fmt(baseElapsed + Math.floor((Date.now() - startTs) / 1000)); }, 1000);
   })();
 
   // ---- Hints (same pool as the room; saved back to the session) ----
