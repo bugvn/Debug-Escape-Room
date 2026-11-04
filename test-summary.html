@@ -208,7 +208,7 @@
   const { count: attempts } = await db.from('game_sessions').select('id', { count: 'exact', head: true });
 
   const total = subs.length, good = subs.filter(x => x.is_correct).length, bad = total - good;
-  const timeBonus = Math.round(30 * s.time_left_sec / Math.max(1, s.time_total_sec));
+  const timeBonus = s.result === 'won' ? Math.round(30 * s.time_left_sec / Math.max(1, s.time_total_sec)) : 0;
   // score: 10 per room puzzle (max 50) + time bonus (max 30) + 20 for a correct code fix - 3 per hint - 2 per wrong submit
   const score = Math.max(0, Math.min(100, s.solved_count * 10 + timeBonus + (good > 0 ? 20 : 0) - s.hints_used * 3 - bad * 2));
   const RANKS = [[90,'S','MASTER CODER'],[75,'A','SENIOR DEBUGGER'],[60,'B','JUNIOR DEBUGGER'],[40,'C','ROOKIE'],[0,'D','NEEDS PRACTICE']];
