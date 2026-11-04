@@ -103,7 +103,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #22d3ee;outline-offse
 /* ===== Submission-form window (puzzle pop-up) ===== */
 #modal2{position:absolute;inset:0;z-index:45;background:rgba(4,6,16,.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px}
 .sf{--bg:#060814;--panel:#0c1024;--panel-2:#0a0e1f;--border:#1c2440;--cyan:#4fe0ff;--violet:#9b8cf5;--pink:#ff5a9d;--amber:#ffc857;--ink:#cfd6f0;--dim:#6a7196;
-font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:relative;width:100%;max-height:94%;overflow-y:auto;padding:14px 22px 16px;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--border);border-radius:4px}
+font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:relative;width:100%;overflow:visible;transform-origin:center center;padding:14px 22px 16px;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--border);border-radius:4px}
 .sf.main{max-width:860px}.sf.small{max-width:480px}
 .sf::before,.sf::after,.sf .tbl,.sf .tbr{content:'';position:absolute;width:7px;height:7px;background:var(--cyan)}
 .sf::before{top:-4px;left:-4px}.sf::after{top:-4px;right:-4px}.sf .tbl{bottom:-4px;left:-4px}.sf .tbr{bottom:-4px;right:-4px}
@@ -126,10 +126,10 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 .sf .ctag{font-size:10px;font-weight:700;color:var(--pink);border:1px solid rgba(255,90,157,.4);border-radius:4px;padding:3px 8px}
 .sf .status{font-size:10px;color:var(--dim)}
 .sf .msg{font-size:12.5px;line-height:1.6;white-space:pre-wrap}
-.sf .sfcode{font-size:13px;line-height:1.7;white-space:pre;overflow-x:auto}
+.sf .sfcode{font-size:13px;line-height:1.7;white-space:pre;overflow:hidden}
 .sf .kw{color:var(--violet)}.sf .fn{color:var(--cyan)}.sf .cm{color:var(--dim)}.sf .st{color:#7ee0b0}.sf .bug{color:var(--pink);font-weight:700}
 .sf .meta{font-size:10px;color:var(--dim);margin-bottom:10px}
-.sf textarea{display:block;width:100%;min-height:90px;background:var(--panel-2);border:1px solid var(--border);color:var(--ink);font-family:'Space Mono',monospace;font-size:13px;line-height:1.7;padding:10px 14px;resize:vertical;white-space:pre;overflow:auto;tab-size:4;border-radius:0}
+.sf textarea{display:block;width:100%;min-height:90px;background:var(--panel-2);border:1px solid var(--border);color:var(--ink);font-family:'Space Mono',monospace;font-size:13px;line-height:1.7;padding:10px 14px;resize:none;white-space:pre;overflow:hidden;tab-size:4;border-radius:0}
 .sf textarea:focus{outline:none;border-color:var(--violet);box-shadow:0 0 0 3px rgba(155,140,245,.15)}
 .sf .tip{font-size:10.5px;color:var(--dim);margin-top:8px}
 .sf .foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
@@ -430,9 +430,20 @@ $('modal2').innerHTML = `<div class="sf small ${o.tone === 'cyan' ? '' : o.tone}
 ${o.eyebrow ? `<div class="eyebrow">${o.eyebrow}</div>` : ''}${body}<div class="foot"><div></div><div class="btns" id="sfb"></div></div></div>`;
 let last;
 (o.buttons || []).forEach(x => { const b = document.createElement('button'); b.className = 'sb ' + x.k; b.textContent = x.l; b.onclick = x.f; $('sfb').append(b); last = b; });
-$('modal2').classList.remove('hidden');
+$('modal2').classList.remove('hidden'); fitSf();
 if (last) last.focus();
 }
+function fitSf(){
+document.querySelectorAll('.sf').forEach(el=>{
+const host=el.parentElement; el.style.transform='';
+const h=el.offsetHeight,w=el.offsetWidth,pad=24;
+const sc=Math.min(1,(host.clientHeight-pad)/h,(host.clientWidth-pad)/w);
+if(sc<1)el.style.transform='scale('+sc+')';
+});
+}
+function growEd(){ const e=$('ed'); if(!e)return; e.style.height='auto'; e.style.height=e.scrollHeight+2+'px'; fitSf(); }
+addEventListener('resize',fitSf);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitSf);
 function openPuzzle(id){
 const p = P[id], m = META[id], no = String(PUZ.indexOf(id) + 1).padStart(2, '0'); lastOpen = id;
 const bugCode = p.code.split('\n').map((l, i) => m.bug.includes(i) ? `<span class="bug">${esc(l)}</span>` : hl(l)).join('\n');
@@ -451,8 +462,8 @@ $('modal').innerHTML = `<div class="sf main" role="dialog" aria-modal="true" ari
 <div class="foot"><button class="hints" id="sf-hints" type="button"></button>
 <div class="btns"><button class="sb ghost" id="sf-run" type="button">↻ RUN TEST</button><button class="sb go" id="sf-submit" type="button">▶ SUBMIT SOLUTION</button></div></div></div></div>`;
 $('modal').classList.remove('hidden'); $('modal').classList.add('pz'); escFn = closeDlg; sfHud();
-const ed = $('ed'); ed.value = drafts[id] ?? p.code;
-ed.oninput = () => drafts[id] = ed.value;
+const ed = $('ed'); ed.value = drafts[id] ?? p.code; growEd();
+ed.oninput = () => { drafts[id] = ed.value; growEd(); };
 ed.onkeydown = e => {
 if (e.key === 'Tab') { e.preventDefault(); ed.setRangeText('    ', ed.selectionStart, ed.selectionEnd, 'end'); ed.oninput(); }
 };
@@ -468,7 +479,7 @@ sfDlg({ tone:'violet', title:'HINT', badge:'HINTS LEFT: ' + hints, text:esc(p.hi
 } }] });
 };
 $('sf-close').onclick = closeDlg;
-$('sf-reset').onclick = () => { ed.value = p.code; drafts[id] = p.code; ed.focus(); };
+$('sf-reset').onclick = () => { ed.value = p.code; drafts[id] = p.code; growEd(); ed.focus(); };
 $('sf-run').onclick = async () => {
 const bad = validate(id); if (bad) return showInvalid(bad);
 sfRunning(); const j = await evaluate(id, ed.value);
