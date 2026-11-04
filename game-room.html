@@ -133,8 +133,10 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 .sf textarea:focus{outline:none;border-color:var(--violet);box-shadow:0 0 0 3px rgba(155,140,245,.15)}
 .sf .tip{font-size:10.5px;color:var(--dim);margin-top:8px}
 .sf .foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
-.sf .hints{font-size:11px;color:var(--dim);cursor:pointer;background:none;border:0;font-family:inherit;padding:2px 0;text-align:left}
-.sf .hints b{color:var(--amber)}
+.sf .hints{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--amber);cursor:pointer;background:rgba(255,200,87,.08);border:1px solid rgba(255,200,87,.45);border-radius:4px;font-family:inherit;padding:9px 14px;text-align:left}
+.sf .hints:hover:not(:disabled){background:rgba(255,200,87,.16)}
+.sf .hints.none{color:var(--dim);border-color:var(--border);background:transparent}
+.sf .hints b{color:#fff}
 .sf .btns{display:flex;gap:10px;flex-wrap:wrap}
 .sf .sb{font-family:'Space Mono',monospace;font-weight:700;font-size:12px;letter-spacing:.04em;padding:10px 18px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:8px}
 .sf .sb.ghost{background:transparent;border:1px solid var(--violet);color:var(--violet)}
@@ -154,6 +156,8 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 .sf .dots{display:inline-flex;gap:5px;margin-top:6px}.sf .dots i{width:7px;height:7px;background:#232a4a}.sf .dots i.on{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
 .sf .xbtn{background:none;border:0;color:var(--dim);font:700 12px 'Space Mono',monospace;cursor:pointer;padding:0}
 .sf .xbtn:hover{color:var(--violet)}
+.sf .xbtn.close{border:1px solid var(--border);border-radius:4px;padding:5px 10px;font-size:10px;letter-spacing:.06em;color:var(--ink)}
+.sf .xbtn.close:hover{border-color:var(--pink);color:var(--pink)}
 #modal.pz{background:rgba(4,6,16,.94)}
 @media(max-width:639px){.sf .topbar{grid-template-columns:1fr 1fr}.sf .tp.mid{display:none}}
 @media(max-width:639px){.sf{padding:14px}.sf .sec{padding:12px}.sf .title{font-size:11px}}
@@ -443,6 +447,11 @@ if(sc<1)el.style.transform='scale('+sc+')';
 }
 function growEd(){ const e=$('ed'); if(!e)return; e.style.height='auto'; e.style.height=e.scrollHeight+2+'px'; fitSf(); }
 addEventListener('resize',fitSf);
+let mdT=null;
+$('modal').addEventListener('mousedown',e=>{mdT=e.target;});
+$('modal').addEventListener('click',e=>{
+if(e.target===$('modal')&&mdT===$('modal')&&$('modal').classList.contains('pz')&&$('modal2').classList.contains('hidden'))closeDlg();
+});
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitSf);
 function openPuzzle(id){
 const p = P[id], m = META[id], no = String(PUZ.indexOf(id) + 1).padStart(2, '0'); lastOpen = id;
@@ -451,7 +460,7 @@ $('modal').innerHTML = `<div class="sf main" role="dialog" aria-modal="true" ari
 <div class="topbar"><div class="tp"><span class="tbl"></span><span class="tbr"></span><div class="lb">ROOM PROGRESS</div><div class="vl" id="sf-prog"></div><div class="dots" id="sf-dots"><i></i><i></i><i></i><i></i></div></div>
 <div class="tp mid"><span class="tbl"></span><span class="tbr"></span><div class="lb">TIME ELAPSED</div><div class="vl" id="sf-time">${fmt(elapsed)}</div></div>
 <div class="tp rt"><span class="tbl"></span><span class="tbr"></span><div class="lb">KEYS COLLECTED</div><div class="vl" id="sf-keys"></div></div></div>
-<div class="sec pk"><div class="head"><div class="title" id="dt"><span class="sq pink"></span>${p.icon} PUZZLE ${no}: ${esc(p.title.toUpperCase())}</div><span style="display:flex;gap:10px;align-items:center"><span class="badge pink" id="sf-fault">FAULT DETECTED</span><button class="xbtn" id="sf-close" type="button" aria-label="Close puzzle" title="Close">✕</button></span></div>
+<div class="sec pk"><div class="head"><div class="title" id="dt"><span class="sq pink"></span>${p.icon} PUZZLE ${no}: ${esc(p.title.toUpperCase())}</div><span style="display:flex;gap:10px;align-items:center"><span class="badge pink" id="sf-fault">FAULT DETECTED</span><button class="xbtn close" id="sf-close" type="button" aria-label="Close puzzle" title="Close (Esc)">✕ CLOSE</button></span></div>
 <div class="eyebrow">DEBUGGING TERMINAL // ${esc(p.name.toUpperCase())} LOCK</div>
 <div class="mission"><b>MISSION:</b> ${esc(p.story)} Expected output: <b>${esc(p.expect)}</b></div>
 <div class="cc"><div class="tagrow"><span class="ctag">BUG</span><span class="status">${m.file} // ${m.status}</span></div><div class="sfcode">${bugCode}</div></div></div>
@@ -467,7 +476,7 @@ ed.oninput = () => { drafts[id] = ed.value; growEd(); };
 ed.onkeydown = e => {
 if (e.key === 'Tab') { e.preventDefault(); ed.setRangeText('    ', ed.selectionStart, ed.selectionEnd, 'end'); ed.oninput(); }
 };
-const sfHints = () => $('sf-hints') && ($('sf-hints').innerHTML = `HINTS LEFT: <b>${hints}</b> — click to decode log`);
+const sfHints = () => $('sf-hints') && (($('sf-hints').classList.toggle('none', !hints), $('sf-hints').innerHTML = `💡 USE A HINT · <b>${hints}</b> LEFT`));
 sfHints();
 $('sf-hints').onclick = () => {
 if (!hints) return sfDlg({ tone:'violet', title:'NO HINTS LEFT', badge:'HINTS', text:'All 3 hints are used.', buttons:[{ l:'OK', k:'go', f:closeSf }] });
