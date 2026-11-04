@@ -104,7 +104,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #22d3ee;outline-offse
 #modal2{position:absolute;inset:0;z-index:45;background:rgba(4,6,16,.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px}
 .sf{--bg:#060814;--panel:#0c1024;--panel-2:#0a0e1f;--border:#1c2440;--cyan:#4fe0ff;--violet:#9b8cf5;--pink:#ff5a9d;--amber:#ffc857;--ink:#cfd6f0;--dim:#6a7196;
 font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:relative;width:100%;max-height:94%;overflow-y:auto;padding:14px 22px 16px;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--border);border-radius:4px}
-.sf.main{max-width:760px}.sf.small{max-width:480px}
+.sf.main{max-width:860px}.sf.small{max-width:480px}
 .sf::before,.sf::after,.sf .tbl,.sf .tbr{content:'';position:absolute;width:7px;height:7px;background:var(--cyan)}
 .sf::before{top:-4px;left:-4px}.sf::after{top:-4px;right:-4px}.sf .tbl{bottom:-4px;left:-4px}.sf .tbr{bottom:-4px;right:-4px}
 .sf.pink::before,.sf.pink::after,.sf.pink .tbl,.sf.pink .tbr{background:var(--pink)}
@@ -143,6 +143,19 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 .sf .sb.go:hover:not(:disabled){filter:brightness(1.1)}
 .sf .sb:disabled{opacity:.5;cursor:wait}
 .sf button:focus-visible,.sf textarea:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.sf .topbar{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:12px;margin:0 0 14px}
+.sf .tp{position:relative;border:1px solid var(--border);border-radius:4px;background:linear-gradient(180deg,var(--panel),var(--panel-2));padding:10px 16px}
+.sf .tp::before,.sf .tp::after,.sf .tp .tbl,.sf .tp .tbr{content:'';position:absolute;width:5px;height:5px;background:var(--cyan)}
+.sf .tp::before{top:-3px;left:-3px}.sf .tp::after{top:-3px;right:-3px}.sf .tp .tbl{bottom:-3px;left:-3px}.sf .tp .tbr{bottom:-3px;right:-3px}
+.sf .tp .lb{font-size:9px;letter-spacing:.1em;color:var(--dim)}
+.sf .tp .vl{font-size:14px;font-weight:700;margin-top:6px;color:var(--cyan)}
+.sf .tp.mid{text-align:center}.sf .tp.mid .vl{font-family:'Press Start 2P',monospace;font-size:20px;color:var(--pink);text-shadow:0 0 16px rgba(255,90,157,.55);margin-top:8px}
+.sf .tp.rt{text-align:right}.sf .tp.rt .vl{color:var(--amber)}
+.sf .dots{display:inline-flex;gap:5px;margin-top:6px}.sf .dots i{width:7px;height:7px;background:#232a4a}.sf .dots i.on{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.sf .xbtn{background:none;border:0;color:var(--dim);font:700 12px 'Space Mono',monospace;cursor:pointer;padding:0}
+.sf .xbtn:hover{color:var(--violet)}
+#modal.pz{background:rgba(4,6,16,.94)}
+@media(max-width:639px){.sf .topbar{grid-template-columns:1fr 1fr}.sf .tp.mid{display:none}}
 @media(max-width:639px){.sf{padding:14px}.sf .sec{padding:12px}.sf .title{font-size:11px}}
 
 @media(max-width:639px){
@@ -211,7 +224,7 @@ sessionStorage.removeItem('lastSessionId');
 const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
 const startTs = Date.now();
 let elapsed = 0;
-function tick(){ if (over) return; elapsed = Math.floor((Date.now() - startTs) / 1000); $('timer').textContent = fmt(elapsed); }
+function tick(){ if (over) return; elapsed = Math.floor((Date.now() - startTs) / 1000); $('timer').textContent = fmt(elapsed); const t = $('sf-time'); if (t) t.textContent = fmt(elapsed); }
 setInterval(tick, 1000);
 
 /* ---------- State: items collected = puzzles solved ---------- */
@@ -333,7 +346,7 @@ hint:['Where does chimes live? Can code outside the function see it?',
 };
 
 /* ---------- Dialog manager ---------- */
-function closeDlg(){ $('modal').classList.add('hidden'); $('modal').innerHTML = ''; $('modal2').classList.add('hidden'); $('modal2').innerHTML = ''; escFn = null; }
+function closeDlg(){ $('modal').classList.add('hidden'); $('modal').classList.remove('pz'); $('modal').innerHTML = ''; $('modal2').classList.add('hidden'); $('modal2').innerHTML = ''; escFn = null; }
 function addBtn(a){
 const b = document.createElement('button');
 b.textContent = a.l; b.className = 'btn ' + (a.k || ''); b.disabled = !!a.dis;
@@ -423,18 +436,21 @@ if (last) last.focus();
 function openPuzzle(id){
 const p = P[id], m = META[id], no = String(PUZ.indexOf(id) + 1).padStart(2, '0'); lastOpen = id;
 const bugCode = p.code.split('\n').map((l, i) => m.bug.includes(i) ? `<span class="bug">${esc(l)}</span>` : hl(l)).join('\n');
-$('modal').innerHTML = `<div class="sf main violet-wrap" role="dialog" aria-modal="true" aria-labelledby="dt"><span class="tbl"></span><span class="tbr"></span>
-<div class="sec pk"><div class="head"><div class="title" id="dt"><span class="sq pink"></span>${p.icon} PUZZLE ${no}: ${esc(p.title.toUpperCase())}</div><span class="badge pink" id="sf-fault">FAULT DETECTED</span></div>
+$('modal').innerHTML = `<div class="sf main" role="dialog" aria-modal="true" aria-labelledby="dt"><span class="tbl"></span><span class="tbr"></span>
+<div class="topbar"><div class="tp"><span class="tbl"></span><span class="tbr"></span><div class="lb">ROOM PROGRESS</div><div class="vl" id="sf-prog"></div><div class="dots" id="sf-dots"><i></i><i></i><i></i><i></i></div></div>
+<div class="tp mid"><span class="tbl"></span><span class="tbr"></span><div class="lb">TIME ELAPSED</div><div class="vl" id="sf-time">${fmt(elapsed)}</div></div>
+<div class="tp rt"><span class="tbl"></span><span class="tbr"></span><div class="lb">KEYS COLLECTED</div><div class="vl" id="sf-keys"></div></div></div>
+<div class="sec pk"><div class="head"><div class="title" id="dt"><span class="sq pink"></span>${p.icon} PUZZLE ${no}: ${esc(p.title.toUpperCase())}</div><span style="display:flex;gap:10px;align-items:center"><span class="badge pink" id="sf-fault">FAULT DETECTED</span><button class="xbtn" id="sf-close" type="button" aria-label="Close puzzle" title="Close">✕</button></span></div>
 <div class="eyebrow">DEBUGGING TERMINAL // ${esc(p.name.toUpperCase())} LOCK</div>
-<div class="mission"><b>MISSION:</b> ${esc(p.story)}<br><span class="ex">Expected output: <b>${esc(p.expect)}</b></span></div>
+<div class="mission"><b>MISSION:</b> ${esc(p.story)} Expected output: <b>${esc(p.expect)}</b></div>
 <div class="cc"><div class="tagrow"><span class="ctag">BUG</span><span class="status">${m.file} // ${m.status}</span></div><div class="sfcode">${bugCode}</div></div></div>
 <div class="sec vi"><div class="head"><div class="title"><span class="sq violet"></span>SUBMISSION FORM</div><span class="badge violet" id="sf-badge">AWAITING PATCH</span></div>
-<div class="meta">PYTHON 3.X // MONOSPACE MODE</div>
+<div class="meta" style="display:flex;justify-content:space-between"><span>PYTHON 3.X // MONOSPACE MODE</span><button class="xbtn" id="sf-reset" type="button" title="Restore the original code">↺ RESET</button></div>
 <textarea id="ed" spellcheck="false" rows="5" aria-label="Python code editor"></textarea>
 <div class="tip">TIP: keep the original code and fix the actual bug. Hardcoding the answer will not pass.</div>
 <div class="foot"><button class="hints" id="sf-hints" type="button"></button>
-<div class="btns"><button class="sb ghost" id="sf-close" type="button">✕ CLOSE</button><button class="sb ghost" id="sf-reset" type="button">↺ RESET</button><button class="sb ghost" id="sf-run" type="button">↻ RUN TEST</button><button class="sb go" id="sf-submit" type="button">▶ SUBMIT SOLUTION</button></div></div></div></div>`;
-$('modal').classList.remove('hidden'); escFn = closeDlg;
+<div class="btns"><button class="sb ghost" id="sf-run" type="button">↻ RUN TEST</button><button class="sb go" id="sf-submit" type="button">▶ SUBMIT SOLUTION</button></div></div></div></div>`;
+$('modal').classList.remove('hidden'); $('modal').classList.add('pz'); escFn = closeDlg; sfHud();
 const ed = $('ed'); ed.value = drafts[id] ?? p.code;
 ed.oninput = () => drafts[id] = ed.value;
 ed.onkeydown = e => {
@@ -466,13 +482,18 @@ text:`You are about to submit your fix for Puzzle ${no}. You can still edit your
 buttons:[{ l:'CANCEL', k:'ghost', f:closeSf }, { l:'▶ YES, SUBMIT', k:'go', f:async () => {
 sfRunning(); const j = await evaluate(id, ed.value);
 if (!j.ok) return showFail(id, j);
-got.push(id); renderAll(); $('sf-badge').textContent = 'SOLVED'; $('sf-fault').textContent = 'FAULT CLEARED';
+got.push(id); renderAll(); sfHud(); $('sf-badge').textContent = 'SOLVED'; $('sf-fault').textContent = 'FAULT CLEARED';
 sfDlg({ tone:'cyan', title:esc(p.title.toUpperCase()) + ' SOLVED', badge:'SUCCESS', eyebrow:'TEST RESULT // PUZZLE ' + no,
 text:`${esc(p.why)}<br><br>Item unlocked: ${p.reward[0]} ${p.reward[1]}`,
 buttons:[{ l:'▶ OK, CONTINUE', k:'go', f:() => { closeSf(); closeDlg(); toast(`Item unlocked: ${p.reward[1]} (${count()} / 4)`); } }] });
 } }] });
 };
 ed.focus();
+}
+function sfHud(){
+if (!$('sf-prog')) return; const n = count();
+$('sf-prog').textContent = 'CHAMBER ' + String(n).padStart(2, '0') + ' / 04'; $('sf-keys').textContent = n + ' / 4';
+document.querySelectorAll('#sf-dots i').forEach((d, i) => d.classList.toggle('on', i < n));
 }
 function sfRunning(){ sfDlg({ tone:'violet', title:'RUNNING TEST', badge:'PLEASE WAIT', text: pyReady ? 'Running your code in Python...' : 'Loading Python, please wait...', buttons:[] }); }
 // Validation: missing field, required structure, length
