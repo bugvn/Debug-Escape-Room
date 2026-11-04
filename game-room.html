@@ -175,13 +175,12 @@ let hints = 3, over = null, sound = true, labels = false, toastT, escFn = null;
 const count = () => got.length;
 
 /* ---------- Save result (time_total_sec = elapsed; time_left_sec kept at 0 for the existing table) ---------- */
-const TIME_LIMIT = 900; // par time (sec) used by the summary page for the time bonus
 let sessionSaved = false;
 async function saveSession(result){
 if (sessionSaved) return; sessionSaved = true;
 try {
 const { data, error } = await db.from('game_sessions').insert({
-result, solved_count: count(), hints_used: 3 - hints, time_total_sec: TIME_LIMIT, time_left_sec: Math.max(0, TIME_LIMIT - elapsed)
+result, solved_count: count(), hints_used: 3 - hints, time_total_sec: elapsed, time_left_sec: 0
 }).select('id').single();
 if (error) throw error;
 sessionStorage.setItem('lastSessionId', data.id);
