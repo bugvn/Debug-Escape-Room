@@ -175,19 +175,19 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 </head>
 <body>
 <main id="room">
-<img alt="Cozy starlit room with a window, refrigerator, tea table and exit door" src="room_door_closed_no_girl.png"/>
+<img alt="Cozy starlit room with a window, refrigerator, kettle on the dining table and exit door" src="room_door_closed_no_girl.png"/>
 
 <div id="hotspots">
 <button class="hs orange" data-hs="window" aria-label="Window, Star Matrix puzzle" style="top:16%;left:49%"><div class="wrap"><span class="ping"></span><span class="core">✦</span></div><div id="tag-window" class="tag"></div></button>
 <button class="hs amber" data-hs="fridge" aria-label="Refrigerator, code lock" style="top:43%;left:43.5%"><div class="wrap"><span class="ping"></span><span class="core">🔒</span></div><div id="tag-fridge" class="tag"></div></button>
-<button class="hs emerald" data-hs="tea" aria-label="Tea table, tea cipher" style="top:65%;left:46.5%"><div class="wrap"><span class="ping"></span><span class="core">☕</span></div><div id="tag-tea" class="tag"></div></button>
+<button class="hs emerald" data-hs="kettle" aria-label="Kettle, recursive kettle loop puzzle" style="top:65%;left:46.5%"><div class="wrap"><span class="ping"></span><span class="core">☕</span></div><div id="tag-kettle" class="tag"></div></button>
 <button class="hs violet" data-hs="clock" aria-label="Wall clock, chime counter" style="top:26%;left:39.5%"><div class="wrap"><span class="ping"></span><span class="core">🕰️</span></div><div id="tag-clock" class="tag"></div></button>
 <button class="hs rose" data-hs="door" aria-label="Exit door" style="top:47%;left:80%"><div class="wrap"><span class="ping"></span><span class="core">🔑</span></div><div id="tag-door" class="tag"></div></button>
 </div>
 
 <header id="progress" class="hud box">
 <div class="row"><div class="l pix"><span class="dot"></span>ROOM PROGRESS</div><span id="prog-text" class="pix">0 / 4 SOLVED</span></div>
-<div id="nodes"><span class="node" title="Star Window"></span><span class="node" title="Code Lock"></span><span class="node" title="Tea Cipher"></span><span class="node" title="Wall Clock"></span></div>
+<div id="nodes"><span class="node" title="Star Window"></span><span class="node" title="Code Lock"></span><span class="node" title="Recursive Kettle Loop"></span><span class="node" title="Wall Clock"></span></div>
 <div class="bar"><div id="prog-bar"></div></div>
 </header>
 
@@ -232,7 +232,7 @@ function tick(){ if (over) return; elapsed = Math.floor((Date.now() - startTs) /
 setInterval(tick, 1000);
 
 /* ---------- State: items collected = puzzles solved ---------- */
-const PUZ = ['window', 'fridge', 'tea', 'clock'];
+const PUZ = ['window', 'fridge', 'kettle', 'clock'];
 const got = []; // puzzle ids solved, in order (one inventory item each)
 const drafts = {}; // the player's unsaved edits per puzzle
 const hintTier = {}; let lastOpen = null;
@@ -325,16 +325,18 @@ print("Lock code:", code)`,
 why:'"7" is a string. It must be converted with int() before a number can be added to it.',
 hint:['Look at the quotes around 7. What type does that make it?',
 'Convert it first: int(digit) + 1. Or remove the quotes around 7.'] },
-tea: { icon:'☕', name:'Tea Table', title:'Tea Cipher', reward:['📜','Cipher Note'],
-story:'The program should find the cup marked "black", but it will not even start. Fix the code and run it.',
-expect:'Cipher cup found: black', must:/for\s[\s\S]*if\s+tea\s*==/, ban:/print\s*\(\s*["']Cipher cup found:?\s*black/,
-code:`cups = ["green", "black", "oolong"]
-for tea in cups:
-    if tea = "black":
-        print("Cipher cup found:", tea)`,
-why:'A single = assigns a value. Comparing two values needs ==.',
-hint:['Line 3 asks a question about tea. Is = a question or an order?',
-'Compare with ==, like this: if tea == "black":'] },
+kettle: { icon:'☕', name:'Kettle', title:'Recursive Kettle Loop', reward:['📜','Cipher Note'],
+story:'The kettle on the dining table is boiling infinitely and tripping the containment seal. The heating routine should stop once the target is reached, but it crashes. Fix the code and run it.',
+expect:'kettle_ready: safe_to_pour', must:/heat_water\s*\(\s*current_temp\s*\+/, ban:/print\s*\(\s*["']kettle_ready/,
+code:`def heat_water(current_temp, target_temp, cycle):
+    if current_temp >= target_temp:
+        return "kettle_ready: safe_to_pour"
+    return heat_water(current_temp, target_temp, cycle + 1)
+
+print(heat_water(20, 100, 0))`,
+why:'current_temp never changes, so it never reaches target_temp and the recursion never stops. Each call must move the temperature forward.',
+hint:['Does current_temp ever get bigger from one call to the next?',
+'Heat it up on every call: heat_water(current_temp + 10, target_temp, cycle + 1).'] },
 clock: { icon:'🕰️', name:'Wall Clock', title:'Chime Counter', reward:['⚙️','Clock Gear'],
 story:'At 15:00 the clock should chime 3 times, but the program crashes. Fix the code and run it.',
 expect:'Chimes: 3', must:/ring_hours[\s\S]*ring_hours\s*\(/, ban:/\b3\b/,
@@ -407,7 +409,7 @@ openPuzzle(id);
 const META = {
 window:{ file:'star_matrix.py', status:'index_out_of_range', badge:'INDEX FAULT', bug:[2] },
 fridge:{ file:'code_lock.py', status:'type_mismatch', badge:'TYPE FAULT', bug:[1] },
-tea:{ file:'tea_cipher.py', status:'syntax_error', badge:'SYNTAX FAULT', bug:[2] },
+kettle:{ file:'kettle_controller.py', status:'stack_overflow_risk', badge:'RECURSION FAULT', bug:[3] },
 clock:{ file:'chime_counter.py', status:'scope_error', badge:'SCOPE FAULT', bug:[4,5] }
 };
 const MAX_CHARS = 500;
