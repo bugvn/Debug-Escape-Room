@@ -348,7 +348,7 @@ actions:[ { l:'LOADING PYTHON...', id:'run', keep:1, dis:1, f:() => run(id) },
 { l:'Reset Code', k:'sec', keep:1, f:() => { $('ed').value = p.code; drafts[id] = p.code; $('con').textContent = 'Code reset.'; } },
 { l:'Close', k:'sec' } ] });
 const ed = $('ed');
-ed.value = drafts[id] ?? p.code;
+ed.value = drafts[id] ?? p.code; $('con').innerHTML = 'Console output appears here after you press Run.';
 ed.oninput = () => drafts[id] = ed.value;
 ed.onkeydown = e => {
 if (e.key === 'Tab') { e.preventDefault(); const s = ed.selectionStart; ed.setRangeText(' ', s, ed.selectionEnd, 'end'); ed.oninput(); }
