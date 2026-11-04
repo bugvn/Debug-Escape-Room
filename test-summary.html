@@ -208,9 +208,11 @@
   const { count: attempts } = await db.from('game_sessions').select('id', { count: 'exact', head: true });
 
   const total = subs.length, good = subs.filter(x => x.is_correct).length, bad = total - good;
+  const KETTLE = 'PUZZLE 02: RECURSIVE KETTLE LOOP', PAR = 900;
+  const kettleOk = subs.some(x => x.puzzle === KETTLE && x.is_correct);
   const timeBonus = s.result === 'won' ? Math.round(30 * s.time_left_sec / Math.max(1, s.time_total_sec)) : 0;
   // score: 10 per room puzzle (max 50) + time bonus (max 30) + 20 for a correct code fix - 3 per hint - 2 per wrong submit
-  const score = Math.max(0, Math.min(100, s.solved_count * 10 + timeBonus + (good > 0 ? 20 : 0) - s.hints_used * 3 - bad * 2));
+  const score = Math.max(0, Math.min(100, s.solved_count * 10 + timeBonus + (kettleOk ? 20 : 0) - s.hints_used * 3 - Math.min(20, bad * 2)));
   const RANKS = [[90,'S','MASTER CODER'],[75,'A','SENIOR DEBUGGER'],[60,'B','JUNIOR DEBUGGER'],[40,'C','ROOKIE'],[0,'D','NEEDS PRACTICE']];
   const r = RANKS.find(x => score >= x[0]);
 
@@ -219,7 +221,7 @@
   $('rankTitle').textContent = 'RANK ' + r[1] + ' - ' + r[2];
   $('rankSub').textContent = 'Attempt #' + (attempts || 1) + ' · ' + ({won:'Escaped', time:'Time up', left:'Left room'}[s.result]);
   $('timeVal').textContent = mmss(s.time_total_sec - s.time_left_sec);
-  $('timeSub').textContent = 'Limit ' + mmss(s.time_total_sec);
+  $('timeSub').textContent = 'Par ' + mmss(PAR);
   $('accVal').textContent = total ? Math.round(100 * good / total) + '%' : '--';
   $('accSub').textContent = total ? good + ' / ' + total + ' Submits Correct' : 'No submissions';
 

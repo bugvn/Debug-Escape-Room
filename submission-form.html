@@ -197,14 +197,14 @@
     if (!u) return;
     getProfile(u.id).then(function(p){ if (p) document.getElementById('playerName').textContent = p.player_name; });
   });
-  async function saveSubmission(ok){
+  async function saveSubmission(ok, tag){
     var sid = sessionStorage.getItem('lastSessionId');
     var res = await db.from('submissions').insert({
       session_id: sid ? Number(sid) : null,
       puzzle: 'PUZZLE 02: RECURSIVE KETTLE LOOP',
       code: answer.value,
       is_correct: ok,
-      mistake_tag: ok ? null : 'Infinite Recursion'
+      mistake_tag: ok ? null : (tag || 'Other')
     });
     if (res.error) console.error(res.error);
     return !res.error;
@@ -251,6 +251,109 @@
   }
 
   var MAX_CHARS = 500;
+  var esc = function(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+
+  // ---- Live HUD: values come from the room the player just finished ----
+  var run = {};
+  try { run = JSON.parse(sessionStorage.getItem('lastRun') || '{}'); } catch(e){}
+  var hintsLeft = typeof run.hintsLeft === 'number' ? run.hintsLeft : 3;
+  var hintTier = 0;
+  (function(){
+    var solved = run.solved || 0, el = run.elapsed;
+    document.querySelector('#progress .value').textContent = 'CHAMBER ' + String(solved).padStart(2,'0') + ' / 04';
+    document.querySelectorAll('#progress .dot').forEach(function(d,i){ d.classList.toggle('on', i < solved); });
+    document.querySelector('#countdown .label').textContent = 'TIME ELAPSED';
+    document.querySelector('#countdown .value').textContent = typeof el === 'number'
+      ? String(Math.floor(el/60)).padStart(2,'0') + ':' + String(el%60).padStart(2,'0') : '--:--';
+    document.querySelector('#keys .value').textContent = solved + ' / 4';
+  })();
+
+  // ---- Hints (same pool as the room; saved back to the session) ----
+  var hintsEl = document.querySelector('#screen .hints');
+  function renderHintsLeft(){ hintsEl.innerHTML = 'HINTS LEFT: <b>' + hintsLeft + '</b> — click to decode log'; }
+  hintsEl.style.cursor = 'pointer'; renderHintsLeft();
+  var HINTS = ['Look at the last line. Which argument never changes between recursive calls?',
+               'Change the last call to heat_water(current_temp + 10, target_temp, cycle + 1).'];
+  hintsEl.addEventListener('click', function(){
+    var ok = [{label:'OK', kind:'go', onClick:closeDialog}];
+    if (!hintsLeft){ render({tone:'violet', title:'NO HINTS LEFT', badge:'HINTS', text:'All 3 hints are used.', code:false, buttons:ok}); return; }
+    hintsLeft--; renderHintsLeft();
+    var txt = HINTS[Math.min(hintTier++, HINTS.length - 1)];
+    var sid = sessionStorage.getItem('lastSessionId');
+    run.hintsLeft = hintsLeft; sessionStorage.setItem('lastRun', JSON.stringify(run));
+    if (sid) db.from('game_sessions').update({ hints_used: 3 - hintsLeft }).eq('id', Number(sid)).then(function(r){ if (r.error) console.error(r.error); });
+    render({tone:'violet', title:'HINT', badge:'HINTS LEFT: ' + hintsLeft, text:esc(txt), code:false, buttons:ok});
+  });
+
+  // ---- Real Python test (Pyodide in a worker). Falls back to the old regex check if Python cannot load ----
+  function workerMain(){
+    importScripts('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js');
+    var ready = loadPyodide({ indexURL:'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/' });
+    ready.then(function(){ postMessage({ ready:true }); }, function(e){ postMessage({ fatal:String(e) }); });
+    onmessage = async function(e){
+      var py = await ready;
+      try { postMessage({ res: await py.runPythonAsync(e.data, { globals: py.globals.get('dict')() }) }); }
+      catch(err){ postMessage({ err: String(err.message || err) }); }
+    };
+  }
+  var HARNESS = "\n\nimport sys, json\nsys.setrecursionlimit(400)\n_seen = []\n_orig = heat_water\n" +
+    "def heat_water(*a, **k):\n    _seen.append(k['cycle'] if 'cycle' in k else (a[2] if len(a) > 2 else None))\n    return _orig(*a, **k)\n" +
+    "_r = heat_water(20, 100, 0)\njson.dumps({'r': _r, 'seen': _seen})";
+  var worker = null, pending = null, pyOK = false, pyBad = false, readyWaiters = [];
+  function settleReady(){ readyWaiters.splice(0).forEach(function(f){ f(); }); }
+  function startWorker(){
+    pyOK = false;
+    try {
+      worker = new Worker(URL.createObjectURL(new Blob(['(' + workerMain.toString() + ')()'], { type:'text/javascript' })));
+      worker.onmessage = function(e){
+        var d = e.data;
+        if (d.ready){ pyOK = true; settleReady(); }
+        else if (d.fatal){ pyBad = true; settleReady(); }
+        else if (pending){ var p = pending; pending = null; p(d); }
+      };
+      worker.onerror = function(){ pyBad = true; settleReady(); };
+    } catch(e){ pyBad = true; }
+  }
+  startWorker();
+  function whenReady(){
+    return new Promise(function(res){
+      if (pyOK || pyBad) return res();
+      readyWaiters.push(res); setTimeout(function(){ pyBad = pyBad || !pyOK; res(); }, 30000);
+    });
+  }
+  function errTag(m){
+    var x = m.trim().split('\n').pop().match(/^(\w*Error)/);
+    if (!x) return 'Runtime Error';
+    return x[1] === 'RecursionError' || x[1] === 'TimeoutError' ? 'Infinite Recursion' : x[1];
+  }
+  function isCorrect(code){
+    var c = code.replace(/\s+/g,'');
+    return c.indexOf('defheat_water(') !== -1 && /cycle\+1/.test(c);
+  }
+  async function check(code){
+    await whenReady();
+    if (pyBad || !worker){
+      return isCorrect(code) ? { ok:true } : { ok:false, tag:'Logic Error', msg:'cycle is not moving forward. Check the recursive call and try again.' };
+    }
+    var d = await new Promise(function(res){
+      var t = setTimeout(function(){ worker.terminate(); pending = null; startWorker(); res({ err:'TimeoutError: ran longer than 5 seconds' }); }, 5000);
+      pending = function(x){ clearTimeout(t); res(x); };
+      worker.postMessage(code + HARNESS);
+    });
+    if (d.err){
+      var last = d.err.trim().split('\n').pop();
+      return { ok:false, tag:errTag(d.err), msg:'Python says: ' + esc(last) };
+    }
+    var out = JSON.parse(d.res);
+    if (out.r !== 'kettle_ready: safe_to_pour')
+      return { ok:false, tag:'Wrong Output', msg:'heat_water returned ' + esc(JSON.stringify(out.r)) + ' instead of "kettle_ready: safe_to_pour".' };
+    if (!out.seen.every(function(c,i){ return c === i; }))
+      return { ok:false, tag:'Cycle Not Incrementing', msg:'cycle must go up by 1 on every recursive call. It went: ' + esc(out.seen.slice(0,5).join(', ')) + '...' };
+    return { ok:true };
+  }
+  function showRunning(){
+    render({ tone:'violet', title:'RUNNING TEST', badge:'PLEASE WAIT', text:'Running your code in Python...', code:false, buttons:[] });
+  }
 
   // Validation: missing field, type/format of input, length of input
   function validate(){
@@ -274,12 +377,11 @@
     });
   }
 
-  // Valid input, but the logic is still wrong
-  function showFailure(){
+  // Valid input, but the logic is still wrong. j = result of check()
+  function showFailure(j){
     render({
-      tone:'pink', title:'RECURSION STILL RUNS FOREVER', badge:'ERROR',
-      text:'current_temp is not moving closer to target_temp. Check the recursive call and try again.',
-      code:true,
+      tone:'pink', title: j.tag === 'Infinite Recursion' ? 'RECURSION STILL RUNS FOREVER' : 'TEST FAILED', badge:'ERROR',
+      text: j.msg, code:true,
       buttons:[{label:'\u21bb OK, TRY AGAIN', kind:'ghost', onClick:function(){ closeDialog(); answer.focus(); }}]
     });
   }
@@ -294,33 +396,36 @@
       buttons:[
         {label:'CANCEL', kind:'ghost', onClick:closeDialog},
         {label:'▶ YES, SUBMIT', kind:'go', onClick:async function(){
-          var ok = isCorrect(answer.value);
-          await saveSubmission(ok);
+          showRunning();
+          var j = await check(answer.value), ok = j.ok;
+          await saveSubmission(ok, j.tag);
           if (ok){
             badge.textContent = 'SOLVED';
             render({
               tone:'cyan', title:'KETTLE STABILIZED', badge:'SUCCESS',
               eyebrow:'TEST RESULT // PUZZLE 02',
-              text:'Your fix corrected the recursion. The kettle reached target temperature safely. Chamber 02 is now unlocked.',
+              text:'Your fix corrected the recursion. The kettle reached target temperature safely. The final lock is open.',
               buttons:[{label:'▶ OK, CONTINUE', kind:'go', onClick:function(){ window.location.href = NEXT_PAGE; }}]
             });
-          } else { showFailure(); }
+          } else { showFailure(j); }
         }}
       ]
     });
   });
 
-  document.getElementById('runBtn').addEventListener('click', function(){
+  document.getElementById('runBtn').addEventListener('click', async function(){
     var bad = validate();
     if (bad){ showInvalid(bad); return; }
-    if (isCorrect(answer.value)){
+    showRunning();
+    var j = await check(answer.value);
+    if (j.ok){
       render({
         tone:'cyan', title:'TEST PASSED', badge:'SUCCESS',
         eyebrow:'TEST RESULT // PUZZLE 02',
         text:'Your code stops correctly. You can submit it when you are ready.',
         buttons:[{label:'▶ OK', kind:'go', onClick:closeDialog}]
       });
-    } else { showFailure(); }
+    } else { showFailure(j); }
   });
 
   // Escape closes the dialog (same as Cancel / OK)

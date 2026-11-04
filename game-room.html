@@ -383,6 +383,7 @@ con.innerHTML = html; refreshRun();
 }
 function win(){
 over = 'won'; elapsed = Math.floor((Date.now() - startTs) / 1000); $('timer').textContent = fmt(elapsed);
+sessionStorage.setItem('lastRun', JSON.stringify({ solved: count(), elapsed, hintsLeft: hints }));
 const savedP = saveSession('won');
 dlg({ icon:'🎉', title:'Door unlocked!', body:`You used all 4 items to unlock the door and escaped in <b>${fmt(elapsed)}</b>.`,
 actions:[{ l:'Continue', f:async () => { await savedP; location.href = 'submission-form.html'; } }] });

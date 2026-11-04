@@ -38,6 +38,7 @@ create policy "profiles read own"   on public.profiles for select using (auth.ui
 create policy "profiles update own" on public.profiles for update using (auth.uid() = id);
 
 create policy "sessions read own"   on public.game_sessions for select using (auth.uid() = user_id);
+create policy "sessions update own" on public.game_sessions for update using (auth.uid() = user_id);
 create policy "sessions insert own" on public.game_sessions for insert with check (auth.uid() = user_id);
 
 create policy "subs read own"   on public.submissions for select using (auth.uid() = user_id);
