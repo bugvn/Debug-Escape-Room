@@ -156,9 +156,9 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 .sf .dots{display:inline-flex;gap:5px;margin-top:6px}.sf .dots i{width:7px;height:7px;background:#232a4a}.sf .dots i.on{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
 .sf .xbtn{background:none;border:0;color:var(--dim);font:700 12px 'Space Mono',monospace;cursor:pointer;padding:0}
 .sf .xbtn:hover{color:var(--violet)}
-.sf .xbtn.close{position:absolute;top:-44px;right:0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:0;font-size:16px;line-height:1;color:var(--ink)}
+.sf .xbtn.close{position:absolute;top:0;left:calc(100% + 14px);width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:0;font-size:22px;line-height:1;color:var(--ink)}
 .sf .xbtn.close:hover{border-color:var(--pink);color:var(--pink)}
-#modal.pz{background:rgba(4,6,16,.94);padding:60px 16px 16px}
+#modal.pz{background:rgba(4,6,16,.94);padding:16px 76px}
 @media(max-width:639px){.sf .topbar{grid-template-columns:1fr 1fr}.sf .tp.mid{display:none}}
 @media(max-width:639px){.sf{padding:14px}.sf .sec{padding:12px}.sf .title{font-size:11px}}
 
@@ -187,7 +187,7 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 
 <header id="progress" class="hud box">
 <div class="row"><div class="l pix"><span class="dot"></span>ROOM PROGRESS</div><span id="prog-text" class="pix">0 / 4 SOLVED</span></div>
-<div id="nodes"><span class="node" title="Star Window"></span><span class="node" title="Code Lock"></span><span class="node" title="Recursive Kettle Loop"></span><span class="node" title="Wall Clock"></span></div>
+<div id="nodes"><span class="node" title="Star Window"></span><span class="node" title="Recursive Kettle Loop"></span><span class="node" title="Code Lock"></span><span class="node" title="Wall Clock"></span></div>
 <div class="bar"><div id="prog-bar"></div></div>
 </header>
 
@@ -232,7 +232,7 @@ function tick(){ if (over) return; elapsed = Math.floor((Date.now() - startTs) /
 setInterval(tick, 1000);
 
 /* ---------- State: items collected = puzzles solved ---------- */
-const PUZ = ['window', 'fridge', 'kettle', 'clock'];
+const PUZ = ['window', 'kettle', 'fridge', 'clock'];
 const got = []; // puzzle ids solved, in order (one inventory item each)
 const drafts = {}; // the player's unsaved edits per puzzle
 const hintTier = {}; let lastOpen = null;
@@ -462,7 +462,7 @@ $('modal').innerHTML = `<div class="sf main" role="dialog" aria-modal="true" ari
 <div class="topbar"><div class="tp"><span class="tbl"></span><span class="tbr"></span><div class="lb">ROOM PROGRESS</div><div class="vl" id="sf-prog"></div><div class="dots" id="sf-dots"><i></i><i></i><i></i><i></i></div></div>
 <div class="tp mid"><span class="tbl"></span><span class="tbr"></span><div class="lb">TIME ELAPSED</div><div class="vl" id="sf-time">${fmt(elapsed)}</div></div>
 <div class="tp rt"><span class="tbl"></span><span class="tbr"></span><div class="lb">KEYS COLLECTED</div><div class="vl" id="sf-keys"></div></div></div>
-<div class="sec pk"><div class="head"><div class="title" id="dt"><span class="sq pink"></span>${p.icon} PUZZLE ${no}: ${esc(p.title.toUpperCase())}</div><span class="badge pink" id="sf-fault">${m.badge}</span></div>
+<div class="sec pk"><div class="head"><div class="title" id="dt"><span class="sq pink"></span>PUZZLE ${no}: ${esc(p.title.toUpperCase())}</div><span class="badge pink" id="sf-fault">${m.badge}</span></div>
 <div class="eyebrow">DEBUGGING TERMINAL // ${esc(p.name.toUpperCase())} LOCK</div>
 <div class="mission"><b>MISSION:</b> ${esc(p.story.replace(/\s*Fix the code and run it\.$/, ''))} Inspect the code below, <u>identify the bug</u>, and provide the corrected code. Expected output: <b>${esc(p.expect)}</b></div>
 <div class="cc"><div class="tagrow"><span class="ctag">BUG</span><span class="status">${m.file} // ${m.status}</span></div><div class="sfcode">${bugCode}</div></div></div>
