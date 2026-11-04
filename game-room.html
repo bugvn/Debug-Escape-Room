@@ -157,7 +157,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #22d3ee;outline-offse
 (() => {
 const $ = id => document.getElementById(id);
 const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-try { requireLogin(); } catch (e) { console.error(e); }
+try { requireLogin().catch(e => console.error(e)); } catch (e) { console.error(e); }
 sessionStorage.removeItem('lastSessionId');
 
 /* ---------- Timer (counts up from 00:00) ---------- */
@@ -171,20 +171,27 @@ setInterval(tick, 1000);
 const PUZ = ['window', 'fridge', 'tea', 'clock'];
 const got = []; // puzzle ids solved, in order (one inventory item each)
 const drafts = {}; // the player's unsaved edits per puzzle
+const hintTier = {}; let lastOpen = null;
 let hints = 3, over = null, sound = true, labels = false, toastT, escFn = null;
 const count = () => got.length;
 
 /* ---------- Save result (time_total_sec = elapsed; time_left_sec kept at 0 for the existing table) ---------- */
 const TIME_LIMIT = 900; // par time (sec) used by the summary page for the time bonus
 let sessionSaved = false;
+const attempts = []; // every Run press, saved to submissions with the session
 async function saveSession(result){
 if (sessionSaved) return; sessionSaved = true;
+elapsed = Math.floor((Date.now() - startTs) / 1000);
 try {
 const { data, error } = await db.from('game_sessions').insert({
-result, solved_count: count(), hints_used: 3 - hints, time_total_sec: TIME_LIMIT, time_left_sec: Math.max(0, TIME_LIMIT - elapsed)
+result, solved_count: count(), hints_used: 3 - hints, time_total_sec: Math.max(TIME_LIMIT, elapsed), time_left_sec: Math.max(0, TIME_LIMIT - elapsed)
 }).select('id').single();
 if (error) throw error;
 sessionStorage.setItem('lastSessionId', data.id);
+if (attempts.length) {
+const r = await db.from('submissions').insert(attempts.map(a => ({ ...a, session_id: data.id })));
+if (r.error) console.error(r.error);
+}
 } catch (e) { console.error(e); toast('Could not save result. Check connection.', true); }
 }
 
@@ -196,7 +203,7 @@ onmessage = async e => {
 const py = await ready; let out = '';
 py.setStdout({ batched: s => out += s + '\\n' });
 py.setStderr({ batched: s => out += s + '\\n' });
-try { await py.runPythonAsync(e.data); postMessage({ out }); }
+try { await py.runPythonAsync(e.data, { globals: py.globals.get('dict')() }); postMessage({ out }); }
 catch (err) { postMessage({ out, err: String(err.message || err) }); }
 };`;
 let worker, pending = null, pyReady = false, pyFail = false, pyErr = '';
@@ -236,42 +243,46 @@ return (i < 0 ? m.trim() : 'Traceback (most recent call last):\n' + L.slice(i).j
 const P = {
 window: { icon:'✦', name:'Window', title:'Star Matrix', reward:['🌠','Star Map'],
 story:'The star matrix should add up the brightness of five stars, but the program crashes. Fix the code and run it.',
-expect:'14', must:/for\s/,
+expect:'14', must:/for\s/, ban:/\b14\b/,
 code:`stars = [3, 1, 4, 1, 5]
 total = 0
 for i in range(len(stars) + 1):
-total += stars[i]
+    total += stars[i]
 print(total)`,
 why:'The loop went one index too far. A list of 5 items has valid indexes 0 to 4.',
-hint:'Check the range() call. The last valid index of a 5-item list is 4.' },
+hint:['Count the stars: 5. Now count how many times the loop runs. Do they match?',
+'range(len(stars) + 1) runs 6 times. Drop the + 1, or loop with for s in stars.'] },
 fridge: { icon:'🔒', name:'Refrigerator', title:'Code Lock', reward:['🗝️','Silver Key'],
 story:'The lock needs the digit that comes after 7. Fix the code and run it.',
-expect:'Lock code: 8', must:/digit/,
+expect:'Lock code: 8', must:/digit/, ban:/\b8\b/,
 code:`digit = "7"
 code = digit + 1
 print("Lock code:", code)`,
 why:'"7" is a string. It must be converted with int() before a number can be added to it.',
-hint:'The error says a str and an int cannot be added. Convert one of them first.' },
+hint:['Look at the quotes around 7. What type does that make it?',
+'Convert it first: int(digit) + 1. Or remove the quotes around 7.'] },
 tea: { icon:'☕', name:'Tea Table', title:'Tea Cipher', reward:['📜','Cipher Note'],
 story:'The program should find the cup marked "black", but it will not even start. Fix the code and run it.',
-expect:'Cipher cup found: black', must:/for\s/,
+expect:'Cipher cup found: black', must:/for\s[\s\S]*if\s+tea\s*==/, ban:/print\s*\(\s*["']Cipher cup found:?\s*black/,
 code:`cups = ["green", "black", "oolong"]
 for tea in cups:
-if tea = "black":
-print("Cipher cup found:", tea)`,
+    if tea = "black":
+        print("Cipher cup found:", tea)`,
 why:'A single = assigns a value. Comparing two values needs ==.',
-hint:'Python compares values with two equals signs, not one.' },
+hint:['Line 3 asks a question about tea. Is = a question or an order?',
+'Compare with ==, like this: if tea == "black":'] },
 clock: { icon:'🕰️', name:'Wall Clock', title:'Chime Counter', reward:['⚙️','Clock Gear'],
 story:'At 15:00 the clock should chime 3 times, but the program crashes. Fix the code and run it.',
-expect:'Chimes: 3', must:/ring_hours/,
+expect:'Chimes: 3', must:/ring_hours[\s\S]*ring_hours\s*\(/, ban:/\b3\b/,
 code:`def ring_hours(hour):
-chimes = hour % 12
-return chimes
+    chimes = hour % 12
+    return chimes
 
 ring_hours(15)
 print("Chimes:", chimes)`,
 why:'chimes only exists inside the function. Store the returned value in a variable outside it.',
-hint:'The variable chimes is created inside the function. Save the value that ring_hours returns.' }
+hint:['Where does chimes live? Can code outside the function see it?',
+'ring_hours(15) returns a value but nothing catches it. Store it: chimes = ring_hours(15).'] }
 };
 
 /* ---------- Dialog manager ---------- */
@@ -328,7 +339,7 @@ if (got.includes(id)) return toast(`Already solved. You have the ${P[id].reward[
 openPuzzle(id);
 }
 function openPuzzle(id){
-const p = P[id];
+const p = P[id]; lastOpen = id;
 dlg({ icon:p.icon, title:p.title, wide:true,
 body:`<p>${p.story}</p><p class="exp">Expected output: <b>${esc(p.expect)}</b></p>
 <textarea id="ed" class="editor" spellcheck="false" rows="7" aria-label="Python code editor"></textarea>
@@ -348,14 +359,20 @@ if (pyFail) $('con').textContent = 'Python could not start in this browser (' + 
 }
 async function run(id){
 const p = P[id], code = $('ed').value, btn = $('run');
+const nc = code.replace(/#.*$/gm, '');
 btn.disabled = true; btn.textContent = 'RUNNING...';
 const d = await runPy(code), con = $('con');
 if (!con) return;
 const out = (d.out || '').trim();
+let tag = null;
+if (d.err) { const m = cleanErr(d.err).trim().split('\n').pop().match(/^(\w*Error)/); tag = !m ? 'Runtime Error' : m[1] === 'TimeoutError' ? 'Infinite Loop' : m[1]; }
+else if (out !== p.expect) tag = 'Wrong Output';
+else if (!p.must.test(nc) || p.ban.test(nc)) tag = 'Hardcoded Answer';
+attempts.push({ puzzle: p.title, code: code.slice(0, 2000), is_correct: !tag, mistake_tag: tag });
 let html = out ? esc(out) + '\n' : '';
 if (d.err) html += `<span class="err">${esc(cleanErr(d.err))}</span>`;
 else if (out !== p.expect) html += `<span class="err">It ran, but the output is not what the lock expects.</span>`;
-else if (!p.must.test(code)) html += `<span class="err">The output matches, but keep the original code and fix the bug in it.</span>`;
+else if (!p.must.test(nc) || p.ban.test(nc)) html += `<span class="err">The output matches, but no hardcoding. Keep the original code and fix the actual bug.</span>`;
 else {
 got.push(id); renderAll();
 con.innerHTML = html + `<span class="ok">✔ Correct! ${esc(p.why)}\nItem unlocked: ${p.reward[0]} ${p.reward[1]}</span>`;
@@ -378,7 +395,12 @@ try { act(b.dataset.hs); } catch (err) { console.error(err); toast('Error: ' + e
 
 /* ---------- Hints ---------- */
 function renderHints(){ $('hint-label').textContent = `HINTS [${hints}/3 REMAINING]`; $('btn-hint').style.opacity = hints ? 1 : .6; }
-function hintText(){ const k = PUZ.find(x => !got.includes(x)); return k ? P[k].hint : 'You have all 4 items. Head to the exit door.'; }
+function hintText(){
+const k = lastOpen && !got.includes(lastOpen) ? lastOpen : PUZ.find(x => !got.includes(x));
+if (!k) return 'You have all 4 items. Head to the exit door.';
+const t = hintTier[k] || 0; hintTier[k] = t + 1;
+return `<b>${P[k].title}</b><p>${P[k].hint[Math.min(t, 1)]}</p>`;
+}
 $('btn-hint').onclick = () => {
 if (over) return toast('Hints are unavailable once the game has ended.');
 if (!hints) return dlg({ icon:'💡', title:'No hints remaining', body:'All 3 hints have been used.', actions:[OK] });
