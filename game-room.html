@@ -120,7 +120,7 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 .sf .badge.cyan{color:var(--cyan);border-color:rgba(79,224,255,.4);background:rgba(79,224,255,.08)}
 .sf .eyebrow{font-size:10px;letter-spacing:.1em;color:var(--dim);margin-bottom:12px}
 .sf .mission{background:var(--panel-2);border:1px solid var(--border);border-left:3px solid var(--cyan);padding:11px 15px;font-size:13px;line-height:1.6;margin-bottom:12px}
-.sf .mission.plain{margin-bottom:0}.sf .mission b{color:var(--amber)}.sf .mission .ex{color:var(--amber)}
+.sf .mission.plain{margin-bottom:0}.sf .mission b{color:var(--amber)}.sf .mission u{color:var(--cyan);text-decoration:underline}.sf .mission .ex{color:var(--amber)}
 .sf .cc{background:var(--panel-2);border:1px solid var(--border);border-left:3px solid var(--pink);padding:12px 16px}
 .sf .tagrow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
 .sf .ctag{font-size:10px;font-weight:700;color:var(--pink);border:1px solid rgba(255,90,157,.4);border-radius:4px;padding:3px 8px}
@@ -156,9 +156,9 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 .sf .dots{display:inline-flex;gap:5px;margin-top:6px}.sf .dots i{width:7px;height:7px;background:#232a4a}.sf .dots i.on{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
 .sf .xbtn{background:none;border:0;color:var(--dim);font:700 12px 'Space Mono',monospace;cursor:pointer;padding:0}
 .sf .xbtn:hover{color:var(--violet)}
-.sf .xbtn.close{border:1px solid var(--border);border-radius:4px;padding:5px 10px;font-size:10px;letter-spacing:.06em;color:var(--ink)}
+.sf .xbtn.close{position:absolute;top:-44px;right:0;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:0;font-size:16px;line-height:1;color:var(--ink)}
 .sf .xbtn.close:hover{border-color:var(--pink);color:var(--pink)}
-#modal.pz{background:rgba(4,6,16,.94)}
+#modal.pz{background:rgba(4,6,16,.94);padding:60px 16px 16px}
 @media(max-width:639px){.sf .topbar{grid-template-columns:1fr 1fr}.sf .tp.mid{display:none}}
 @media(max-width:639px){.sf{padding:14px}.sf .sec{padding:12px}.sf .title{font-size:11px}}
 
@@ -405,10 +405,10 @@ openPuzzle(id);
 }
 /* ---------- Puzzle pop-up = the submission form, one per puzzle ---------- */
 const META = {
-window:{ fault:'INDEX ERROR', file:'star_matrix.py', status:'index_out_of_range', bug:[2] },
-fridge:{ fault:'TYPE MISMATCH', file:'code_lock.py', status:'type_mismatch', bug:[1] },
-tea:{ fault:'SYNTAX ERROR', file:'tea_cipher.py', status:'syntax_error', bug:[2] },
-clock:{ fault:'SCOPE ERROR', file:'chime_counter.py', status:'scope_error', bug:[4,5] }
+window:{ file:'star_matrix.py', status:'index_out_of_range', badge:'INDEX FAULT', bug:[2] },
+fridge:{ file:'code_lock.py', status:'type_mismatch', badge:'TYPE FAULT', bug:[1] },
+tea:{ file:'tea_cipher.py', status:'syntax_error', badge:'SYNTAX FAULT', bug:[2] },
+clock:{ file:'chime_counter.py', status:'scope_error', badge:'SCOPE FAULT', bug:[4,5] }
 };
 const MAX_CHARS = 500;
 const KW = /(#.*$)|("[^"]*"|'[^']*')|\b(def|return|for|in|if|else|elif|while|import)\b|\b([A-Za-z_]\w*)(?=\()/;
@@ -440,8 +440,8 @@ if (last) last.focus();
 function fitSf(){
 document.querySelectorAll('.sf').forEach(el=>{
 const host=el.parentElement; el.style.transform='';
-const h=el.offsetHeight,w=el.offsetWidth,pad=24;
-const sc=Math.min(1,(host.clientHeight-pad)/h,(host.clientWidth-pad)/w);
+const cs=getComputedStyle(host),h=el.offsetHeight,w=el.offsetWidth;
+const sc=Math.min(1,(host.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-8)/h,(host.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-8)/w);
 if(sc<1)el.style.transform='scale('+sc+')';
 });
 }
@@ -456,13 +456,13 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitSf);
 function openPuzzle(id){
 const p = P[id], m = META[id], no = String(PUZ.indexOf(id) + 1).padStart(2, '0'); lastOpen = id;
 const bugCode = p.code.split('\n').map((l, i) => m.bug.includes(i) ? `<span class="bug">${esc(l)}</span>` : hl(l)).join('\n');
-$('modal').innerHTML = `<div class="sf main" role="dialog" aria-modal="true" aria-labelledby="dt"><span class="tbl"></span><span class="tbr"></span>
+$('modal').innerHTML = `<div class="sf main" role="dialog" aria-modal="true" aria-labelledby="dt"><span class="tbl"></span><span class="tbr"></span><button class="xbtn close" id="sf-close" type="button" aria-label="Close puzzle" title="Close (Esc)">✕</button>
 <div class="topbar"><div class="tp"><span class="tbl"></span><span class="tbr"></span><div class="lb">ROOM PROGRESS</div><div class="vl" id="sf-prog"></div><div class="dots" id="sf-dots"><i></i><i></i><i></i><i></i></div></div>
 <div class="tp mid"><span class="tbl"></span><span class="tbr"></span><div class="lb">TIME ELAPSED</div><div class="vl" id="sf-time">${fmt(elapsed)}</div></div>
 <div class="tp rt"><span class="tbl"></span><span class="tbr"></span><div class="lb">KEYS COLLECTED</div><div class="vl" id="sf-keys"></div></div></div>
-<div class="sec pk"><div class="head"><div class="title" id="dt"><span class="sq pink"></span>${p.icon} PUZZLE ${no}: ${esc(p.title.toUpperCase())}</div><span style="display:flex;gap:10px;align-items:center"><span class="badge pink" id="sf-fault">${m.fault}</span><button class="xbtn close" id="sf-close" type="button" aria-label="Close puzzle" title="Close (Esc)">✕ CLOSE</button></span></div>
+<div class="sec pk"><div class="head"><div class="title" id="dt"><span class="sq pink"></span>${p.icon} PUZZLE ${no}: ${esc(p.title.toUpperCase())}</div><span class="badge pink" id="sf-fault">${m.badge}</span></div>
 <div class="eyebrow">DEBUGGING TERMINAL // ${esc(p.name.toUpperCase())} LOCK</div>
-<div class="mission"><b>MISSION:</b> ${esc(p.story)} Expected output: <b>${esc(p.expect)}</b></div>
+<div class="mission"><b>MISSION:</b> ${esc(p.story.replace(/\s*Fix the code and run it\.$/, ''))} Inspect the code below, <u>identify the bug</u>, and provide the corrected code. Expected output: <b>${esc(p.expect)}</b></div>
 <div class="cc"><div class="tagrow"><span class="ctag">BUG</span><span class="status">${m.file} // ${m.status}</span></div><div class="sfcode">${bugCode}</div></div></div>
 <div class="sec vi"><div class="head"><div class="title"><span class="sq violet"></span>SUBMISSION FORM</div><span class="badge violet" id="sf-badge">AWAITING PATCH</span></div>
 <div class="meta" style="display:flex;justify-content:space-between"><span>PYTHON 3.X // MONOSPACE MODE</span><button class="xbtn" id="sf-reset" type="button" title="Restore the original code">↺ RESET</button></div>
