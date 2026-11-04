@@ -151,7 +151,7 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
     <div class="flex items-center gap-2 sm:gap-5">
       <button class="px-2.5 py-1 bg-[#0b2335] hover:bg-[#112d42] border border-cyan-400/40 text-cyan-200 font-pixel text-[8px] uppercase tracking-wider active:scale-95" onclick="openModal('rulesModal')" type="button">Rules</button>
       <button class="px-2.5 py-1 bg-[#0b2335] hover:bg-[#112d42] border border-cyan-400/40 text-cyan-100 font-pixel text-[8px] uppercase tracking-wider active:scale-95" onclick="openSettings()" type="button">Settings</button>
-      <a href="login.html" class="px-2.5 py-1 bg-cyan-400 hover:brightness-110 border border-cyan-200 text-[#061d29] font-pixel text-[8px] uppercase tracking-wider active:scale-95"><span class="hidden sm:inline">Register / </span>Login</a>
+      <a id="authBtn" href="login.html" class="px-2.5 py-1 bg-cyan-400 hover:brightness-110 border border-cyan-200 text-[#061d29] font-pixel text-[8px] uppercase tracking-wider active:scale-95"><span class="hidden sm:inline">Register / </span>Login</a>
     </div>
   </div>
 </header>
@@ -269,6 +269,8 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
   });
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
   const MODALS = ['rulesModal', 'settingsModal', 'confirmModal'];
@@ -529,8 +531,6 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
 
   /* Play Now: loading feedback */
   function startLoading() {
-    if (launching) return;
-    launching = true;
     const msgs = ['Initializing...', 'Loading kitchen assets...', 'Lighting the stars...', 'Almost there...'];
     let pct = 0;
     $('loadingOverlay').classList.remove('hidden');
@@ -543,17 +543,41 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
         setTimeout(() => {
           $('loadingOverlay').classList.add('hidden');
           $('loadBar').style.width = '0%'; $('loadPct').textContent = '0%';
-          launching = false;
           showToast('success', 'Chamber ready!', 'Welcome to Sector 07. Find the first clue.');
+          setTimeout(() => { location.href = 'game-room.html'; }, 1200);
         }, 400);
       }
     }, 160);
   }
   function handlePlayGame() {
+    if (launching) return;
+    launching = true;
     const btn = $('playNowBtn');
     btn.classList.add('scale-90');
-    setTimeout(() => { btn.classList.remove('scale-90'); startLoading(); }, 150);
+    setTimeout(async () => {
+      btn.classList.remove('scale-90');
+      let user = null;
+      try { user = await getUser(); } catch (e) { console.error(e); }
+      if (!user) {
+        showToast('warning', 'Login required', 'Log in or register to play.');
+        setTimeout(() => { location.href = 'login.html'; }, 1200);
+        return;
+      }
+      startLoading();
+    }, 150);
   }
+
+  /* Header: Login becomes Logout when signed in */
+  (async () => {
+    try {
+      const user = await getUser();
+      if (!user) return;
+      const a = $('authBtn');
+      a.textContent = 'Logout';
+      a.href = '#';
+      a.addEventListener('click', (e) => { e.preventDefault(); logout(); });
+    } catch (e) { console.error(e); }
+  })();
 
 </script>
 </body></html>
