@@ -370,7 +370,7 @@ else if (out !== p.expect) tag = 'Wrong Output';
 else if (!p.must.test(nc) || p.ban.test(nc)) tag = 'Hardcoded Answer';
 attempts.push({ puzzle: p.title, code: code.slice(0, 2000), is_correct: !tag, mistake_tag: tag });
 let html = out ? esc(out) + '\n' : '';
-if (d.err) html += `<span class="err">${esc(cleanErr(d.err))}</span>`;
+if (d.err) html += `<span class="err">The program encountered an error. Check your code and try again.</span>`;
 else if (out !== p.expect) html += `<span class="err">It ran, but the output is not what the lock expects.</span>`;
 else if (!p.must.test(nc) || p.ban.test(nc)) html += `<span class="err">The output matches, but no hardcoding. Keep the original code and fix the actual bug.</span>`;
 else {
