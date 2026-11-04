@@ -240,7 +240,7 @@ expect:'14', must:/for\s/,
 code:`stars = [3, 1, 4, 1, 5]
 total = 0
 for i in range(len(stars) + 1):
-    total += stars[i]
+total += stars[i]
 print(total)`,
 why:'The loop went one index too far. A list of 5 items has valid indexes 0 to 4.',
 hint:'Check the range() call. The last valid index of a 5-item list is 4.' },
@@ -257,16 +257,16 @@ story:'The program should find the cup marked "black", but it will not even star
 expect:'Cipher cup found: black', must:/for\s/,
 code:`cups = ["green", "black", "oolong"]
 for tea in cups:
-    if tea = "black":
-        print("Cipher cup found:", tea)`,
+if tea = "black":
+print("Cipher cup found:", tea)`,
 why:'A single = assigns a value. Comparing two values needs ==.',
 hint:'Python compares values with two equals signs, not one.' },
 clock: { icon:'🕰️', name:'Wall Clock', title:'Chime Counter', reward:['⚙️','Clock Gear'],
 story:'At 15:00 the clock should chime 3 times, but the program crashes. Fix the code and run it.',
 expect:'Chimes: 3', must:/ring_hours/,
 code:`def ring_hours(hour):
-    chimes = hour % 12
-    return chimes
+chimes = hour % 12
+return chimes
 
 ring_hours(15)
 print("Chimes:", chimes)`,
