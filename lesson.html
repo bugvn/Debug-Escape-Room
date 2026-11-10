@@ -48,11 +48,14 @@
   .tag.good { color:#86efac; border-color:#86efac; background:rgba(134,239,172,.1); }
   .tag.sys { color:#7ae8ff; border-color:#4d6594; background:rgba(77,101,148,.2); }
 
-  .opt { display:block; width:100%; text-align:left; padding:.7rem .9rem; background:#0b2335; border:2px solid rgba(122,232,255,.3); color:#dffcff; font-size:.95rem; transition:.15s; }
-  .opt:hover:not(:disabled) { border-color:#7ae8ff; background:#112d42; }
-  .opt.right { border-color:#86efac; background:rgba(134,239,172,.12); }
-  .opt.wrong { border-color:#f87171; background:rgba(248,113,113,.12); }
-  .opt:disabled { cursor:default; }
+  .ed { display:block; width:100%; background:#050c14; border:2px solid #4d6594; color:#7ae8ff; font-family:'VT323',monospace; font-size:1.25rem; line-height:1.35; padding:.8rem 1rem; resize:none; outline:none; white-space:pre; overflow:auto; tab-size:4; }
+  .ed:focus { border-color:#7ae8ff; box-shadow:0 0 12px rgba(122,232,255,.25); }
+  .con { background:#02060b; border:2px solid #153f50; min-height:5.5rem; padding:.7rem 1rem; font-family:'VT323',monospace; font-size:1.2rem; line-height:1.3; color:#dffcff; white-space:pre-wrap; word-break:break-word; }
+  .con.err { color:#fca5a5; border-color:#f87171; }
+  .con.ok { border-color:#86efac; }
+  .con .ph { color:#4d6594; }
+  .ref a { color:#7ae8ff; text-decoration:underline; text-underline-offset:3px; }
+  .ref a:hover { color:#fff; }
   .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { animation:none!important; transition:none!important; }
 </style>
 </head>
@@ -111,6 +114,7 @@
       </div>
     </div>
     <p class="mt-4 text-center font-pixel text-[7px] text-slate-500 tracking-[0.25em] uppercase">Read the lessons, then fix the bugs in the room<span class="caret">_</span></p>
+    <p class="mt-2 text-center text-[11px] text-slate-500">Examples run in your browser with <a class="underline" href="https://pyodide.org" target="_blank" rel="noopener noreferrer">Pyodide</a>. References are from the official <a class="underline" href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer">Python 3 documentation</a>.</p>
   </div>
 </main>
 
@@ -143,9 +147,8 @@ const LESSONS = [
     total += stars[i]
 <span class="er">IndexError: list index out of range</span>`]],
   note: 'In the room: use RUN TEST to try your fix as many times as you like. Only SUBMIT counts as your answer.',
-  quiz: { q: 'Which part of an error message tells you what kind of problem it is?',
-    o: ['The last line', 'The first line', 'The file name'], a: 0,
-    why: 'The last line names the error type and gives the reason. The lines above it show where it happened.' }
+  tryit: { task: "Run it and read the error. Then change the index so it prints blue.", goal: "blue", code: "colors = [\"red\", \"blue\"]\nprint(colors[2])" },
+  refs: [["Errors and Exceptions (Python Tutorial)", "https://docs.python.org/3/tutorial/errors.html"], ["Built-in Exceptions", "https://docs.python.org/3/library/exceptions.html"]]
 },
 {
   tag: 'INDEX FAULT', title: 'Lists and Index Errors',
@@ -166,9 +169,8 @@ print(fruits[2])   <span class="cm"># kiwi</span>`],
     print(fruit)       <span class="cm"># never goes past the end</span>`]
   ],
   note: 'Watch for: range(len(items) + 1). The + 1 makes the loop run one extra time.',
-  quiz: { q: 'scores = [90, 85, 70]. Which index gives the last item?',
-    o: ['2', '3', '1'], a: 0,
-    why: 'There are 3 items, so the indexes are 0, 1 and 2. The last index is len(scores) - 1.' }
+  tryit: { task: "Run it. The loop crashes at the end. Fix it so it prints all 3 fruits and stops.", goal: "apple\nmango\nkiwi", code: "fruits = [\"apple\", \"mango\", \"kiwi\"]\nfor i in range(len(fruits) + 1):\n    print(fruits[i])" },
+  refs: [["Lists (Python Tutorial)", "https://docs.python.org/3/tutorial/introduction.html#lists"], ["for Statements (Python Tutorial)", "https://docs.python.org/3/tutorial/controlflow.html#for-statements"], ["IndexError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#IndexError"]]
 },
 {
   tag: 'TYPE FAULT', title: 'Data Types and Type Errors',
@@ -187,9 +189,8 @@ print(age + 1)
 print(int(age) + 1)   <span class="cm"># 16</span>`]
   ],
   note: 'If the error mentions str and int together, check the quotes around your numbers.',
-  quiz: { q: 'How do you fix  "3" + 4  so it gives 7?',
-    o: ['int("3") + 4', '"3" + "4"', 'print("3" + 4)'], a: 0,
-    why: 'int("3") turns the text into the number 3, so 3 + 4 gives 7. "3" + "4" would give "34".' }
+  tryit: { task: "Run it and read the error. Then fix it so it prints 16.", goal: "16", code: "age = \"15\"\nprint(age + 1)" },
+  refs: [["Text Sequence Type: str", "https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str"], ["int() (Built-in Functions)", "https://docs.python.org/3/library/functions.html#int"], ["TypeError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#TypeError"]]
 },
 {
   tag: 'RECURSION FAULT', title: 'Recursion',
@@ -212,9 +213,8 @@ print(int(age) + 1)   <span class="cm"># 16</span>`]
     <span class="kw">return</span> countdown(n - 1)    <span class="cm"># moves toward 0</span>`]
   ],
   note: 'Remember: the answer must be returned all the way back up, so keep the return in front of the call.',
-  quiz: { q: 'What does a recursive function need so that it can stop?',
-    o: ['A base case', 'A for loop', 'A global variable'], a: 0,
-    why: 'The base case is the condition that ends the calls. Each call must also move closer to it.' }
+  tryit: { task: "Run it and wait for the error. Then make n move toward 0 so it prints liftoff.", goal: "liftoff", code: "def countdown(n):\n    if n == 0:\n        return \"liftoff\"\n    return countdown(n)\n\nprint(countdown(3))" },
+  refs: [["Defining Functions (Python Tutorial)", "https://docs.python.org/3/tutorial/controlflow.html#defining-functions"], ["RecursionError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#RecursionError"]]
 },
 {
   tag: 'SCOPE FAULT', title: 'Variable Scope',
@@ -241,18 +241,63 @@ result = double(4)     <span class="cm"># catch the returned value</span>
 print(result)          <span class="cm"># 8</span>`]
   ],
   note: 'You are ready. Fix every bug in the room to collect all 4 items and open the exit door.',
-  quiz: { q: 'Where can you use a variable that was created inside a function?',
-    o: ['Only inside that function', 'Anywhere in the program', 'Only after a print()'], a: 0,
-    why: 'It only lives inside the function. To use the value outside, return it and store it in a variable.' }
+  tryit: { task: "Run it and read the error. Then catch the returned value so it prints 8.", goal: "8", code: "def double(n):\n    result = n * 2\n    return result\n\ndouble(4)\nprint(result)" },
+  refs: [["Python Scopes and Namespaces (Python Tutorial)", "https://docs.python.org/3/tutorial/classes.html#python-scopes-and-namespaces"], ["The return Statement (Language Reference)", "https://docs.python.org/3/reference/simple_stmts.html#return"], ["NameError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#NameError"]]
 }
 ];
 
+/* ---------- Python (Pyodide) in a Web Worker, same setup as the game room ---------- */
+const WORKER_SRC = `importScripts('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js');
+const ready = loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/' });
+ready.then(() => postMessage({ ready: true }), e => postMessage({ fatal: String(e) }));
+onmessage = async e => {
+const py = await ready; let out = '';
+py.setStdout({ batched: s => out += s + '\\n' });
+py.setStderr({ batched: s => out += s + '\\n' });
+try { await py.runPythonAsync(e.data, { globals: py.globals.get('dict')() }); postMessage({ out }); }
+catch (err) { postMessage({ out, err: String(err.message || err) }); }
+};`;
+let worker, pending = null, pyReady = false, pyFail = false, pyErr = '';
+function refreshRun(){
+  const b = $('btnRun'); if (!b) return;
+  b.disabled = !pyReady;
+  b.textContent = pyFail ? 'PYTHON FAILED TO LOAD' : pyReady ? '▶ RUN' : 'LOADING PYTHON...';
+}
+function startWorker(){
+  pyReady = false;
+  try {
+    worker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type:'text/javascript' })));
+    worker.onmessage = e => {
+      const d = e.data;
+      if (d.ready) { pyReady = true; refreshRun(); }
+      else if (d.fatal) { pyFail = true; pyErr = d.fatal; refreshRun(); }
+      else if (pending) { pending(d); pending = null; }
+    };
+    worker.onerror = e => { pyFail = true; pyErr = e.message || 'worker error'; refreshRun(); };
+  } catch (e) { worker = null; pyFail = true; pyErr = String(e); refreshRun(); }
+}
+startWorker();
+function runPy(code){
+  return new Promise(res => {
+    if (!worker) return res({ err:'Python is not available: ' + pyErr });
+    const timer = setTimeout(() => { worker.terminate(); startWorker(); pending = null; res({ err:'TimeoutError: the code ran for more than 5 seconds. Check for an infinite loop.' }); }, 5000);
+    pending = d => { clearTimeout(timer); res(d); };
+    worker.postMessage(code);
+  });
+}
+const cleanErr = m => {
+  const L = m.split('\n'), k = L.findIndex(l => l.includes('<exec>'));
+  return (k < 0 ? m.trim() : 'Traceback (most recent call last):\n' + L.slice(k).join('\n').trim()).replace(/<exec>/g, 'main.py');
+};
+
 /* ---------- State + rendering ---------- */
 let i = 0;
-const answered = {};
+const drafts = {};
 const last = LESSONS.length - 1;
 
 function goGame(){ try { localStorage.setItem(DONE_KEY, 'yes'); } catch (e) {} location.href = 'game-room.html'; }
+
+function growEd(){ const e = $('ed'); if (!e) return; e.style.height = 'auto'; e.style.height = (e.scrollHeight + 2) + 'px'; }
 
 function render(){
   const L = LESSONS[i];
@@ -262,7 +307,7 @@ function render(){
 
   const codes = L.code.map(c => '<pre class="code ' + c[0] + '">' + c[1] + '</pre>').join('<div class="h-2"></div>');
   const pts = L.points.map(p => '<li class="flex gap-3"><span class="text-cyan-300 font-pixel text-[9px] mt-1.5">▸</span><span>' + p + '</span></li>').join('');
-  const opts = L.quiz.o.map((o, k) => '<button type="button" class="opt" data-k="' + k + '">' + esc(o) + '</button>').join('<div class="h-2"></div>');
+  const refs = L.refs.map(r => '<li><a href="' + r[1] + '" target="_blank" rel="noopener noreferrer">' + esc(r[0]) + '</a></li>').join('');
 
   $('lessonBody').innerHTML =
     '<h1 class="font-pixel text-base sm:text-xl leading-snug text-[#7ae8ff]" style="text-shadow:0 0 12px rgba(122,232,255,.6)">' + L.title.toUpperCase() + '</h1>' +
@@ -270,33 +315,67 @@ function render(){
     '<ul class="mt-4 space-y-2 text-sm sm:text-[15px] text-slate-300 leading-relaxed">' + pts + '</ul>' +
     '<div class="mt-5">' + codes + '</div>' +
     '<p class="mt-4 text-sm text-purple-200 leading-relaxed border-l-4 border-[#a38fc2] pl-3">' + L.note + '</p>' +
+
     '<div class="mt-6 border-2 border-cyan-400/30 bg-[#0b2335]/70 p-4">' +
-      '<div class="font-pixel text-[8px] tracking-widest text-cyan-300 mb-3">QUICK CHECK</div>' +
-      '<p class="text-sm sm:text-base text-white mb-3">' + esc(L.quiz.q) + '</p>' + opts +
-      '<p id="quizMsg" class="mt-3 text-sm leading-relaxed hidden"></p>' +
+      '<div class="flex items-center justify-between mb-2"><span class="font-pixel text-[8px] tracking-widest text-cyan-300">TRY IT YOURSELF</span><span class="tag sys">PYTHON 3</span></div>' +
+      '<p class="text-sm text-slate-200 leading-relaxed mb-3">' + esc(L.tryit.task) + '</p>' +
+      '<textarea id="ed" class="ed" rows="4" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Python code editor"></textarea>' +
+      '<div class="mt-3 flex flex-wrap items-center gap-2">' +
+        '<button id="btnRun" class="btn btn-primary pixel-btn-border" type="button">LOADING PYTHON...</button>' +
+        '<button id="btnReset" class="btn btn-ghost pixel-btn-border" type="button">↺ RESET</button>' +
+        '<span id="status" class="tag sys hidden"></span>' +
+      '</div>' +
+      '<div class="mt-3 font-pixel text-[8px] tracking-widest text-slate-400">OUTPUT</div>' +
+      '<div id="con" class="con mt-1" aria-live="polite"><span class="ph">Press RUN to see the output here.</span></div>' +
+      '<div class="mt-2 text-xs text-slate-400">Goal output: <span class="font-retro text-base text-cyan-200">' + esc(L.tryit.goal).replace(/\n/g, ' ⏎ ') + '</span></div>' +
+    '</div>' +
+
+    '<div class="mt-6 ref">' +
+      '<div class="font-pixel text-[8px] tracking-widest text-cyan-300 mb-2">REFERENCES</div>' +
+      '<ul class="text-sm text-slate-300 space-y-1 list-disc pl-5">' + refs + '</ul>' +
     '</div>';
 
   const box = $('lessonBody'); box.classList.remove('anim-pop'); void box.offsetWidth; box.classList.add('anim-pop');
 
-  box.querySelectorAll('.opt').forEach(b => b.onclick = () => pick(+b.dataset.k));
-  if (answered[i] !== undefined) pick(answered[i], true);
+  const ed = $('ed');
+  ed.value = drafts[i] !== undefined ? drafts[i] : L.tryit.code; growEd();
+  ed.oninput = () => { drafts[i] = ed.value; growEd(); };
+  ed.onkeydown = e => {
+    if (e.key === 'Tab') { e.preventDefault(); ed.setRangeText('    ', ed.selectionStart, ed.selectionEnd, 'end'); ed.oninput(); }
+    e.stopPropagation(); // arrow keys stay for typing, not for changing lessons
+  };
+  $('btnReset').onclick = () => { ed.value = L.tryit.code; drafts[i] = L.tryit.code; growEd(); setCon(null); ed.focus(); };
+  $('btnRun').onclick = runExample;
+  refreshRun();
 
   $('btnBack').disabled = i === 0;
   $('btnNext').textContent = i === last ? '▶ START GAME' : 'NEXT ▶';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function pick(k, restore){
-  const Q = LESSONS[i].quiz, ok = k === Q.a;
-  answered[i] = k;
-  document.querySelectorAll('.opt').forEach((b, n) => {
-    b.disabled = true;
-    if (n === Q.a) b.classList.add('right');
-    else if (n === k) b.classList.add('wrong');
-  });
-  const m = $('quizMsg');
-  m.className = 'mt-3 text-sm leading-relaxed ' + (ok ? 'text-green-300' : 'text-red-300');
-  m.textContent = (ok ? 'Correct. ' : 'Not quite. ') + Q.why;
+function setCon(text, kind){
+  const c = $('con'), st = $('status'); if (!c) return;
+  c.className = 'con mt-1' + (kind ? ' ' + kind : '');
+  if (text === null) { c.innerHTML = '<span class="ph">Press RUN to see the output here.</span>'; st.classList.add('hidden'); return; }
+  c.textContent = text === '' ? '(no output)' : text;
+}
+
+async function runExample(){
+  const L = LESSONS[i], btn = $('btnRun'), st = $('status');
+  btn.disabled = true; btn.textContent = 'RUNNING...';
+  const d = await runPy($('ed').value);
+  const out = (d.out || '').trim();
+  if (d.err) {
+    setCon((out ? out + '\n' : '') + cleanErr(d.err), 'err');
+    st.className = 'tag bad'; st.textContent = 'ERROR - READ THE LAST LINE';
+  } else if (out === L.tryit.goal) {
+    setCon(out, 'ok');
+    st.className = 'tag good'; st.textContent = 'MATCHES THE GOAL';
+  } else {
+    setCon(out, '');
+    st.className = 'tag sys'; st.textContent = 'RAN - NOT THE GOAL YET';
+  }
+  refreshRun();
 }
 
 $('btnBack').onclick = () => { if (i > 0) { i--; render(); } };
