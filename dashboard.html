@@ -16,33 +16,40 @@
 <div class="glow glow--cyan"></div>
 <div class="glow glow--violet"></div>
 
-<div class="page">
+<header class="topbar">
+  <div class="topbar__inner">
+    <a class="brand" href="dashboard.html">
+      <div class="brand__mark">&lt;&gt;</div>
+      <div>
+        <span class="brand__name">Remediate</span>
+        <span class="brand__slash">/</span>
+        <h1 class="brand__sub">Dashboard</h1>
+      </div>
+    </a>
+    <nav class="nav">
+      <a class="nav__link nav__link--on" href="dashboard.html" aria-current="page">Dashboard</a>
+      <a class="nav__link" href="index.html">Lessons</a>
+      <a class="nav__link" href="game-room.html">Play</a>
+      <span class="player" style="cursor:default">
+        <span class="player__avatar">?<i></i></span>
+        <span id="playerName">Player</span>
+      </span>
+      <button class="nav__link nav__link--out" id="logoutBtn" type="button">Log out</button>
+    </nav>
+  </div>
+</header>
 
-  <header class="top">
-    <div class="top__row">
-      <a class="identity" href="index.html" style="text-decoration:none">
-        <div class="identity__mark">&lt;&gt;</div>
-        <h1 class="identity__title">Dashboard</h1>
-      </a>
-      <nav class="nav">
-        <a class="nav__link" href="index.html">Lessons</a>
-        <a class="nav__link" href="game-room.html">Play</a>
-        <a class="nav__link nav__link--on" href="dashboard.html" aria-current="page">Dashboard</a>
-        <span class="player" style="cursor:default">
-          <span class="player__avatar">?<i></i></span>
-          <span id="playerName">Player</span>
-        </span>
-        <button class="nav__link nav__link--out" id="logoutBtn" type="button">Log out</button>
-      </nav>
-    </div>
-  </header>
+<div class="page">
 
   <main class="dash">
     <div id="loading" class="loading">LOADING DATA<span>_</span></div>
 
     <div id="empty" class="pixel-box card empty hidden">
-      <p>No games logged yet. Escape the room to fill this dashboard.</p>
-      <button class="act act--go" onclick="location.href='game-room.html'">PLAY NOW</button>
+      <p>No games logged yet. Learn the basics first, then escape the room to fill this dashboard.</p>
+      <div class="actions__row" style="justify-content:center">
+        <button class="act act--go" onclick="location.href='index.html'">START LESSONS</button>
+        <button class="act act--menu" onclick="location.href='game-room.html'">SKIP TO GAME</button>
+      </div>
     </div>
 
     <div id="content" class="hidden">
@@ -93,8 +100,8 @@
 
   <div class="actions">
     <div class="actions__row">
-      <button class="act act--go" onclick="location.href='game-room.html'">PLAY AGAIN</button>
-      <button class="act act--menu" onclick="location.href='index.html'">MAIN MENU</button>
+      <button class="act act--menu" onclick="location.href='index.html'">GO TO LESSONS</button>
+      <button class="act act--go" onclick="location.href='game-room.html'">PLAY GAME</button>
     </div>
   </div>
 </div>

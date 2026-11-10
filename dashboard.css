@@ -23,10 +23,12 @@
 .card { padding: 1.5rem; background: rgba(10, 13, 26, .95); border: 2px solid rgba(56, 225, 255, .45); }
 .card--lav { border-color: rgba(165, 148, 249, .5); }
 .card--pink { border-color: rgba(255, 92, 138, .5); }
-.card__title { margin-bottom: 1.25rem; padding-bottom: .75rem; border-bottom: 1px solid rgba(35, 42, 78, .8);
-  font-family: var(--pixel); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--cyan); }
+.card__title { display: flex; align-items: center; gap: .5rem; margin-bottom: 1.25rem; padding-bottom: .75rem; border-bottom: 1px solid rgba(35, 42, 78, .8);
+  font-family: var(--pixel); font-size: .875rem; line-height: 1.25rem; letter-spacing: .025em; text-transform: uppercase; color: var(--cyan); }
+.card__title::before { content: ''; width: .75rem; height: .75rem; background: currentColor; flex-shrink: 0; }
 .card--lav .card__title { color: var(--lavender); }
 .card--pink .card__title { color: var(--peach); }
+@media (min-width: 640px) { .card__title { font-size: 1rem; line-height: 1.5rem; } }
 
 .chart { width: 100%; height: auto; display: block; }
 .chart text { font-family: var(--retro); font-size: 14px; fill: #94a3b8; }
@@ -67,6 +69,6 @@ tr:hover td { background: rgba(22, 27, 51, .7); }
 .loading { text-align: center; padding: 4rem 1rem; font-family: var(--pixel); font-size: .75rem; color: var(--cyan); }
 .loading span { animation: caret 1s steps(1) infinite; }
 
-@media (min-width: 640px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .top__row { flex-direction: row; } }
+@media (min-width: 640px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1024px) { .kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); } .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
