@@ -15,21 +15,24 @@
 <div class="glow glow--cyan"></div>
 <div class="glow glow--violet"></div>
 
-<div class="page">
-
-  <header class="top">
-    <div class="top__row">
-      <div class="identity">
-        <div class="identity__mark">&lt;&gt;</div>
-        <h1 class="identity__title">Debug Report</h1>
-      </div>
-      <div class="player">
-        <div class="player__avatar">?<i></i></div>
-        <span id="playerName">Player</span>
-        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4 L6 8 L10 4"/></svg>
+<header class="topbar">
+  <div class="topbar__inner">
+    <div class="brand">
+      <div class="brand__mark">&lt;&gt;</div>
+      <div>
+        <span class="brand__name">Remediate</span>
+        <span class="brand__slash">/</span>
+        <h1 class="brand__sub">Debug Report</h1>
       </div>
     </div>
-  </header>
+    <div class="player">
+      <div class="player__avatar">?<i></i></div>
+      <span id="playerName">Player</span>
+    </div>
+  </div>
+</header>
+
+<div class="page">
 
   <main class="board">
 
@@ -170,11 +173,8 @@
       <button class="act act--go" onclick="location.href='game-room.html'">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M2 1 L11 6 L2 11 Z"/></svg> PLAY NEXT ROOM
       </button>
-      <button class="act act--menu" onclick="location.href='index.html'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg> MAIN MENU
-      </button>
       <button class="act act--menu" onclick="location.href='dashboard.html'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg> DASHBOARD
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg> DASHBOARD
       </button>
       <button class="act act--share">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 1 L11 8 L1 8 Z"/></svg> SHARE SCORE
