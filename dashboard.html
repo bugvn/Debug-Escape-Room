@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REMEDIATE: Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="test-summary.css">
+<link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<div class="scanlines"></div>
+<div class="glow glow--cyan"></div>
+<div class="glow glow--violet"></div>
+
+<div class="page">
+
+  <header class="top">
+    <div class="top__row">
+      <a class="identity" href="index.html" style="text-decoration:none">
+        <div class="identity__mark">&lt;&gt;</div>
+        <h1 class="identity__title">Dashboard</h1>
+      </a>
+      <nav class="nav">
+        <a class="nav__link" href="index.html">Lessons</a>
+        <a class="nav__link" href="game-room.html">Play</a>
+        <a class="nav__link nav__link--on" href="dashboard.html" aria-current="page">Dashboard</a>
+        <span class="player" style="cursor:default">
+          <span class="player__avatar">?<i></i></span>
+          <span id="playerName">Player</span>
+        </span>
+        <button class="nav__link nav__link--out" id="logoutBtn" type="button">Log out</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="dash">
+    <div id="loading" class="loading">LOADING DATA<span>_</span></div>
+
+    <div id="empty" class="pixel-box card empty hidden">
+      <p>No games logged yet. Escape the room to fill this dashboard.</p>
+      <button class="act act--go" onclick="location.href='game-room.html'">PLAY NOW</button>
+    </div>
+
+    <div id="content" class="hidden">
+      <section class="kpis" aria-label="Summary">
+        <div class="kpi"><div class="kpi__label">Games</div><div class="kpi__value" id="kGames">--</div><div class="kpi__sub" id="kGamesSub"></div></div>
+        <div class="kpi"><div class="kpi__label">Escapes</div><div class="kpi__value kpi__value--gold" id="kWins">--</div><div class="kpi__sub" id="kWinsSub"></div></div>
+        <div class="kpi"><div class="kpi__label">Best score</div><div class="kpi__value kpi__value--lav" id="kBest">--</div><div class="kpi__sub" id="kBestSub"></div></div>
+        <div class="kpi"><div class="kpi__label">Accuracy</div><div class="kpi__value" id="kAcc">--</div><div class="kpi__sub" id="kAccSub"></div></div>
+        <div class="kpi"><div class="kpi__label">Avg time</div><div class="kpi__value kpi__value--peach" id="kTime">--</div><div class="kpi__sub" id="kTimeSub"></div></div>
+      </section>
+
+      <div class="grid2" style="margin-top:2rem">
+        <section class="card pixel-box">
+          <h2 class="card__title">Score Trend</h2>
+          <div id="trend"></div>
+          <div class="legend"><span><i></i>Game score</span><span><i class="g"></i>Escaped</span></div>
+        </section>
+
+        <section class="card card--lav pixel-box">
+          <h2 class="card__title">Puzzle Accuracy</h2>
+          <div class="bars" id="puzzleBars"></div>
+        </section>
+      </div>
+
+      <div class="grid2" style="margin-top:2rem">
+        <section class="card card--pink pixel-box">
+          <h2 class="card__title">Mistake Breakdown</h2>
+          <div class="bars" id="mistakeBars"></div>
+        </section>
+
+        <section class="card pixel-box">
+          <h2 class="card__title">Progress Check</h2>
+          <div id="insights" class="bars"></div>
+        </section>
+      </div>
+
+      <section class="card card--lav pixel-box" style="margin-top:2rem">
+        <h2 class="card__title">Game History</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Date</th><th>Result</th><th>Solved</th><th>Hints</th><th>Time</th><th>Score</th><th>Rank</th><th></th></tr></thead>
+            <tbody id="history"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="actions">
+    <div class="actions__row">
+      <button class="act act--go" onclick="location.href='game-room.html'">PLAY AGAIN</button>
+      <button class="act act--menu" onclick="location.href='index.html'">MAIN MENU</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script>
+(async function () {
+  const $ = id => document.getElementById(id);
+  const esc = t => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const mmss = sec => Math.floor(sec / 60) + 'm ' + String(Math.round(sec % 60)).padStart(2, '0') + 's';
+  const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+
+  $('logoutBtn').onclick = logout;
+  const u = await requireLogin(); if (!u) return;
+  const p = await getProfile(u.id);
+  if (p) $('playerName').textContent = p.player_name;
+
+  // same score formula and ranks as test-summary.html, so the numbers match the report
+  const KETTLE = 'PUZZLE 02: RECURSIVE KETTLE LOOP';
+  const RANKS = [[90,'S'],[75,'A'],[60,'B'],[40,'C'],[0,'D']];
+  function scoreOf(s, subs) {
+    const bad = subs.filter(x => !x.is_correct).length;
+    const kettleOk = subs.some(x => x.puzzle === KETTLE && x.is_correct);
+    const bonus = s.result === 'won' ? Math.round(30 * s.time_left_sec / Math.max(1, s.time_total_sec)) : 0;
+    return Math.max(0, Math.min(100, s.solved_count * 10 + bonus + (kettleOk ? 20 : 0) - s.hints_used * 3 - Math.min(20, bad * 2)));
+  }
+
+  const [sRes, subRes] = await Promise.all([
+    db.from('game_sessions').select('*').order('created_at', { ascending: true }),
+    db.from('submissions').select('session_id,puzzle,is_correct,mistake_tag')
+  ]);
+  $('loading').classList.add('hidden');
+
+  if (sRes.error || subRes.error) {
+    const e = $('empty'); e.classList.remove('hidden');
+    e.querySelector('p').textContent = 'Could not load your data. Check your connection and refresh.';
+    return;
+  }
+  const sessions = sRes.data || [], allSubs = subRes.data || [];
+  if (!sessions.length) { $('empty').classList.remove('hidden'); return; }
+  $('content').classList.remove('hidden');
+
+  const bySession = {};
+  allSubs.forEach(x => (bySession[x.session_id] = bySession[x.session_id] || []).push(x));
+  const rows = sessions.map((s, i) => {
+    const subs = bySession[s.id] || [];
+    const score = scoreOf(s, subs);
+    return { s, n: i + 1, score, rank: RANKS.find(r => score >= r[0])[1], took: s.time_total_sec - s.time_left_sec };
+  });
+
+  /* ----- KPIs ----- */
+  const wins = rows.filter(r => r.s.result === 'won');
+  const good = allSubs.filter(x => x.is_correct).length;
+  const best = rows.reduce((a, b) => (b.score > a.score ? b : a));
+  const avgTime = wins.length ? wins.reduce((a, r) => a + r.took, 0) / wins.length : null;
+  $('kGames').textContent = rows.length;
+  $('kGamesSub').textContent = rows.filter(r => r.s.result === 'left').length + ' left early';
+  $('kWins').textContent = wins.length;
+  $('kWinsSub').textContent = pct(wins.length, rows.length) + '% win rate';
+  $('kBest').textContent = best.score;
+  $('kBestSub').textContent = 'Rank ' + best.rank + ' · game #' + best.n;
+  $('kAcc').textContent = allSubs.length ? pct(good, allSubs.length) + '%' : '--';
+  $('kAccSub').textContent = good + ' / ' + allSubs.length + ' submits';
+  $('kTime').textContent = avgTime == null ? '--' : mmss(avgTime);
+  $('kTimeSub').textContent = avgTime == null ? 'No escapes yet' : 'Escaped games';
+
+  /* ----- score trend (inline SVG) ----- */
+  (function () {
+    const last = rows.slice(-20), W = 560, H = 220, L = 34, R = 12, T = 12, B = 28;
+    const x = i => last.length === 1 ? (L + W - R) / 2 : L + i * (W - L - R) / (last.length - 1);
+    const y = v => T + (H - T - B) * (1 - v / 100);
+    let g = '';
+    [0, 25, 50, 75, 100].forEach(v => { g += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`; });
+    const pts = last.map((r, i) => x(i) + ',' + y(r.score)).join(' ');
+    const dots = last.map((r, i) => `<circle class="dot ${r.s.result === 'won' ? 'dot--win' : ''}" cx="${x(i)}" cy="${y(r.score)}" r="5"><title>Game #${r.n}: ${r.score} pts</title></circle>`).join('');
+    const labs = last.map((r, i) => (last.length <= 10 || i % 2 === 0) ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">#${r.n}</text>` : '').join('');
+    $('trend').innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Score per game">${g}${last.length > 1 ? `<polyline class="line" points="${pts}"/>` : ''}${dots}${labs}</svg>`;
+  })();
+
+  /* ----- per puzzle accuracy ----- */
+  const puz = {};
+  allSubs.forEach(x => { const o = puz[x.puzzle] = puz[x.puzzle] || { t: 0, ok: 0 }; o.t++; if (x.is_correct) o.ok++; });
+  const pk = Object.keys(puz).sort();
+  $('puzzleBars').innerHTML = pk.length ? pk.map(k => `
+    <div><div class="bar__head"><span class="bar__name">${esc(k)}</span><span class="bar__val">${pct(puz[k].ok, puz[k].t)}% · ${puz[k].ok}/${puz[k].t}</span></div>
+    <div class="bar__track"><div class="bar__fill bar__fill--lav" style="width:${pct(puz[k].ok, puz[k].t)}%"></div></div></div>`).join('')
+    : '<p class="empty-note">No submissions yet.</p>';
+
+  /* ----- mistakes ----- */
+  const tags = {};
+  allSubs.filter(x => !x.is_correct).forEach(x => { const k = x.mistake_tag || 'Other'; tags[k] = (tags[k] || 0) + 1; });
+  const tk = Object.keys(tags).sort((a, b) => tags[b] - tags[a]), tmax = Math.max(1, ...tk.map(k => tags[k]));
+  $('mistakeBars').innerHTML = tk.length ? tk.map(k => `
+    <div><div class="bar__head"><span class="bar__name">${esc(k)}</span><span class="bar__val bar__val--bad">${tags[k]} ${tags[k] === 1 ? 'hit' : 'hits'}</span></div>
+    <div class="bar__track"><div class="bar__fill bar__fill--bad" style="width:${pct(tags[k], tmax)}%"></div></div></div>`).join('')
+    : '<p class="empty-note">No mistakes logged. Clean runs.</p>';
+
+  /* ----- progress check ----- */
+  const half = Math.ceil(rows.length / 2), first = rows.slice(0, half), second = rows.slice(half);
+  const avg = a => a.length ? a.reduce((x, r) => x + r.score, 0) / a.length : 0;
+  const avgHints = rows.reduce((a, r) => a + r.s.hints_used, 0) / rows.length;
+  const avgSolved = rows.reduce((a, r) => a + r.s.solved_count, 0) / rows.length;
+  let trendLine = 'Play more games to see a trend.';
+  if (second.length) { const d = Math.round(avg(second) - avg(first)); trendLine = (d >= 0 ? '+' : '') + d + ' pts vs your earlier games'; }
+  $('insights').innerHTML = `
+    <div><div class="bar__head"><span class="bar__name">Avg puzzles solved</span><span class="bar__val">${avgSolved.toFixed(1)} / 4</span></div>
+    <div class="bar__track"><div class="bar__fill" style="width:${pct(avgSolved, 4)}%"></div></div></div>
+    <div><div class="bar__head"><span class="bar__name">Avg hints used</span><span class="bar__val">${avgHints.toFixed(1)} / 3</span></div>
+    <div class="bar__track"><div class="bar__fill bar__fill--lav" style="width:${pct(avgHints, 3)}%"></div></div></div>
+    <div><div class="bar__head"><span class="bar__name">Score trend</span><span class="bar__val">${esc(trendLine)}</span></div></div>
+    ${tk.length ? `<div><div class="bar__head"><span class="bar__name">Focus next</span><span class="bar__val bar__val--bad">${esc(tk[0])}</span></div></div>` : ''}`;
+
+  /* ----- history ----- */
+  const RES = { won: 'Escaped', time: 'Time up', left: 'Left' };
+  $('history').innerHTML = rows.slice().reverse().map(r => `
+    <tr>
+      <td>${r.n}</td>
+      <td>${new Date(r.s.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+      <td><span class="chip chip--${esc(r.s.result)}">${RES[r.s.result] || esc(r.s.result)}</span></td>
+      <td>${r.s.solved_count} / 4</td>
+      <td>${r.s.hints_used} / 3</td>
+      <td>${mmss(r.took)}</td>
+      <td>${r.score}</td>
+      <td class="rk">${r.rank}</td>
+      <td><button class="link" type="button" data-sid="${r.s.id}">REPORT</button></td>
+    </tr>`).join('');
+  $('history').onclick = e => {
+    const b = e.target.closest('[data-sid]'); if (!b) return;
+    sessionStorage.setItem('lastSessionId', b.dataset.sid);
+    location.href = 'test-summary.html';
+  };
+})();
+</script>
+</body>
+</html>
