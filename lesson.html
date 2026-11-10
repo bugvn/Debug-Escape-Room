@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>REMEDIATE: Lesson Module</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script>
+  tailwind.config = {
+    theme: { extend: {
+      fontFamily: { pixel: ['"Press Start 2P"', 'monospace'], retro: ['"VT323"', 'monospace'], sans: ['"Nunito"', 'sans-serif'] },
+      colors: { space: { 950: '#020d16', 900: '#051b2a', 800: '#0a2334', 700: '#163e50' } }
+    } }
+  }
+</script>
+<style>
+  @keyframes pop-in { from { opacity:0; transform:scale(.97) translateY(6px);} to { opacity:1; transform:scale(1) translateY(0);} }
+  @keyframes blink { 50% { opacity:0; } }
+  .anim-pop { animation: pop-in .2s ease-out; }
+  .caret { animation: blink 1s steps(1) infinite; }
+  .pixel-btn-border { box-shadow: inset -3px -3px 0 0 rgba(0,0,0,.5), inset 3px 3px 0 0 rgba(255,255,255,.25); }
+  .pixel-btn-border:active { box-shadow: inset 3px 3px 0 0 rgba(0,0,0,.6), inset -2px -2px 0 0 rgba(255,255,255,.15); transform: translateY(2px); }
+  .pixel-box { box-shadow: 0 0 0 2px #071a2b, 0 0 0 4px #153f50, 0 0 0 6px #62dfff, 0 12px 30px rgba(0,0,0,.85); }
+  #crtOverlay { background: repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0px, rgba(0,0,0,.28) 1px, transparent 1px, transparent 3px); }
+  #vignette { background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.65) 100%); }
+
+  .btn { font-family:'Press Start 2P',monospace; font-size:10px; padding:.85rem 1.1rem; display:inline-flex; align-items:center; justify-content:center; transition:filter .15s; }
+  .btn:hover:not(:disabled) { filter:brightness(1.12); }
+  .btn:disabled { opacity:.35; cursor:not-allowed; }
+  .btn-primary { background:#7ae8ff; color:#061d29; }
+  .btn-ghost { background:#0b2335; color:#bfefff; border:2px solid rgba(122,232,255,.4); }
+
+  .step { width:100%; height:8px; background:#0b2335; border:1px solid rgba(122,232,255,.3); }
+  .step.done { background:#7ae8ff; box-shadow:0 0 8px rgba(122,232,255,.6); }
+  .step.now { background:#a38fc2; border-color:#d5c7ee; }
+
+  .code { background:#050c14; border:2px solid #153f50; border-left:4px solid #7ae8ff; padding:.8rem 1rem; font-family:'VT323',monospace; font-size:1.25rem; line-height:1.35; color:#dffcff; overflow-x:auto; white-space:pre; }
+  .code.bad { border-left-color:#f87171; }
+  .code.good { border-left-color:#86efac; }
+  .code .cm { color:#6b8ba0; }
+  .code .kw { color:#d3bdf3; }
+  .code .st { color:#ffd8dd; }
+  .code .er { color:#fca5a5; }
+  .tag { font-family:'Press Start 2P',monospace; font-size:8px; letter-spacing:.08em; padding:.3rem .5rem; border:2px solid; display:inline-block; }
+  .tag.bad { color:#fca5a5; border-color:#f87171; background:rgba(248,113,113,.1); }
+  .tag.good { color:#86efac; border-color:#86efac; background:rgba(134,239,172,.1); }
+  .tag.sys { color:#7ae8ff; border-color:#4d6594; background:rgba(77,101,148,.2); }
+
+  .opt { display:block; width:100%; text-align:left; padding:.7rem .9rem; background:#0b2335; border:2px solid rgba(122,232,255,.3); color:#dffcff; font-size:.95rem; transition:.15s; }
+  .opt:hover:not(:disabled) { border-color:#7ae8ff; background:#112d42; }
+  .opt.right { border-color:#86efac; background:rgba(134,239,172,.12); }
+  .opt.wrong { border-color:#f87171; background:rgba(248,113,113,.12); }
+  .opt:disabled { cursor:default; }
+  .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { animation:none!important; transition:none!important; }
+</style>
+</head>
+<body class="bg-[#020d1a] text-slate-200 min-h-screen relative overflow-x-hidden flex flex-col font-sans selection:bg-cyan-300 selection:text-space-950">
+
+<div id="vignette" class="fixed inset-0 z-[89] pointer-events-none"></div>
+<div id="crtOverlay" class="fixed inset-0 z-[90] pointer-events-none"></div>
+
+<!-- Ambient background (same as the landing page) -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+  <div class="absolute inset-0 bg-[#0a0d1a]"></div>
+  <canvas class="absolute inset-0 w-full h-full opacity-70" id="starfield-canvas"></canvas>
+  <div class="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-cyan-900/20 blur-3xl"></div>
+  <div class="absolute bottom-10 -right-24 w-[30rem] h-[30rem] rounded-full bg-indigo-900/20 blur-3xl"></div>
+</div>
+
+<!-- Header -->
+<header class="relative z-10 w-full px-4 sm:px-8 py-3 border-b-2 border-cyan-400/40 bg-[#081b2a]/90 backdrop-blur-md">
+  <div class="max-w-6xl mx-auto flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <div class="w-7 h-7 bg-cyan-400/20 border-2 border-cyan-400 flex items-center justify-center text-cyan-300 text-xs font-pixel">&lt;&gt;</div>
+      <div>
+        <span class="font-pixel text-[10px] sm:text-xs tracking-wider text-cyan-300 uppercase">REMEDIATE</span>
+        <span class="hidden sm:inline text-xs text-slate-500 font-pixel mx-2">/</span>
+        <span class="hidden sm:inline font-pixel text-[9px] text-purple-200 uppercase tracking-wide">Lesson Module</span>
+      </div>
+    </a>
+    <div class="flex items-center gap-2 sm:gap-5">
+      <button id="skipTop" class="px-2.5 py-1 bg-[#0b2335] hover:bg-[#112d42] border border-cyan-400/40 text-cyan-200 font-pixel text-[8px] uppercase tracking-wider active:scale-95" type="button">Skip to Game</button>
+    </div>
+  </div>
+</header>
+
+<!-- Lesson card -->
+<main class="relative z-10 flex-1 flex items-start justify-center px-4 py-8 sm:px-6 md:px-8">
+  <div class="w-full max-w-3xl">
+    <div class="border-2 border-cyan-400/60 bg-[#081b2b]/85 shadow-[0_0_28px_rgba(122,232,255,0.1)] backdrop-blur-sm">
+
+      <!-- progress -->
+      <div class="px-4 sm:px-8 pt-5">
+        <div class="flex items-center justify-between mb-2">
+          <span id="lessonCount" class="font-pixel text-[9px] text-cyan-300 tracking-wider"></span>
+          <span id="lessonTag" class="tag sys"></span>
+        </div>
+        <div id="steps" class="grid grid-cols-5 gap-2"></div>
+      </div>
+
+      <!-- content -->
+      <div id="lessonBody" class="px-4 sm:px-8 py-6 anim-pop" aria-live="polite"></div>
+
+      <!-- nav -->
+      <div class="px-4 sm:px-8 py-4 border-t border-cyan-400/25 flex items-center justify-between gap-3">
+        <button id="btnBack" class="btn btn-ghost pixel-btn-border" type="button">◀ BACK</button>
+        <span class="hidden sm:block font-pixel text-[7px] text-slate-500 tracking-widest uppercase">Use ← → keys</span>
+        <button id="btnNext" class="btn btn-primary pixel-btn-border" type="button">NEXT ▶</button>
+      </div>
+    </div>
+    <p class="mt-4 text-center font-pixel text-[7px] text-slate-500 tracking-[0.25em] uppercase">Read the lessons, then fix the bugs in the room<span class="caret">_</span></p>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="starfield.js"></script>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const DONE_KEY = 'remediate.lessonDone';
+
+// Only logged-in players can use the module, same as the game room
+try { requireLogin().catch(e => console.error(e)); } catch (e) { console.error(e); }
+
+/* ---------- Lesson content ---------- */
+// code blocks: [style, text]. style: '' | 'bad' | 'good'
+const LESSONS = [
+{
+  tag: 'BASICS', title: 'How to Read a Bug',
+  intro: 'Every bug in the room shows up as an error message or as the wrong output. Both tell you where to look.',
+  points: [
+    '<b>Run the code first.</b> Do not guess. The error message is a clue.',
+    '<b>Read the last line of the error.</b> It names the type of problem, such as IndexError or TypeError, and says what went wrong.',
+    '<b>Check the line number</b> above it. That is where Python noticed the problem. The cause can be a line or two earlier.',
+    '<b>Change one thing, then run again.</b> Fixing one line at a time shows you which change worked.'
+  ],
+  code: [['bad', `Traceback (most recent call last):
+  File "main.py", line 3, in &lt;module&gt;
+    total += stars[i]
+<span class="er">IndexError: list index out of range</span>`]],
+  note: 'In the room: use RUN TEST to try your fix as many times as you like. Only SUBMIT counts as your answer.',
+  quiz: { q: 'Which part of an error message tells you what kind of problem it is?',
+    o: ['The last line', 'The first line', 'The file name'], a: 0,
+    why: 'The last line names the error type and gives the reason. The lines above it show where it happened.' }
+},
+{
+  tag: 'INDEX FAULT', title: 'Lists and Index Errors',
+  intro: 'A list keeps items in order, and each item has a position number called an index. Python starts counting at 0, not 1.',
+  points: [
+    'A list with <b>3 items</b> has the indexes <b>0, 1, 2</b>. The last valid index is always <b>len(list) - 1</b>.',
+    'Asking for an index that does not exist causes an <b>IndexError</b>.',
+    'The most common cause is an <b>off-by-one</b> mistake: a loop that runs one time too many.',
+    'To go through every item safely, loop over the list itself.'
+  ],
+  code: [
+    ['', `fruits = ["apple", "mango", "kiwi"]
+print(fruits[0])   <span class="cm"># apple</span>
+print(fruits[2])   <span class="cm"># kiwi</span>`],
+    ['bad', `print(fruits[3])   <span class="cm"># there is no index 3</span>
+<span class="er">IndexError: list index out of range</span>`],
+    ['good', `<span class="kw">for</span> fruit <span class="kw">in</span> fruits:
+    print(fruit)       <span class="cm"># never goes past the end</span>`]
+  ],
+  note: 'Watch for: range(len(items) + 1). The + 1 makes the loop run one extra time.',
+  quiz: { q: 'scores = [90, 85, 70]. Which index gives the last item?',
+    o: ['2', '3', '1'], a: 0,
+    why: 'There are 3 items, so the indexes are 0, 1 and 2. The last index is len(scores) - 1.' }
+},
+{
+  tag: 'TYPE FAULT', title: 'Data Types and Type Errors',
+  intro: 'Every value has a type. Text is a string (str) and whole numbers are integers (int). Python will not mix them in math.',
+  points: [
+    'Anything inside quotes is a <b>string</b>, even if it looks like a number: <b>"7"</b> is text, <b>7</b> is a number.',
+    'Adding a string and an integer causes a <b>TypeError</b>.',
+    'Use <b>int()</b> to turn a numeric string into a number before doing math.',
+    'Two strings added with + are joined together: "5" + "5" gives "55", not 10.'
+  ],
+  code: [
+    ['bad', `age = "15"
+print(age + 1)
+<span class="er">TypeError: can only concatenate str (not "int") to str</span>`],
+    ['good', `age = "15"
+print(int(age) + 1)   <span class="cm"># 16</span>`]
+  ],
+  note: 'If the error mentions str and int together, check the quotes around your numbers.',
+  quiz: { q: 'How do you fix  "3" + 4  so it gives 7?',
+    o: ['int("3") + 4', '"3" + "4"', 'print("3" + 4)'], a: 0,
+    why: 'int("3") turns the text into the number 3, so 3 + 4 gives 7. "3" + "4" would give "34".' }
+},
+{
+  tag: 'RECURSION FAULT', title: 'Recursion',
+  intro: 'A recursive function calls itself. To work correctly it needs two things, or it will never stop.',
+  points: [
+    'A <b>base case</b>: the condition where the function stops and returns an answer.',
+    '<b>Progress</b>: each call must change something so the next call gets closer to the base case.',
+    'If the base case is never reached, Python stops it with a <b>RecursionError</b>.',
+    'When you debug, ask: does the value I check ever change between calls?'
+  ],
+  code: [
+    ['bad', `<span class="kw">def</span> countdown(n):
+    <span class="kw">if</span> n == 0:
+        <span class="kw">return</span> <span class="st">"liftoff"</span>
+    <span class="kw">return</span> countdown(n)        <span class="cm"># n never changes</span>
+<span class="er">RecursionError: maximum recursion depth exceeded</span>`],
+    ['good', `<span class="kw">def</span> countdown(n):
+    <span class="kw">if</span> n == 0:
+        <span class="kw">return</span> <span class="st">"liftoff"</span>
+    <span class="kw">return</span> countdown(n - 1)    <span class="cm"># moves toward 0</span>`]
+  ],
+  note: 'Remember: the answer must be returned all the way back up, so keep the return in front of the call.',
+  quiz: { q: 'What does a recursive function need so that it can stop?',
+    o: ['A base case', 'A for loop', 'A global variable'], a: 0,
+    why: 'The base case is the condition that ends the calls. Each call must also move closer to it.' }
+},
+{
+  tag: 'SCOPE FAULT', title: 'Variable Scope',
+  intro: 'A variable created inside a function only exists inside that function. Outside, Python does not know it.',
+  points: [
+    'Using a variable outside the place where it was created causes a <b>NameError</b>.',
+    'A function can pass a value out with <b>return</b>.',
+    'The code that calls the function must <b>catch</b> the returned value, usually by storing it in a variable.',
+    'Calling a function without storing its result throws the result away.'
+  ],
+  code: [
+    ['bad', `<span class="kw">def</span> double(n):
+    result = n * 2
+    <span class="kw">return</span> result
+
+double(4)
+print(result)
+<span class="er">NameError: name 'result' is not defined</span>`],
+    ['good', `<span class="kw">def</span> double(n):
+    result = n * 2
+    <span class="kw">return</span> result
+
+result = double(4)     <span class="cm"># catch the returned value</span>
+print(result)          <span class="cm"># 8</span>`]
+  ],
+  note: 'You are ready. Fix every bug in the room to collect all 4 items and open the exit door.',
+  quiz: { q: 'Where can you use a variable that was created inside a function?',
+    o: ['Only inside that function', 'Anywhere in the program', 'Only after a print()'], a: 0,
+    why: 'It only lives inside the function. To use the value outside, return it and store it in a variable.' }
+}
+];
+
+/* ---------- State + rendering ---------- */
+let i = 0;
+const answered = {};
+const last = LESSONS.length - 1;
+
+function goGame(){ try { localStorage.setItem(DONE_KEY, 'yes'); } catch (e) {} location.href = 'game-room.html'; }
+
+function render(){
+  const L = LESSONS[i];
+  $('lessonCount').textContent = 'LESSON ' + (i + 1) + ' / ' + LESSONS.length;
+  $('lessonTag').textContent = L.tag;
+  $('steps').innerHTML = LESSONS.map((_, k) => '<div class="step ' + (k < i ? 'done' : k === i ? 'now' : '') + '"></div>').join('');
+
+  const codes = L.code.map(c => '<pre class="code ' + c[0] + '">' + c[1] + '</pre>').join('<div class="h-2"></div>');
+  const pts = L.points.map(p => '<li class="flex gap-3"><span class="text-cyan-300 font-pixel text-[9px] mt-1.5">▸</span><span>' + p + '</span></li>').join('');
+  const opts = L.quiz.o.map((o, k) => '<button type="button" class="opt" data-k="' + k + '">' + esc(o) + '</button>').join('<div class="h-2"></div>');
+
+  $('lessonBody').innerHTML =
+    '<h1 class="font-pixel text-base sm:text-xl leading-snug text-[#7ae8ff]" style="text-shadow:0 0 12px rgba(122,232,255,.6)">' + L.title.toUpperCase() + '</h1>' +
+    '<p class="mt-3 text-sm sm:text-base text-slate-200/90 leading-relaxed">' + L.intro + '</p>' +
+    '<ul class="mt-4 space-y-2 text-sm sm:text-[15px] text-slate-300 leading-relaxed">' + pts + '</ul>' +
+    '<div class="mt-5">' + codes + '</div>' +
+    '<p class="mt-4 text-sm text-purple-200 leading-relaxed border-l-4 border-[#a38fc2] pl-3">' + L.note + '</p>' +
+    '<div class="mt-6 border-2 border-cyan-400/30 bg-[#0b2335]/70 p-4">' +
+      '<div class="font-pixel text-[8px] tracking-widest text-cyan-300 mb-3">QUICK CHECK</div>' +
+      '<p class="text-sm sm:text-base text-white mb-3">' + esc(L.quiz.q) + '</p>' + opts +
+      '<p id="quizMsg" class="mt-3 text-sm leading-relaxed hidden"></p>' +
+    '</div>';
+
+  const box = $('lessonBody'); box.classList.remove('anim-pop'); void box.offsetWidth; box.classList.add('anim-pop');
+
+  box.querySelectorAll('.opt').forEach(b => b.onclick = () => pick(+b.dataset.k));
+  if (answered[i] !== undefined) pick(answered[i], true);
+
+  $('btnBack').disabled = i === 0;
+  $('btnNext').textContent = i === last ? '▶ START GAME' : 'NEXT ▶';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function pick(k, restore){
+  const Q = LESSONS[i].quiz, ok = k === Q.a;
+  answered[i] = k;
+  document.querySelectorAll('.opt').forEach((b, n) => {
+    b.disabled = true;
+    if (n === Q.a) b.classList.add('right');
+    else if (n === k) b.classList.add('wrong');
+  });
+  const m = $('quizMsg');
+  m.className = 'mt-3 text-sm leading-relaxed ' + (ok ? 'text-green-300' : 'text-red-300');
+  m.textContent = (ok ? 'Correct. ' : 'Not quite. ') + Q.why;
+}
+
+$('btnBack').onclick = () => { if (i > 0) { i--; render(); } };
+$('btnNext').onclick = () => { if (i < last) { i++; render(); } else goGame(); };
+$('skipTop').onclick = goGame;
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') $('btnNext').click();
+  else if (e.key === 'ArrowLeft' && i > 0) $('btnBack').click();
+});
+
+render();
+})();
+</script>
+</body></html>
