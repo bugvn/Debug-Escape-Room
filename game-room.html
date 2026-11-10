@@ -592,9 +592,11 @@ $('cb-labels').onchange = e => setLabels(e.target.checked);
 function confirmLeave(){
 dlg({ icon:'🚪', title:'Leave the room?', body:`Your progress (<b>${count()} / 4</b> solved) will be lost.`,
 actions:[ { l:'Stay', k:'sec' }, { l:'Leave Room', k:'dan', f:() => {
-over = 'left'; saveSession('left');
-dlg({ icon:'👋', title:'You left the room', body:'Start a new attempt whenever you are ready.', actions:[{ l:'Enter Again', f:() => location.reload() }] });
+over = 'left';
+const savedLeave = saveSession('left'); // wait for the save so the dashboard shows this game
+dlg({ icon:'👋', title:'You left the room', body:'Saving your result and opening your dashboard...', actions:[{ l:'Enter Again', f:async () => { await savedLeave; location.reload(); } }] });
 escFn = null;
+savedLeave.then(() => { location.href = 'dashboard.html'; });
 } } ] });
 }
 
