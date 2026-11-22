@@ -79,8 +79,8 @@
         '<div class="sh-um hidden" id="shUser">' +
           '<button class="sh-player" id="shPlayer" type="button" aria-haspopup="true" aria-expanded="false"><span class="sh-av"><b id="shInitial" style="font-weight:400">?</b><i></i></span><span id="playerName">Player</span></button>' +
           '<div class="sh-menu" id="shMenu" role="menu">' +
-            '<a role="menuitem" href="dashboard.html"' + (file === 'dashboard.html' ? ' class="on" aria-current="page"' : '') + '>Dashboard</a>' +
-            '<a role="menuitem" id="navAnalytics" class="hidden' + (file === 'analytics.html' ? ' on' : '') + '" href="analytics.html">Analytics</a>' +
+            '<a role="menuitem" href="dashboard.html"' + (file === 'dashboard.html' ? ' class="on" aria-current="page"' : '') + '>My Dashboard</a>' +
+            '<a role="menuitem" id="navAnalytics" class="hidden' + (file === 'analytics.html' ? ' on' : '') + '" href="analytics.html">Cohort Analytics</a>' +
             '<hr><button role="menuitem" id="logoutBtn" type="button">Log out</button>' +
           '</div>' +
         '</div>' +
