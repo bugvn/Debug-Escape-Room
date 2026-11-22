@@ -1,0 +1,108 @@
+// Run with:  node --test
+const test = require('node:test');
+const assert = require('node:assert');
+const { PUZZLE_BANK, LEVELS, CATEGORIES, categoryOfTag, TAG_CATEGORY, applyVariant, pyLiteral } = require('./puzzles.js');
+const { RULES, accuracyOf, nextLevel, weakCategories, pickRoom } = require('./adaptive.js');
+
+const good = (n) => Array.from({ length: n }, () => ({ kind: 'submit', is_correct: true }));
+const bad = (n, kind = 'submit') => Array.from({ length: n }, () => ({ kind, is_correct: false }));
+const game = (o) => ({ level: 'BEGINNER', result: 'won', solved_count: 4, hints_used: 0, elapsed_sec: 41, ...o });
+const seeded = (s = 1) => () => (s = (s * 16807) % 2147483647) / 2147483647;
+
+test('bank: unique ids, every category x level covered, valid fields', () => {
+  assert.strictEqual(new Set(PUZZLE_BANK.map((p) => p.id)).size, PUZZLE_BANK.length);
+  for (const l of LEVELS) for (const c of CATEGORIES)
+    assert.ok(PUZZLE_BANK.some((p) => p.level === l && p.category === c), `missing ${c} ${l}`);
+  PUZZLE_BANK.forEach((p) => { assert.ok(CATEGORIES.includes(p.category)); assert.strictEqual(p.hint.length, 2); });
+});
+
+test('tag -> category', () => {
+  assert.strictEqual(categoryOfTag('IndexError'), 'Index');
+  assert.strictEqual(categoryOfTag('UnboundLocalError'), 'Scope');
+  assert.strictEqual(categoryOfTag('IndentationError'), 'Syntax');
+  assert.strictEqual(categoryOfTag('Wrong Output'), 'Logic');
+  assert.strictEqual(categoryOfTag('SomethingNew'), 'Other');
+  Object.values(TAG_CATEGORY).forEach((c) => assert.ok(CATEGORIES.includes(c)));
+});
+
+test('applyVariant keeps quotes, pyLiteral makes valid python', () => {
+  const v = PUZZLE_BANK.find((p) => p.id === 'b-type-lock').variant;
+  assert.strictEqual(applyVariant('digit = "7"', v), 'digit = "4"');
+  assert.strictEqual(applyVariant('digit = 7', v), 'digit = 4');
+  assert.strictEqual(pyLiteral([true, null, { a: '2' }]), '[True, None, {"a": "2"}]');
+});
+
+test('accuracy counts submits only', () => {
+  assert.strictEqual(accuracyOf([...good(3), ...bad(5, 'run')]), 1);
+  assert.strictEqual(accuracyOf([]), null);
+});
+
+test('clean fast win moves up one level', () => {
+  assert.strictEqual(nextLevel(game(), good(4)), 'INTERMEDIATE');
+  assert.strictEqual(nextLevel(game({ level: 'INTERMEDIATE' }), good(4)), 'ADVANCED');
+});
+
+test('top level stays at top, bottom level stays at bottom', () => {
+  assert.strictEqual(nextLevel(game({ level: 'ADVANCED' }), good(4)), 'ADVANCED');
+  assert.strictEqual(nextLevel(game({ result: 'left', solved_count: 0 }), bad(4)), 'BEGINNER');
+});
+
+test('slow, hint-heavy or sloppy win stays', () => {
+  assert.strictEqual(nextLevel(game({ elapsed_sec: RULES.parSec.BEGINNER + 1 }), good(4)), 'BEGINNER');
+  assert.strictEqual(nextLevel(game({ hints_used: 2 }), good(4)), 'BEGINNER');
+  assert.strictEqual(nextLevel(game(), [...good(3), ...bad(2)]), 'BEGINNER');   // 60% accuracy
+});
+
+test('very low accuracy or leaving early moves down', () => {
+  assert.strictEqual(nextLevel(game({ level: 'ADVANCED' }), [...good(1), ...bad(4)]), 'INTERMEDIATE');
+  assert.strictEqual(nextLevel(game({ level: 'INTERMEDIATE', result: 'left', solved_count: 1 }), good(1)), 'BEGINNER');
+});
+
+test('left after solving most puzzles with good accuracy stays', () => {
+  assert.strictEqual(nextLevel(game({ level: 'INTERMEDIATE', result: 'left', solved_count: 3 }), good(3)), 'INTERMEDIATE');
+});
+
+test('weak categories need 2 misses, worst first, runs ignored', () => {
+  const rows = [
+    { category: 'Index', is_correct: false }, { category: 'Index', is_correct: false }, { category: 'Index', is_correct: false },
+    { category: 'Type', is_correct: false }, { category: 'Type', is_correct: false },
+    { category: 'Scope', is_correct: false },
+    { category: 'Logic', is_correct: false, kind: 'run' }, { category: 'Logic', is_correct: false, kind: 'run' }
+  ];
+  assert.deepStrictEqual(weakCategories(rows), [['Index', 3], ['Type', 2]]);
+});
+
+test('room: 4 distinct puzzles, all from the asked level when the bank has enough', () => {
+  const r = pickRoom({ level: 'INTERMEDIATE', rnd: seeded(3) });
+  assert.strictEqual(r.length, 4);
+  assert.strictEqual(new Set(r.map((p) => p.id)).size, 4);
+  assert.ok(r.every((p) => p.level === 'INTERMEDIATE'));
+  assert.strictEqual(new Set(r.map((p) => p.category)).size, 4);
+});
+
+test('room: weak categories are always included, capped by weakSlots', () => {
+  for (let s = 1; s < 30; s++) {
+    const r = pickRoom({ level: 'BEGINNER', weak: [['Recursion', 4], ['Scope', 3], ['Syntax', 2]], rnd: seeded(s) });
+    const cats = r.map((p) => p.category);
+    assert.ok(cats.includes('Recursion') && cats.includes('Scope'));
+  }
+});
+
+test('room: tops up from the nearest level when a level is short', () => {
+  const small = PUZZLE_BANK.filter((p) => p.level !== 'ADVANCED' || p.category === 'Index');
+  const r = pickRoom({ level: 'ADVANCED', bank: small, rnd: seeded(5) });
+  assert.strictEqual(r.length, 4);
+  assert.strictEqual(r[0].level, 'ADVANCED');
+  assert.ok(r.slice(1).every((p) => p.level === 'INTERMEDIATE'));
+});
+
+test('room: puzzles from the last room are used last', () => {
+  const beg = PUZZLE_BANK.filter((p) => p.level === 'BEGINNER');
+  const lastIds = beg.slice(0, 4).map((p) => p.id);
+  const unseen = beg.slice(4).map((p) => p.id);
+  for (let s = 1; s < 20; s++) {
+    const r = pickRoom({ level: 'BEGINNER', lastIds, rnd: seeded(s) });
+    assert.strictEqual(r.length, 4);
+    unseen.forEach((id) => assert.ok(r.some((p) => p.id === id), 'unseen puzzle must be picked first'));
+  }
+});

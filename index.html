@@ -311,7 +311,7 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
      Other pages: read localStorage 'remediate.settings.v1' or listen for the 'remediate:settings' event. */
   const KEY = 'remediate.settings.v1';
   const DEF = { master: 100, bgm: 80, sfx: 95, uiSounds: true, quality: 'high', crt: true, vignette: true, colorblind: 'off',
-    reduceMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, difficulty: 'standard', hints: true, timer: true, captions: true,
+    reduceMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, hints: true, timer: true, captions: true,
     keys: { interact: 'Space', hint: 'KeyH', inventory: 'KeyI' } };
   const clone = o => JSON.parse(JSON.stringify(o));
   const cap = x => x[0].toUpperCase() + x.slice(1);
@@ -346,8 +346,6 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
       ['key', 'inventory', 'Inventory', 'Shows the items you collected in the game room.'],
       ['note', 'Click a key box, then press the new key. Esc is reserved and always goes back.'] ] },
     { id: 'gameplay', name: 'Gameplay', icon: '<path d="M10 3h4v3h3v4h-2a2 2 0 1 0 0 4h2v4h-4v-2a2 2 0 1 0-4 0v2H6v-4h2a2 2 0 1 0 0-4H6V6h4z"/>', rows: [
-      ['sec', 'Rules'],
-      ['select', 'difficulty', 'Difficulty', 'Puzzle complexity and hint cost.', 'cozy,standard,hardcore'],
       ['sec', 'Assistance'],
       ['switch', 'hints', 'Hints', 'Allow the hint button during puzzles.'],
       ['switch', 'timer', 'Show Timer', 'Show the elapsed time in the game room.'],

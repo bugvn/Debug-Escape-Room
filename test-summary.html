@@ -203,6 +203,19 @@
       <div class="pattern__track"><div class="pattern__fill" style="width:${Math.round(100 * tags[k] / max)}%"></div></div>
     </div>`).join('') : '<p class="empty-note">No mistakes logged. Clean run.</p>';
 
+  // ACCURACY BY CATEGORY: from the category saved with every attempt (puzzles.js). Old games without it skip this.
+  const byCat = {};
+  subm.filter(x => x.category).forEach(x => { const c = byCat[x.category] = byCat[x.category] || { n: 0, ok: 0 }; c.n++; if (x.is_correct) c.ok++; });
+  const cats = Object.keys(byCat);
+  if (cats.length) $('mistakeList').innerHTML += '<p class="patterns__title" style="margin-top:14px">Accuracy by Category</p>' + cats.map(c => `
+    <div>
+      <div class="pattern__head">
+        <span class="pattern__name">${esc(c)}</span>
+        <span class="pattern__hits">${byCat[c].ok} / ${byCat[c].n} SUBMITS</span>
+      </div>
+      <div class="pattern__track"><div class="pattern__fill" style="width:${Math.round(100 * byCat[c].ok / byCat[c].n)}%"></div></div>
+    </div>`).join('');
+
   // COMMON MISTAKES + RECOMMENDATIONS: built from this game's real mistake tags (top 3)
   const top = keys.slice(0, 3), hl = ['hl-peach', 'hl-cyan', 'hl-violet'];
   const num = i => String(i + 1).padStart(2, '0');

@@ -1,7 +1,7 @@
 // Run with:  node --test
 const test = require('node:test');
 const assert = require('node:assert');
-const { scoreOf, rankOf, submitsOf, PAR_SEC } = require('../score.js');
+const { scoreOf, rankOf, submitsOf, PAR_SEC } = require('./score.js');
 
 const sess = (o) => ({ result: 'won', solved_count: 4, hints_used: 0, elapsed_sec: 0, ...o });
 const bad = (n, kind = 'submit') => Array.from({ length: n }, () => ({ kind, is_correct: false }));

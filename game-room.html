@@ -222,6 +222,8 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 <script src="supabase-config.js"></script>
 <script src="settings.js"></script>
 <script src="pyrunner.js"></script>
+<script src="puzzles.js"></script>
+<script src="adaptive.js"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
@@ -240,11 +242,16 @@ const PUZ = ['window', 'kettle', 'fridge', 'clock'];
 const got = []; // puzzle ids solved, in order (one inventory item each)
 const drafts = {}; // the player's unsaved edits per puzzle
 const hintTier = {}; let lastOpen = null;
+/* time spent inside each puzzle window (pauses while the window is closed) */
+const spent = {}, nTry = {}; let openId = null, openTs = 0;
+function pauseP(){ if (openId) { spent[openId] = (spent[openId] || 0) + Date.now() - openTs; openId = null; } }
+const spentMs = k => (spent[k] || 0) + (openId === k ? Date.now() - openTs : 0);
 let hints = 3, over = null, labels = false, toastT, escFn = null;
 const count = () => got.length;
 
 /* ---------- Saving: the session row is made at start, each attempt is saved as it happens ---------- */
 const attempts = [];    // attempts not saved yet (kept and retried if a save fails)
+const allAttempts = []; // every attempt of this game, used by the level rules at the end
 let sessionId = null, sessionMaking = null, saveWarned = false, saveChain = Promise.resolve();
 function timeCols(){
 elapsed = Math.floor((Date.now() - startTs) / 1000);
@@ -254,7 +261,7 @@ function ensureSession(){
 if (sessionId) return Promise.resolve(sessionId);
 if (!sessionMaking) sessionMaking = (async () => {
 try {
-const { data, error } = await db.from('game_sessions').insert({ result:'in_progress', solved_count:0, hints_used:0, elapsed_sec:0 }).select('id').single();
+const { data, error } = await db.from('game_sessions').insert({ result:'in_progress', solved_count:0, hints_used:0, elapsed_sec:0, level: roomLevel, puzzle_ids: roomPuzzleIds }).select('id').single();
 if (error) throw error;
 sessionId = data.id; sessionStorage.setItem('lastSessionId', sessionId);
 } catch (e) { console.error(e); }
@@ -272,7 +279,7 @@ const batch = attempts.splice(0);
 const r = await db.from('submissions').insert(batch.map(a => ({ ...a, session_id: sid })));
 if (r.error) { attempts.unshift(...batch); throw r.error; }
 }
-const u = await db.from('game_sessions').update({ ...(result ? { result } : {}), solved_count: count(), hints_used: 3 - hints, ...timeCols() }).eq('id', sid);
+const u = await db.from('game_sessions').update({ ...(result ? { result, next_level: roomAdaptive ? nextLevel({ level: roomLevel, result, solved_count: count(), hints_used: 3 - hints, elapsed_sec: timeCols().elapsed_sec }, allAttempts) : roomLevel } : {}), solved_count: count(), hints_used: 3 - hints, ...timeCols() }).eq('id', sid);
 if (u.error) throw u.error;
 } catch (e) {
 ok = false; console.error(e);
@@ -296,53 +303,44 @@ const L = m.split('\n'), i = L.findIndex(l => l.includes('<exec>'));
 return (i < 0 ? m.trim() : 'Traceback (most recent call last):\n' + L.slice(i).join('\n').trim()).replace(/<exec>/g, 'main.py');
 };
 
-/* ---------- The 4 puzzles: buggy Python the player edits and runs ---------- */
-const P = {
-window: { icon:'✦', name:'Window', title:'Star Matrix', reward:['🌠','Star Map'],
-story:'The star matrix should add up the brightness of five stars, but the program crashes. Fix the code and run it.',
-expect:'14', variant:{ re:/\[3,\s*1,\s*4,\s*1,\s*5\]/, to:'[2, 7, 1, 8]', expect:'18' },
-code:`stars = [3, 1, 4, 1, 5]
-total = 0
-for i in range(len(stars) + 1):
-    total += stars[i]
-print(total)`,
-why:'The loop went one index too far. A list of 5 items has valid indexes 0 to 4.',
-hint:['Count the stars: 5. Now count how many times the loop runs. Do they match?',
-'range(len(stars) + 1) runs 6 times. Drop the + 1, or loop with for s in stars.'] },
-fridge: { icon:'🔒', name:'Refrigerator', title:'Code Lock', reward:['🗝️','Silver Key'],
-story:'The lock needs the digit that comes after 7. Fix the code and run it.',
-expect:'Lock code: 8', variant:{ re:/(digit\s*=\s*["']?)7(["']?)/, to:(m, a, b) => a + '4' + b, expect:'Lock code: 5' },
-code:`digit = "7"
-code = digit + 1
-print("Lock code:", code)`,
-why:'"7" is a string. It must be converted with int() before a number can be added to it.',
-hint:['Look at the quotes around 7. What type does that make it?',
-'Convert it first: int(digit) + 1. Or remove the quotes around 7.'] },
-kettle: { icon:'☕', name:'Kettle', title:'Recursive Kettle Loop', reward:['📜','Cipher Note'],
-story:'The kettle on the dining table is boiling infinitely and tripping the containment seal. The heating routine should stop once the target is reached, but it crashes. Fix the code and run it.',
-expect:'kettle_ready: safe_to_pour', probe:{ fn:'heat_water', args:[55,100,0], expect:'kettle_ready: safe_to_pour' },
-code:`def heat_water(current_temp, target_temp, cycle):
-    if current_temp >= target_temp:
-        return "kettle_ready: safe_to_pour"
-    return heat_water(current_temp, target_temp, cycle + 1)
-
-print(heat_water(20, 100, 0))`,
-why:'current_temp never changes, so it never reaches target_temp and the recursion never stops. Each call must move the temperature forward.',
-hint:['Does current_temp ever get bigger from one call to the next?',
-'Heat it up on every call: heat_water(current_temp + 10, target_temp, cycle + 1).'] },
-clock: { icon:'🕰️', name:'Wall Clock', title:'Chime Counter', reward:['⚙️','Clock Gear'],
-story:'At 15:00 the clock should chime 3 times, but the program crashes. Fix the code and run it.',
-expect:'Chimes: 3', probe:{ fn:'ring_hours', args:[9], expect:'9' }, needCall:'ring_hours',
-code:`def ring_hours(hour):
-    chimes = hour % 12
-    return chimes
-
-ring_hours(15)
-print("Chimes:", chimes)`,
-why:'chimes only exists inside the function. Store the returned value in a variable outside it.',
-hint:['Where does chimes live? Can code outside the function see it?',
-'ring_hours(15) returns a value but nothing catches it. Store it: chimes = ring_hours(15).'] }
+/* ---------- The 4 spots in the room. Each spot gets one puzzle from the bank (puzzles.js) ---------- */
+const SPOTS = {
+window: { icon:'✦', name:'Window', reward:['🌠','Star Map'] },
+fridge: { icon:'🔒', name:'Refrigerator', reward:['🗝️','Silver Key'] },
+kettle: { icon:'☕', name:'Kettle', reward:['📜','Cipher Note'] },
+clock: { icon:'🕰️', name:'Wall Clock', reward:['⚙️','Clock Gear'] }
 };
+const P = {}, META = {};   // filled by buildRoom(): spot -> puzzle
+let roomReady = false, roomLevel = 'BEGINNER', roomAdaptive = true, roomPuzzleIds = [];
+function buildRoom(picked){
+PUZ.forEach((k, i) => {
+const p = picked[i];
+P[k] = { ...SPOTS[k], ...p, pid: p.id };
+META[k] = { file:p.file, status:p.status, badge:p.badge, bug:p.bug };
+});
+roomPuzzleIds = picked.map(p => p.id);
+}
+// Level + puzzles for this game: the level carries over from the last finished game (adaptive.js rules),
+// categories the player keeps missing come back. Control group (profiles.adaptive = false): fixed start level, no targeting.
+async function setupRoom(user){
+let level = 'BEGINNER', weak = [], lastIds = [];
+try {
+const prof = await getProfile(user.id);
+if (prof) { if (LEVELS.includes(prof.difficulty)) level = prof.difficulty; roomAdaptive = prof.adaptive !== false; }
+const r1 = await db.from('game_sessions').select('level,next_level,puzzle_ids').order('created_at', { ascending:false }).limit(10);
+const rows = r1.data || [];
+const lastRoom = rows.find(x => x.puzzle_ids); if (lastRoom) lastIds = lastRoom.puzzle_ids;
+if (roomAdaptive) {
+const carried = rows.find(x => x.next_level); if (carried) level = carried.next_level;
+const r2 = await db.from('submissions').select('category,is_correct,kind').eq('kind', 'submit').not('category', 'is', null).order('id', { ascending:false }).limit(RULES.historyAttempts);
+weak = weakCategories(r2.data || []);
+}
+} catch (e) { console.error(e); }   // offline: start at the safe default, the game still works
+roomLevel = level;
+buildRoom(pickRoom({ level, weak: roomAdaptive ? weak : [], lastIds }));
+roomReady = true; renderAll();
+if (roomAdaptive) toast('Room level: ' + level.charAt(0) + level.slice(1).toLowerCase() + (weak.length ? ' · focus: ' + weak.slice(0, RULES.weakSlots).map(w => w[0]).join(', ') : ''));
+}
 
 /* ---------- Dialog manager ---------- */
 // while a dialog is open, everything behind it is inert: no focus, no keyboard, hidden from screen readers
@@ -351,7 +349,7 @@ const m1 = !$('modal').classList.contains('hidden'), m2 = !$('modal2').classList
 ['stage','progress','timer-box','controls','hint-wrap','inv'].forEach(id => $(id).inert = m1 || m2);
 $('modal').inert = m2;
 }
-function closeDlg(){ $('modal').classList.add('hidden'); $('modal').classList.remove('pz'); $('modal').innerHTML = ''; $('modal2').classList.add('hidden'); $('modal2').innerHTML = ''; escFn = null; syncInert(); }
+function closeDlg(){ pauseP(); $('modal').classList.add('hidden'); $('modal').classList.remove('pz'); $('modal').innerHTML = ''; $('modal2').classList.add('hidden'); $('modal2').innerHTML = ''; escFn = null; syncInert(); }
 function addBtn(a){
 const b = document.createElement('button');
 b.textContent = a.l; b.className = 'btn ' + (a.k || ''); b.disabled = !!a.dis;
@@ -405,18 +403,13 @@ if (k) { s.textContent = P[k].reward[0]; s.title = P[k].reward[1]; s.classList.a
 }
 
 function act(id){
+if (!roomReady) return toast('Setting up the room...');
 if (over) return toast(over === 'won' ? 'You already escaped the room.' : 'You left the room.');
 if (id === 'door') return count() < 4 ? toast(`The door is locked. Fix all 4 puzzles to collect every item (${count()} / 4).`) : win();
 if (got.includes(id)) return toast(`Already solved. You have the ${P[id].reward[1]}.`);
 openPuzzle(id);
 }
 /* ---------- Puzzle pop-up = the submission form, one per puzzle ---------- */
-const META = {
-window:{ file:'star_matrix.py', status:'index_out_of_range', badge:'INDEX FAULT', bug:[2] },
-fridge:{ file:'code_lock.py', status:'type_mismatch', badge:'TYPE FAULT', bug:[1] },
-kettle:{ file:'kettle_controller.py', status:'stack_overflow_risk', badge:'RECURSION FAULT', bug:[3] },
-clock:{ file:'chime_counter.py', status:'scope_error', badge:'SCOPE FAULT', bug:[4,5] }
-};
 const MAX_CHARS = 500;
 const KW = /(#.*$)|("[^"]*"|'[^']*')|\b(def|return|for|in|if|else|elif|while|import)\b|\b([A-Za-z_]\w*)(?=\()/;
 function hl(line){
@@ -461,7 +454,7 @@ if(e.target===$('modal')&&mdT===$('modal')&&$('modal').classList.contains('pz')&
 });
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitSf);
 function openPuzzle(id){
-const p = P[id], m = META[id], no = String(PUZ.indexOf(id) + 1).padStart(2, '0'); lastOpen = id;
+const p = P[id], m = META[id], no = String(PUZ.indexOf(id) + 1).padStart(2, '0'); lastOpen = id; pauseP(); openId = id; openTs = Date.now();
 const bugCode = p.code.split('\n').map((l, i) => m.bug.includes(i) ? `<span class="bug">${esc(l)}</span>` : hl(l)).join('\n');
 $('modal').innerHTML = `<div class="sf main" role="dialog" aria-modal="true" aria-labelledby="dt"><span class="tbl"></span><span class="tbr"></span><button class="xbtn close" id="sf-close" type="button" aria-label="Close puzzle" title="Close (Esc)">✕</button>
 <div class="topbar"><div class="tp"><span class="tbl"></span><span class="tbr"></span><div class="lb">ROOM PROGRESS</div><div class="vl" id="sf-prog"></div><div class="dots" id="sf-dots"><i></i><i></i><i></i><i></i></div></div>
@@ -510,7 +503,7 @@ text:`You are about to submit your fix for Puzzle ${no}. You can still edit your
 buttons:[{ l:'CANCEL', k:'ghost', f:closeSf }, { l:'▶ YES, SUBMIT', k:'go', f:async () => {
 sfRunning(); const j = await evaluate(id, ed.value, 'submit');
 if (!j.ok) return showFail(id, j);
-got.push(id); renderAll(); sfHud(); queueSave(); $('sf-badge').textContent = 'SOLVED'; $('sf-fault').textContent = 'FAULT CLEARED';
+pauseP(); got.push(id); renderAll(); sfHud(); queueSave(); $('sf-badge').textContent = 'SOLVED'; $('sf-fault').textContent = 'FAULT CLEARED';
 sfDlg({ tone:'cyan', title:esc(p.title.toUpperCase()) + ' SOLVED', badge:'SUCCESS', eyebrow:'TEST RESULT // PUZZLE ' + no,
 text:`${esc(p.why)}<br><br>Item unlocked: ${p.reward[0]} ${p.reward[1]}`,
 buttons:[{ l:'▶ OK, CONTINUE', k:'go', f:() => { closeSf(); closeDlg(); toast(`Item unlocked: ${p.reward[1]} (${count()} / 4)`); } }] });
@@ -528,8 +521,8 @@ function sfRunning(){ sfDlg({ tone:'violet', title:'RUNNING TEST', badge:'PLEASE
 function validate(id){
 const v = $('ed').value;
 if (v.trim() === '') return { title:'SUBMISSION IS EMPTY', badge:'REQUIRED FIELD', text:'Your submission is empty. Write your fix in the form before submitting.' };
-if (id === 'clock' && !/def\s+ring_hours\s*\(/.test(v)) return { title:'FUNCTION NOT FOUND', badge:'INVALID FORMAT', text:'Your code must define the function, starting with: def ring_hours(' };
-if (id === 'kettle' && !/def\s+heat_water\s*\(/.test(v)) return { title:'FUNCTION NOT FOUND', badge:'INVALID FORMAT', text:'Your code must define the function, starting with: def heat_water(' };
+const nd = P[id].needDef;
+if (nd && !new RegExp('def\\s+' + nd + '\\s*\\(').test(v)) return { title:'FUNCTION NOT FOUND', badge:'INVALID FORMAT', text:'Your code must define the function, starting with: def ' + nd + '(' };
 if (v.length > MAX_CHARS) return { title:'CODE IS TOO LONG', badge:'LENGTH LIMIT', text:`Your code is ${v.length} characters. The limit is ${MAX_CHARS}.` };
 return null;
 }
@@ -542,17 +535,17 @@ sfDlg({ tone:'pink', title: j.tag === 'Infinite Loop' ? 'CODE RUNS FOREVER' : 'T
 // 1) same code on different data, 2) call the function with a new input, 3) the result must come from a real call.
 async function hardcoded(p, code){
 if (p.variant) {
-if (!p.variant.re.test(code)) return { bad:true };   // the original data was deleted
-const d = await runPy(code.replace(p.variant.re, p.variant.to));
+if (!new RegExp(p.variant.re).test(code)) return { bad:true };   // the original data was deleted
+const d = await runPy(applyVariant(code, p.variant));
 if (d.sys) return { sys:d.sys };
 if (d.err || (d.out || '').trim() !== p.variant.expect) return { bad:true };
 }
-if (p.probe) {
-const f = p.probe.fn;
-const d = await runPy(code + `\nimport inspect as _i\n_n = len(_i.signature(${f}).parameters)\nprint("@@PROBE@@" + str(${f}(*${JSON.stringify(p.probe.args)}[:_n])))`);
+for (const pr of (p.probes || [])) {
+const f = pr.fn;
+const d = await runPy(code + `\nimport inspect as _i\n_n = len(_i.signature(${f}).parameters)\nprint("@@PROBE@@" + str(${f}(*${pyLiteral(pr.args)}[:_n])))`);
 if (d.sys) return { sys:d.sys };
 const got = (d.out || '').split('@@PROBE@@')[1];
-if (d.err || got === undefined || got.trim() !== p.probe.expect) return { bad:true };
+if (d.err || got === undefined || got.trim() !== pr.expect) return { bad:true };
 }
 if (p.needCall) {
 const d = await runPy(`import ast
@@ -587,7 +580,10 @@ const h = await hardcoded(p, code);
 if (h.sys) return { ok:false, sys:true, msg:esc(h.sys) };
 if (h.bad) { tag = 'Hardcoded Answer'; msg = 'The output matches, but the fix only works for this one case. Keep the original code and fix the actual bug.'; }
 }
-attempts.push({ puzzle: p.title, kind, code: code.slice(0, 2000), is_correct: !tag, mistake_tag: tag });
+const row = { puzzle: p.title, kind, code: code.slice(0, 2000), is_correct: !tag, mistake_tag: tag,
+puzzle_id: p.pid, category: p.category, difficulty: p.level, attempt_no: nTry[id] = (nTry[id] || 0) + 1,
+hints_used: hintTier[id] || 0, elapsed_ms: Math.round(spentMs(id)), mistake_category: tag ? categoryOfTag(tag) : null };
+attempts.push(row); allAttempts.push(row);
 queueSave();
 return { ok: !tag, tag, msg };
 }
@@ -668,9 +664,9 @@ toast(`Wall clock icon position: top:${y}%;left:${x}%`); clearTimeout(toastT);
 });
 }
 
-renderAll(); renderHints();
+renderHints();
 (async () => {
-try { const u = await requireLogin(); if (!u) return; startTs = Date.now(); await ensureSession(); }
+try { const u = await requireLogin(); if (!u) return; await setupRoom(u); startTs = Date.now(); await ensureSession(); }
 catch (e) { console.error(e); }
 })();
 })();
