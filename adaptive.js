@@ -59,30 +59,35 @@ function shuffle(a, rnd) {
 //   weak      output of weakCategories() ([] for the non-adaptive group)
 //   lastIds   puzzle ids of the player's previous room (avoided when there are other choices)
 //   rnd       Math.random, or a seeded fn in tests
+// The 4 spot-pinned categories that the room always needs one of each.
+// pickRoom returns exactly one puzzle per spot-category so buildRoom can
+// assign them to the right appliance. Weak-slot overrides stay inside this set.
+const SPOT_CATS = ['Index', 'Type', 'Recursion', 'Scope'];
+
 function pickRoom({ level, weak = [], lastIds = [], n = 4, bank = _bank, rnd = Math.random }) {
   const li = Math.max(0, _levels.indexOf(level));
   // closest levels first, so a small bank still fills the room
   const order = _levels.map((l, i) => [l, Math.abs(i - li)]).sort((a, b) => a[1] - b[1]).map((x) => x[0]);
-  const chosen = [], cats = new Set();
-  const free = (p) => !chosen.includes(p);
-  const fresh = (list) => { const f = list.filter((p) => !lastIds.includes(p.id)); return f.length ? f : list; };
 
-  for (const lv of order) {
-    if (chosen.length >= n) break;
-    const pool = shuffle(bank.filter((p) => p.level === lv), rnd);
-    // pass 1: weak categories first (limited slots), pass 2: unused categories, pass 3: anything left
-    weak.slice(0, RULES.weakSlots).forEach(([cat]) => {
-      if (chosen.length >= n) return;
-      const p = fresh(pool.filter((x) => x.category === cat && free(x)))[0];
-      if (p) { chosen.push(p); cats.add(p.category); }
-    });
-    for (const p of fresh(pool.filter((x) => free(x) && !cats.has(x.category)))) {
-      if (chosen.length >= n) break;
-      if (free(p) && !cats.has(p.category)) { chosen.push(p); cats.add(p.category); }
+  // Only pick from spot-pinned categories so buildRoom can always match appliance→category.
+  // weak slots: demote by 1 level (capped at 0) for the weakest matching categories.
+  const weakCats = weak.map(([c]) => c).filter((c) => SPOT_CATS.includes(c)).slice(0, RULES.weakSlots);
+  const chosen = {}; // cat -> puzzle
+
+  for (const cat of SPOT_CATS) {
+    const demote = weakCats.includes(cat);
+    // try preferred level (demoted for weak), then fall back outward
+    const wantLi = demote ? Math.max(0, li - 1) : li;
+    const tryOrder = _levels.map((_, i) => i).sort((a, b) => Math.abs(a - wantLi) - Math.abs(b - wantLi) || a - b);
+    for (const k of tryOrder) {
+      const pool = shuffle(bank.filter((p) => p.category === cat && p.level === _levels[k]), rnd);
+      const fresh = pool.filter((p) => !lastIds.includes(p.id));
+      const pick = (fresh.length ? fresh : pool)[0];
+      if (pick) { chosen[cat] = pick; break; }
     }
-    for (const p of fresh(pool.filter(free))) { if (chosen.length >= n) break; if (free(p)) chosen.push(p); }
   }
-  return chosen;
+  // return in SPOT_CATS order so buildRoom sees a consistent array
+  return SPOT_CATS.map((c) => chosen[c]).filter(Boolean);
 }
 
 if (typeof module !== 'undefined') module.exports = { RULES, accuracyOf, nextLevel, weakCategories, pickRoom };

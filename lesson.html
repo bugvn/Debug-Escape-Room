@@ -122,6 +122,8 @@
 <script src="supabase-config.js"></script>
 <script src="starfield.js"></script>
 <script src="pyrunner.js"></script>
+<script src="puzzles.js"></script>
+<script src="adaptive.js"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
@@ -371,7 +373,32 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'ArrowLeft' && i > 0) $('btnBack').click();
 });
 
-render();
+// Sort LESSONS so the player's weakest categories come first.
+// Falls back to default order if DB unavailable or no history.
+const CAT_TAG = {
+  Index: 'INDEX FAULT', Type: 'TYPE FAULT',
+  Recursion: 'RECURSION FAULT', Scope: 'SCOPE FAULT',
+  Syntax: 'SYNTAX FAULT', Logic: 'LOGIC FAULT'
+};
+async function prioritizeLessons() {
+  try {
+    const u = await requireLogin().catch(() => null);
+    if (!u) return;
+    const r = await db.from('submissions')
+      .select('category,is_correct,kind')
+      .eq('kind', 'submit')
+      .not('category', 'is', null)
+      .order('id', { ascending: false })
+      .limit(RULES.historyAttempts);
+    const weak = weakCategories(r.data || []);
+    if (!weak.length) return;
+    const weakTags = new Set(weak.map(([c]) => CAT_TAG[c]).filter(Boolean));
+    const front = LESSONS.filter(l => weakTags.has(l.tag));
+    const back  = LESSONS.filter(l => !weakTags.has(l.tag));
+    LESSONS.splice(0, LESSONS.length, ...front, ...back);
+  } catch (e) { console.error('lesson prioritize:', e); }
+}
+prioritizeLessons().then(() => render());
 })();
 </script>
 </body></html>

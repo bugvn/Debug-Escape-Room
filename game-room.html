@@ -312,13 +312,28 @@ clock: { icon:'🕰️', name:'Wall Clock', reward:['⚙️','Clock Gear'] }
 };
 const P = {}, META = {};   // filled by buildRoom(): spot -> puzzle
 let roomReady = false, roomLevel = 'BEGINNER', roomAdaptive = true, roomPuzzleIds = [];
+// Each appliance is thematically tied to one category.
+// buildRoom() assigns puzzles to spots by category match so the
+// clock always gets a Scope puzzle, the kettle always Recursion, etc.
+const SPOT_CATEGORY = { window:'Index', fridge:'Type', kettle:'Recursion', clock:'Scope' };
 function buildRoom(picked){
-PUZ.forEach((k, i) => {
-const p = picked[i];
+const used = new Set(), assigned = {};
+// pass 1: exact category match
+PUZ.forEach(k => {
+const want = SPOT_CATEGORY[k];
+const match = picked.find(p => p.category === want && !used.has(p.id));
+if (match) { assigned[k] = match; used.add(match.id); }
+});
+// pass 2: fill unmatched spots with leftovers (keeps game working when bank is small)
+const leftovers = picked.filter(p => !used.has(p.id));
+let li = 0;
+PUZ.forEach(k => { if (!assigned[k]) assigned[k] = leftovers[li++]; });
+PUZ.forEach(k => {
+const p = assigned[k];
 P[k] = { ...SPOTS[k], ...p, pid: p.id };
 META[k] = { file:p.file, status:p.status, badge:p.badge, bug:p.bug };
 });
-roomPuzzleIds = picked.map(p => p.id);
+roomPuzzleIds = PUZ.map(k => assigned[k].id);
 }
 // Level + puzzles for this game: the level carries over from the last finished game (adaptive.js rules),
 // categories the player keeps missing come back. Control group (profiles.adaptive = false): fixed start level, no targeting.
@@ -331,6 +346,7 @@ const r1 = await db.from('game_sessions').select('level,next_level,puzzle_ids').
 const rows = r1.data || [];
 const lastRoom = rows.find(x => x.puzzle_ids); if (lastRoom) lastIds = lastRoom.puzzle_ids;
 if (roomAdaptive) {
+// only finished games write next_level; skip any in_progress row
 const carried = rows.find(x => x.next_level); if (carried) level = carried.next_level;
 const r2 = await db.from('submissions').select('category,is_correct,kind').eq('kind', 'submit').not('category', 'is', null).order('id', { ascending:false }).limit(RULES.historyAttempts);
 weak = weakCategories(r2.data || []);
