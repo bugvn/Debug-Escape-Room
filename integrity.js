@@ -70,8 +70,9 @@ function createIntegrityGuard(opts) {
       '#ig-chip i{width:10px;height:10px;background:#1c2440;border:1px solid #4d6594}' +
       '#ig-chip i.on{background:#ff5c8a;border-color:#ff5c8a;box-shadow:0 0 8px #ff5c8a}' +
       '#ig-chip.hot{border-color:#ff5c8a;color:#ffb4c4}' +
-      '#ig-banner{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99998;max-width:min(92vw,560px);padding:12px 18px;background:#15192c;' +
-      'border:3px solid #89cff0;box-shadow:4px 4px 0 #060810;font:11px/1.7 "Press Start 2P",monospace;color:#f5f7ff;text-align:center}' +
+      '#ig-banner{position:fixed;top:84px;right:24px;z-index:99998;max-width:min(92vw,340px);padding:10px 14px;background:rgba(21,25,44,.94);' +
+      'border:3px solid #89cff0;box-shadow:4px 4px 0 #060810;font:9px/1.8 \"Press Start 2P\",monospace;color:#f5f7ff;text-align:left}' +
+      '@media(max-width:767px){#ig-banner{top:auto;bottom:64px;left:50%;right:auto;transform:translateX(-50%);text-align:center}}' +
       '#ig-banner.bad{border-color:#ff5c8a;color:#ffd1dc}' +
       '#ig-overlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(3,5,14,.96)}' +
       '#ig-overlay .ig-card{max-width:480px;width:100%;padding:28px;background:#15192c;border:3px solid #ff5c8a;box-shadow:6px 6px 0 #060810,0 0 28px rgba(255,92,138,.35);text-align:center}' +
