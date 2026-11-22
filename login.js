@@ -12,9 +12,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- small ui helpers ----------
   const audioBtn = $('audio-toggle-btn');
-  let muted = false;
+  let muted = RemediateAmbient ? RemediateAmbient.getMuted() : false;
+  audioBtn.querySelector('span').textContent = muted ? 'MUSIC OFF' : 'MUSIC ON';
+  audioBtn.classList.toggle('is-muted', muted);
   audioBtn.addEventListener('click', () => {
     muted = !muted;
+    if (RemediateAmbient) {
+      RemediateAmbient.setMuted(muted);
+      if (!muted) RemediateAmbient.ensureStarted();
+    }
     audioBtn.querySelector('span').textContent = muted ? 'MUSIC OFF' : 'MUSIC ON';
     audioBtn.classList.toggle('is-muted', muted);
   });
