@@ -10,9 +10,7 @@
 
   var file = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
   var NAV = [
-    ['lesson.html', 'Lessons'],
-    ['game-room.html', 'Play'],
-    ['dashboard.html', 'Dashboard'],
+    ['index.html', 'Menu'],
     ['analytics.html', 'Analytics', 'navAnalytics']
   ];
   var ACTIONS = {
@@ -39,9 +37,9 @@
     '.sh-link--in{background:#38e1ff;color:#061d29;border-color:#a5f3fc}',
     '.sh-link--in:hover{color:#061d29;filter:brightness(1.1)}',
     '.sh-sep{display:none}',
-    '.sh-player{display:inline-flex;align-items:center;gap:.5rem;padding:.3rem .6rem;background:rgba(10,13,26,.9);border:1px solid #232a4e;color:#cbd5e1;font:1.125rem/1.5rem "VT323",monospace;max-width:9.5rem}',
+    '.sh-player{text-decoration:none;cursor:pointer;transition:border-color .15s;display:inline-flex;align-items:center;gap:.5rem;padding:.3rem .6rem;background:rgba(10,13,26,.9);border:1px solid #232a4e;color:#cbd5e1;font:1.125rem/1.5rem "VT323",monospace;max-width:9.5rem}',
     '.sh-player span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-    '.sh-av{position:relative;flex-shrink:0;width:1.25rem;height:1.25rem;display:flex;align-items:center;justify-content:center;background:#161b33;border:1px solid #a594f9;font:10px "Press Start 2P",monospace;color:#a594f9}',
+    '.sh-player:hover{border-color:#a594f9}.sh-player--on{border-color:#a594f9;color:#fff}.sh-av{position:relative;flex-shrink:0;width:1.25rem;height:1.25rem;display:flex;align-items:center;justify-content:center;background:#161b33;border:1px solid #a594f9;font:10px "Press Start 2P",monospace;color:#a594f9}',
     '.sh-av i{position:absolute;right:-2px;bottom:-2px;width:.375rem;height:.375rem;background:#ffd166;border:1px solid #070a14}',
     '.sh .hidden{display:none!important}',
     '@media(min-width:640px){.sh{padding-left:2rem;padding-right:2rem}.sh__name{font-size:.75rem;line-height:1rem}}',
@@ -70,7 +68,7 @@
       '<nav class="sh__nav" aria-label="Main">' + links +
         (acts ? '<span class="sh-sep" aria-hidden="true"></span>' + acts : '') +
         '<span class="sh-sep" aria-hidden="true"></span>' +
-        '<span class="sh-player hidden" id="shPlayer"><span class="sh-av"><b id="shInitial" style="font-weight:400">?</b><i></i></span><span id="playerName">Player</span></span>' +
+        '<a class="sh-player hidden' + (file === 'dashboard.html' ? ' sh-player--on' : '') + '" id="shPlayer" href="dashboard.html" title="Open your dashboard"' + (file === 'dashboard.html' ? ' aria-current="page"' : '') + '><span class="sh-av"><b id="shInitial" style="font-weight:400">?</b><i></i></span><span id="playerName">Player</span></a>' +
         '<button class="sh-link sh-link--out hidden" id="logoutBtn" type="button">Log out</button>' +
         '<a class="sh-link sh-link--in" id="authBtn" href="login.html">Login / Register</a>' +
       '</nav>' +
