@@ -117,8 +117,13 @@ const RemediateAmbient = (() => {
       button.setAttribute('aria-pressed', String(!muted));
       button.classList.toggle('is-muted', muted);
       const label = button.querySelector('[data-music-label]');
-      if (label) label.textContent = muted ? 'MUSIC OFF' : 'MUSIC ON';
-      else button.setAttribute('aria-label', muted ? 'Turn cosmic music on' : 'Turn cosmic music off');
+      const dot = button.querySelector('[data-music-dot]');
+      if (label) label.textContent = muted ? 'MUSIC OFF' : (started ? 'MUSIC ON' : 'MUSIC READY');
+      if (dot) {
+        dot.style.background = muted ? '#718096' : '#7ae8ff';
+        dot.style.boxShadow = muted ? 'none' : '0 0 8px #7ae8ff';
+      }
+      button.setAttribute('aria-label', muted ? 'Turn cosmic music on' : 'Turn cosmic music off');
     });
   }
 
@@ -128,8 +133,8 @@ const RemediateAmbient = (() => {
     button.type = 'button';
     button.dataset.remediateMusic = 'true';
     button.setAttribute('aria-label', 'Turn cosmic music off');
-    button.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:9997;padding:.55rem .75rem;border:2px solid rgba(122,232,255,.45);background:#071722;color:#bfefff;font:12px VT323,monospace;letter-spacing:.08em;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.5)';
-    button.innerHTML = '<span data-music-label>MUSIC ON</span>';
+    button.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:9997;display:flex;align-items:center;gap:.5rem;padding:.55rem .75rem;border:2px solid rgba(122,232,255,.45);background:#071722;color:#bfefff;font:12px VT323,monospace;letter-spacing:.08em;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.5)';
+    button.innerHTML = '<span aria-hidden="true" data-music-dot style="width:.55rem;height:.55rem;border-radius:50%;background:#7ae8ff;box-shadow:0 0 8px #7ae8ff"></span><span data-music-label>MUSIC READY</span>';
     button.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -152,7 +157,10 @@ const RemediateAmbient = (() => {
   });
 
   ['pointerdown', 'keydown'].forEach((eventName) => {
-    window.addEventListener(eventName, ensureStarted, { once: true });
+    window.addEventListener(eventName, () => {
+      ensureStarted();
+      updateButtons();
+    }, { once: true });
   });
   window.addEventListener('storage', (event) => {
     if (event.key === SETTINGS_KEY || event.key === MUTE_KEY) {
