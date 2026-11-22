@@ -15,21 +15,10 @@
 <div class="glow glow--cyan"></div>
 <div class="glow glow--violet"></div>
 
-<div class="page">
+<header id="siteHeader" data-title="Debug Report"></header>
+<script src="site-header.js"></script>
 
-  <header class="top">
-    <div class="top__row">
-      <div class="identity">
-        <div class="identity__mark">&lt;&gt;</div>
-        <h1 class="identity__title">Debug Report</h1>
-      </div>
-      <div class="player">
-        <div class="player__avatar">?<i></i></div>
-        <span id="playerName">Player</span>
-        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4 L6 8 L10 4"/></svg>
-      </div>
-    </div>
-  </header>
+<div class="page">
 
   <main class="board">
 
@@ -90,37 +79,9 @@
             <span class="panel__square"></span>
             <h3 class="panel__heading">COMMON MISTAKES</h3>
           </div>
-          <span class="panel__count">3 FOUND</span>
+          <span class="panel__count" id="errCount">0 FOUND</span>
         </div>
-        <div class="panel__list">
-        <div class="entry entry--err">
-          <div class="entry__row">
-            <span class="entry__tag">ERR #01</span>
-            <div>
-              <h4 class="entry__title">Off-by-One in Loop Termination</h4>
-              <p class="entry__text">Array index out of bounds on <span class="hl-peach">Kettle sensor</span> logic iteration. Triggered panic routine during boil cycle.</p>
-            </div>
-          </div>
-        </div>
-        <div class="entry entry--err">
-          <div class="entry__row">
-            <span class="entry__tag">ERR #02</span>
-            <div>
-              <h4 class="entry__title">Unhandled Null Pointer Exception</h4>
-              <p class="entry__text">Encountered in <span class="hl-cyan">Star Map Parser</span> when query window telemetry returned unmapped constellation coordinates.</p>
-            </div>
-          </div>
-        </div>
-        <div class="entry entry--err">
-          <div class="entry__row">
-            <span class="entry__tag">ERR #03</span>
-            <div>
-              <h4 class="entry__title">Suboptimal Time Complexity</h4>
-              <p class="entry__text">Detected in <span class="hl-violet">Door Lock Permutation</span> brute calculation. Nested O(N!) factorial scan delayed exit hatch unseal.</p>
-            </div>
-          </div>
-        </div>
-        </div>
+        <div class="panel__list" id="errList"></div>
       </section>
 
       <section class="panel panel--recs pixel-box">
@@ -129,37 +90,9 @@
             <span class="panel__square"></span>
             <h3 class="panel__heading">RECOMMENDATIONS</h3>
           </div>
-          <span class="panel__count">3 SUGGESTIONS</span>
+          <span class="panel__count" id="recCount">0 SUGGESTIONS</span>
         </div>
-        <div class="panel__list">
-        <div class="entry entry--rec">
-          <div class="entry__row">
-            <span class="entry__tag">REC #01</span>
-            <div>
-              <h4 class="entry__title">Practice Boundary Condition Checking</h4>
-              <p class="entry__text">Reinforce edge constraints in recursive algorithms to prevent stack overflows and one-off edge index overflows.</p>
-            </div>
-          </div>
-        </div>
-        <div class="entry entry--rec">
-          <div class="entry__row">
-            <span class="entry__tag">REC #02</span>
-            <div>
-              <h4 class="entry__title">Strengthen Error Handling &amp; Null Checks</h4>
-              <p class="entry__text">Implement optional unwrapping and defensive fallbacks in data streams before parsing incoming star chamber payloads.</p>
-            </div>
-          </div>
-        </div>
-        <div class="entry entry--rec">
-          <div class="entry__row">
-            <span class="entry__tag">REC #03</span>
-            <div>
-              <h4 class="entry__title">Review Big-O Notation for Hash Set Lookups</h4>
-              <p class="entry__text">Leverage O(1) hash sets for key combination lookups to replace nested iterative permutations across chamber mechanisms.</p>
-            </div>
-          </div>
-        </div>
-        </div>
+        <div class="panel__list" id="recList"></div>
       </section>
 
     </div>
@@ -168,13 +101,13 @@
   <div class="actions">
     <div class="actions__row">
       <button class="act act--go" onclick="location.href='game-room.html'">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M2 1 L11 6 L2 11 Z"/></svg> PLAY NEXT ROOM
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M2 1 L11 6 L2 11 Z"/></svg> PLAY AGAIN
       </button>
-      <button class="act act--menu" onclick="location.href='index.html'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg> MAIN MENU
+      <button class="act act--menu" onclick="location.href='dashboard.html'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg> DASHBOARD
       </button>
-      <button class="act act--share">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 1 L11 8 L1 8 Z"/></svg> SHARE SCORE
+      <button class="act act--share" id="shareBtn" type="button" disabled>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M6 1 L11 8 L1 8 Z"/></svg> <span id="shareLabel">SHARE SCORE</span>
       </button>
     </div>
   </div>
@@ -183,6 +116,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
+<script src="score.js"></script>
 <script>
 (async function(){
   const $ = id => document.getElementById(id);
@@ -191,6 +125,22 @@
   const u = await requireLogin(); if (!u) return;
   const p = await getProfile(u.id);
   if (p) $('playerName').textContent = p.player_name;
+
+  // what each mistake tag means for the player: category + what to practise.
+  // Tags are the Python error names the game saves (see evaluate() in game-room.html).
+  const SYNTAX = { cat: 'Syntax', rec: 'Check Python Syntax', text: 'Look for a missing colon, bracket, quote or wrong indentation. The error message points at the line.' };
+  const INFO = {
+    IndexError:    { cat: 'Index out of range', rec: 'Practice Loop Boundaries', text: 'A list of n items has indexes 0 to n-1. Count how many times your loop runs and compare it to the list length.' },
+    TypeError:     { cat: 'Mixed data types', rec: 'Check Data Types', text: 'A string and a number cannot be added. Convert with int() or str() first, and check the quotes around values.' },
+    NameError:     { cat: 'Variable scope', rec: 'Review Variable Scope', text: 'A variable made inside a function is not visible outside it. Return the value and store it in a variable.' },
+    UnboundLocalError: { cat: 'Variable scope', rec: 'Review Variable Scope', text: 'A variable made inside a function is not visible outside it. Return the value and store it in a variable.' },
+    RecursionError:{ cat: 'Recursion', rec: 'Give Recursion a Stopping Point', text: 'Every recursive call must move closer to the base case, or the calls never stop.' },
+    SyntaxError:   SYNTAX, IndentationError: SYNTAX,
+    'Infinite Loop':    { cat: 'Infinite loop', rec: 'Make Loops Finish', text: 'Check that the loop condition can become false, and that the variable it depends on changes every round.' },
+    'Wrong Output':     { cat: 'Wrong output', rec: 'Compare With the Expected Output', text: 'Your code ran but printed something else. Trace it by hand with the mission values.' },
+    'Hardcoded Answer': { cat: 'Hardcoded answer', rec: 'Fix the Cause, Not the Result', text: 'Typing the answer in only works for one case. Keep the original logic and repair the actual bug.' }
+  };
+  const info = k => INFO[k] || { cat: k, rec: 'Read the Last Line of the Error', text: 'The last line of a Python error names the problem. Start there.' };
 
   const sid = sessionStorage.getItem('lastSessionId');
   let q = db.from('game_sessions').select('*');
@@ -205,27 +155,31 @@
   }
   const { data: subsRaw } = await db.from('submissions').select('*').eq('session_id', s.id);
   const subs = subsRaw || [];
-  const { count: attempts } = await db.from('game_sessions').select('id', { count: 'exact', head: true });
+  // this game's number = how many games the player started up to and including this one
+  const { count: attempts } = await db.from('game_sessions').select('id', { count: 'exact', head: true }).lte('created_at', s.created_at);
 
-  const total = subs.length, good = subs.filter(x => x.is_correct).length, bad = total - good;
-  const timeBonus = Math.round(30 * s.time_left_sec / Math.max(1, s.time_total_sec));
-  // score: 10 per room puzzle (max 50) + time bonus (max 30) + 20 for a correct code fix - 3 per hint - 2 per wrong submit
-  const score = Math.max(0, Math.min(100, s.solved_count * 10 + timeBonus + (good > 0 ? 20 : 0) - s.hints_used * 3 - bad * 2));
-  const RANKS = [[90,'S','MASTER CODER'],[75,'A','SENIOR DEBUGGER'],[60,'B','JUNIOR DEBUGGER'],[40,'C','ROOKIE'],[0,'D','NEEDS PRACTICE']];
-  const r = RANKS.find(x => score >= x[0]);
+  const subm = submitsOf(subs);   // accuracy counts submits only, not test runs
+  const total = subm.length, good = subm.filter(x => x.is_correct).length;
+  const PAR = PAR_SEC;
+  const score = scoreOf(s, subs);
+  const r = rankOf(score);
 
   $('scoreVal').textContent = score;
   $('rankLetter').textContent = r[1];
   $('rankTitle').textContent = 'RANK ' + r[1] + ' - ' + r[2];
-  $('rankSub').textContent = 'Attempt #' + (attempts || 1) + ' · ' + ({won:'Escaped', time:'Time up', left:'Left room'}[s.result]);
-  $('timeVal').textContent = mmss(s.time_total_sec - s.time_left_sec);
-  $('timeSub').textContent = 'Limit ' + mmss(s.time_total_sec);
+  $('rankSub').textContent = 'Attempt #' + (attempts || 1) + ' · ' + ({won:'Escaped', left:'Left room', in_progress:'Unfinished'}[s.result] || s.result);
+  $('timeVal').textContent = mmss(s.elapsed_sec);
+  $('timeSub').textContent = 'Par ' + mmss(PAR);
   $('accVal').textContent = total ? Math.round(100 * good / total) + '%' : '--';
   $('accSub').textContent = total ? good + ' / ' + total + ' Submits Correct' : 'No submissions';
 
-  const tags = {};
-  subs.filter(x => !x.is_correct).forEach(x => { const k = x.mistake_tag || 'Other'; tags[k] = (tags[k] || 0) + 1; });
-  const keys = Object.keys(tags), max = Math.max(3, ...keys.map(k => tags[k]));
+  const tags = {}, where = {};
+  subs.filter(x => !x.is_correct).forEach(x => {
+    const k = x.mistake_tag || 'Other';
+    tags[k] = (tags[k] || 0) + 1;
+    (where[k] = where[k] || new Set()).add(x.puzzle);
+  });
+  const keys = Object.keys(tags).sort((a, b) => tags[b] - tags[a]), max = Math.max(3, ...keys.map(k => tags[k]));
   $('mistakeList').innerHTML = keys.length ? keys.map(k => `
     <div>
       <div class="pattern__head">
@@ -234,6 +188,50 @@
       </div>
       <div class="pattern__track"><div class="pattern__fill" style="width:${Math.round(100 * tags[k] / max)}%"></div></div>
     </div>`).join('') : '<p class="empty-note">No mistakes logged. Clean run.</p>';
+
+  // ACCURACY BY CATEGORY: from the category saved with every attempt (puzzles.js). Old games without it skip this.
+  const byCat = {};
+  subm.filter(x => x.category).forEach(x => { const c = byCat[x.category] = byCat[x.category] || { n: 0, ok: 0 }; c.n++; if (x.is_correct) c.ok++; });
+  const cats = Object.keys(byCat);
+  if (cats.length) $('mistakeList').innerHTML += '<p class="patterns__title" style="margin-top:14px">Accuracy by Category</p>' + cats.map(c => `
+    <div>
+      <div class="pattern__head">
+        <span class="pattern__name">${esc(c)}</span>
+        <span class="pattern__hits">${byCat[c].ok} / ${byCat[c].n} SUBMITS</span>
+      </div>
+      <div class="pattern__track"><div class="pattern__fill" style="width:${Math.round(100 * byCat[c].ok / byCat[c].n)}%"></div></div>
+    </div>`).join('');
+
+  // COMMON MISTAKES + RECOMMENDATIONS: built from this game's real mistake tags (top 3)
+  const top = keys.slice(0, 3), hl = ['hl-peach', 'hl-cyan', 'hl-violet'];
+  const num = i => String(i + 1).padStart(2, '0');
+  $('errCount').textContent = top.length + ' FOUND';
+  $('errList').innerHTML = top.length ? top.map((k, i) => `
+    <div class="entry entry--err"><div class="entry__row">
+      <span class="entry__tag">ERR #${num(i)}</span>
+      <div><h4 class="entry__title">${esc(info(k).cat)}</h4>
+      <p class="entry__text"><span class="${hl[i]}">${esc(k)}</span> x${tags[k]} in ${[...where[k]].map(esc).join(', ')}.</p></div>
+    </div></div>`).join('') : '<div class="entry entry--err"><div class="entry__row"><span class="entry__tag">ERR #00</span><div><h4 class="entry__title">No mistakes found</h4><p class="entry__text">Every test run and submit in this game passed.</p></div></div></div>';
+  const recs = [], seen = new Set();
+  top.forEach(k => { const r = info(k); if (!seen.has(r.rec)) { seen.add(r.rec); recs.push(r); } });
+  if (!recs.length) recs.push({ rec: 'Try a Harder Challenge', text: 'A clean run. Next time, try to finish faster or with fewer hints.' });
+  if (s.hints_used >= 3) recs.push({ rec: 'Try Fewer Hints', text: 'You used all 3 hints. Read the error message and trace the code by hand before asking.' });
+  $('recCount').textContent = recs.length + (recs.length === 1 ? ' SUGGESTION' : ' SUGGESTIONS');
+  $('recList').innerHTML = recs.map((r, i) => `
+    <div class="entry entry--rec"><div class="entry__row">
+      <span class="entry__tag">REC #${num(i)}</span>
+      <div><h4 class="entry__title">${esc(r.rec)}</h4><p class="entry__text">${esc(r.text)}</p></div>
+    </div></div>`).join('');
+
+  // SHARE SCORE: native share sheet when the device has one, else copy the text
+  const shareText = `I scored ${score}/100 (Rank ${r[1]}, ${r[2]}) in Remediate: ${good}/${total} submits correct, ${s.solved_count}/4 puzzles, ${mmss(s.elapsed_sec)}.`;
+  const sb = $('shareBtn'); sb.disabled = false;
+  sb.onclick = async () => {
+    try {
+      if (navigator.share) await navigator.share({ title: 'Remediate score', text: shareText });
+      else { await navigator.clipboard.writeText(shareText); $('shareLabel').textContent = 'COPIED!'; setTimeout(() => { $('shareLabel').textContent = 'SHARE SCORE'; }, 2000); }
+    } catch (e) { if (e.name !== 'AbortError') { $('shareLabel').textContent = 'COPY FAILED'; setTimeout(() => { $('shareLabel').textContent = 'SHARE SCORE'; }, 2000); } }
+  };
 })();
 </script>
 </body></html>

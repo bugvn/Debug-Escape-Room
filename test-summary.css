@@ -62,26 +62,32 @@ svg { display: block; }
 /* ---------- page ---------- */
 .page {
   position: relative; z-index: 10;
-  max-width: 80rem; min-height: 100vh; margin: 0 auto;
-  padding: 2rem 1rem;
+  max-width: 80rem; min-height: calc(100vh - 3.5rem); margin: 0 auto;
+  padding: 1.5rem 1rem 2rem;
   display: flex; flex-direction: column; justify-content: space-between;
 }
 
-.top { margin-bottom: 2rem; }
-.top__row {
-  display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 1rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 2px solid rgba(35, 42, 78, .8);
+/* ---------- top bar (same design on every page) ---------- */
+.topbar {
+  position: relative; z-index: 10; width: 100%;
+  padding: .75rem 1rem;
+  border-bottom: 2px solid rgba(34, 211, 238, .4);
+  background: rgba(8, 27, 42, .9);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
 }
-.identity { display: flex; align-items: center; gap: 1rem; }
-.identity__mark {
-  width: 3rem; height: 3rem;
+.topbar__inner { max-width: 72rem; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
+.brand { display: flex; align-items: center; gap: .75rem; color: inherit; text-decoration: none; }
+.brand__mark {
+  width: 1.75rem; height: 1.75rem; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   background: rgba(56, 225, 255, .2); border: 2px solid var(--cyan);
-  color: var(--cyan); font-family: var(--pixel); font-size: .875rem; line-height: 1.25rem;
+  color: var(--cyan); font-family: var(--pixel); font-size: .75rem; line-height: 1rem;
   box-shadow: 0 0 8px rgba(56, 225, 255, .6);
 }
-.identity__title { font-family: var(--pixel); font-size: 1.5rem; line-height: 2rem; letter-spacing: .025em; color: #fff; }
+.brand__name { font-family: var(--pixel); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; color: var(--cyan); filter: drop-shadow(0 0 5px rgba(56, 225, 255, .5)); }
+.brand__slash { margin: 0 .5rem; font-family: var(--pixel); font-size: .75rem; color: var(--edge); }
+.brand__sub { font-family: var(--pixel); font-size: 9px; letter-spacing: .025em; text-transform: uppercase; color: var(--lavender); }
+.brand h1 { display: inline; }
 
 .player {
   display: flex; align-items: center; gap: .5rem;
@@ -242,15 +248,13 @@ svg { display: block; }
 /* ---------- wider screens ---------- */
 @media (min-width: 640px) {
   .page { padding-left: 1.5rem; padding-right: 1.5rem; }
-  .identity__title { font-size: 1.875rem; line-height: 2.25rem; }
+  .topbar { padding-left: 2rem; padding-right: 2rem; }
+  .brand__name { font-size: .75rem; line-height: 1rem; }
   .score__word { font-size: 1rem; line-height: 1.5rem; }
   .score__num { font-size: 3.75rem; }
   .stat__value { font-size: 1.25rem; line-height: 1.75rem; }
   .panel__heading { font-size: 1rem; line-height: 1.5rem; }
   .actions__row { flex-direction: row; }
-}
-@media (min-width: 768px) {
-  .top__row { flex-direction: row; }
 }
 @media (min-width: 1024px) {
   .page { padding-left: 2rem; padding-right: 2rem; }

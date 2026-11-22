@@ -50,45 +50,42 @@ colors:
   surface-variant: '#303446'
 typography:
   display-lg:
-    fontFamily: Space Grotesk
-    fontSize: 48px
-    fontWeight: '700'
-    lineHeight: 56px
-    letterSpacing: -0.02em
-  display-lg-mobile:
-    fontFamily: Space Grotesk
-    fontSize: 32px
-    fontWeight: '700'
-    lineHeight: 40px
-    letterSpacing: -0.01em
-  headline-lg:
-    fontFamily: Space Grotesk
-    fontSize: 28px
-    fontWeight: '600'
+    fontFamily: Press Start 2P
+    fontSize: 24px
+    fontWeight: '400'
     lineHeight: 36px
-    letterSpacing: -0.01em
-  headline-md:
-    fontFamily: Space Grotesk
-    fontSize: 22px
-    fontWeight: '600'
-    lineHeight: 30px
-  title-md:
-    fontFamily: Space Grotesk
-    fontSize: 18px
-    fontWeight: '600'
-    lineHeight: 24px
-  body-lg:
-    fontFamily: Inter
+  display-lg-mobile:
+    fontFamily: Press Start 2P
     fontSize: 16px
     fontWeight: '400'
-    lineHeight: 24px
-  body-md:
-    fontFamily: Inter
+    lineHeight: 26px
+  headline-lg:
+    fontFamily: Press Start 2P
     fontSize: 14px
     fontWeight: '400'
+    lineHeight: 22px
+  headline-md:
+    fontFamily: Press Start 2P
+    fontSize: 12px
+    fontWeight: '400'
     lineHeight: 20px
+  title-md:
+    fontFamily: Press Start 2P
+    fontSize: 10px
+    fontWeight: '400'
+    lineHeight: 16px
+  body-lg:
+    fontFamily: VT323
+    fontSize: 24px
+    fontWeight: '400'
+    lineHeight: 30px
+  body-md:
+    fontFamily: Nunito
+    fontSize: 14px
+    fontWeight: '400'
+    lineHeight: 22px
   body-sm:
-    fontFamily: Inter
+    fontFamily: Nunito
     fontSize: 12px
     fontWeight: '400'
     lineHeight: 18px
@@ -151,11 +148,12 @@ The color palette draws directly from starry nocturnal skies, moonlit periwinkle
 
 ## Typography
 
-To guarantee both the cozy, retro terminal charm of classic escape rooms and pristine legibility across complex inventory screens, this system pairs **Space Grotesk** (headlines), **Inter** (narrative and body copy), and **Space Mono** (item stats, hotkeys, status tags, and mini dialogue prompts).
+The app uses four Google Fonts, each with one job. This section describes what the code actually loads (see the `<link>` tags in each page).
 
-- **Headlines & Titles:** Rendered in `Space Grotesk`. Geometric yet warm, giving titles a crafted, quirky indie identity without the legibility penalties of low-res pixel fonts at large scale.
-- **Narrative & Dialogue:** Rendered in `Inter` with slightly elevated line height (`1.5` to `1.6`) to evoke comfortable bedtime reading and effortless UI navigation.
-- **Stats & Metadata:** Rendered in `Space Mono` uppercase. Evokes 8-bit text entry, inventory grid counts (`x04`), and game clock timestamps.
+- **Headlines, buttons, HUD labels:** `Press Start 2P`. The pixel face that gives the retro terminal identity. Keep it small (10px to 14px) and in short uppercase strings, because it is hard to read in long text.
+- **Game text, code, console output:** `VT323` in the game room (dialogs, code editor, console) at 22px to 24px.
+- **Narrative and body copy on the menu, login and lesson pages:** `Nunito`, with line height `1.5` to `1.6` for comfortable reading.
+- **Puzzle pop-up (submission form) and stats:** `Space Mono`, uppercase for tags, badges and counters.
 
 ## Layout & Spacing
 

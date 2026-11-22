@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>REMEDIATE: Lesson Module</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script>
+  tailwind.config = {
+    theme: { extend: {
+      fontFamily: { pixel: ['"Press Start 2P"', 'monospace'], retro: ['"VT323"', 'monospace'], sans: ['"Nunito"', 'sans-serif'] },
+      colors: { space: { 950: '#020d16', 900: '#051b2a', 800: '#0a2334', 700: '#163e50' } }
+    } }
+  }
+</script>
+<style>
+  @keyframes pop-in { from { opacity:0; transform:scale(.97) translateY(6px);} to { opacity:1; transform:scale(1) translateY(0);} }
+  @keyframes blink { 50% { opacity:0; } }
+  .anim-pop { animation: pop-in .2s ease-out; }
+  .caret { animation: blink 1s steps(1) infinite; }
+  .pixel-btn-border { box-shadow: inset -3px -3px 0 0 rgba(0,0,0,.5), inset 3px 3px 0 0 rgba(255,255,255,.25); }
+  .pixel-btn-border:active { box-shadow: inset 3px 3px 0 0 rgba(0,0,0,.6), inset -2px -2px 0 0 rgba(255,255,255,.15); transform: translateY(2px); }
+  .pixel-box { box-shadow: 0 0 0 2px #071a2b, 0 0 0 4px #153f50, 0 0 0 6px #62dfff, 0 12px 30px rgba(0,0,0,.85); }
+  #crtOverlay { background: repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0px, rgba(0,0,0,.28) 1px, transparent 1px, transparent 3px); }
+  #vignette { background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.65) 100%); }
+
+  .btn { font-family:'Press Start 2P',monospace; font-size:10px; padding:.85rem 1.1rem; display:inline-flex; align-items:center; justify-content:center; transition:filter .15s; }
+  .btn:hover:not(:disabled) { filter:brightness(1.12); }
+  .btn:disabled { opacity:.35; cursor:not-allowed; }
+  .btn-primary { background:#7ae8ff; color:#061d29; }
+  .btn-ghost { background:#0b2335; color:#bfefff; border:2px solid rgba(122,232,255,.4); }
+
+  .step { width:100%; height:8px; background:#0b2335; border:1px solid rgba(122,232,255,.3); }
+  .step.done { background:#7ae8ff; box-shadow:0 0 8px rgba(122,232,255,.6); }
+  .step.now { background:#a38fc2; border-color:#d5c7ee; }
+
+  .code { background:#050c14; border:2px solid #153f50; border-left:4px solid #7ae8ff; padding:.8rem 1rem; font-family:'VT323',monospace; font-size:1.25rem; line-height:1.35; color:#dffcff; overflow-x:auto; white-space:pre; }
+  .code.bad { border-left-color:#f87171; }
+  .code.good { border-left-color:#86efac; }
+  .code .cm { color:#6b8ba0; }
+  .code .kw { color:#d3bdf3; }
+  .code .st { color:#ffd8dd; }
+  .code .er { color:#fca5a5; }
+  .tag { font-family:'Press Start 2P',monospace; font-size:8px; letter-spacing:.08em; padding:.3rem .5rem; border:2px solid; display:inline-block; }
+  .tag.bad { color:#fca5a5; border-color:#f87171; background:rgba(248,113,113,.1); }
+  .tag.good { color:#86efac; border-color:#86efac; background:rgba(134,239,172,.1); }
+  .tag.sys { color:#7ae8ff; border-color:#4d6594; background:rgba(77,101,148,.2); }
+
+  .ed { display:block; width:100%; background:#050c14; border:2px solid #4d6594; color:#7ae8ff; font-family:'VT323',monospace; font-size:1.25rem; line-height:1.35; padding:.8rem 1rem; resize:none; outline:none; white-space:pre; overflow:auto; tab-size:4; }
+  .ed:focus { border-color:#7ae8ff; box-shadow:0 0 12px rgba(122,232,255,.25); }
+  .con { background:#02060b; border:2px solid #153f50; min-height:5.5rem; padding:.7rem 1rem; font-family:'VT323',monospace; font-size:1.2rem; line-height:1.3; color:#dffcff; white-space:pre-wrap; word-break:break-word; }
+  .con.err { color:#fca5a5; border-color:#f87171; }
+  .con.ok { border-color:#86efac; }
+  .con .ph { color:#4d6594; }
+  .ref a { color:#7ae8ff; text-decoration:underline; text-underline-offset:3px; }
+  .ref a:hover { color:#fff; }
+  .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { animation:none!important; transition:none!important; }
+</style>
+</head>
+<body class="bg-[#020d1a] text-slate-200 min-h-screen relative overflow-x-hidden flex flex-col font-sans selection:bg-cyan-300 selection:text-space-950">
+
+<div id="vignette" class="fixed inset-0 z-[89] pointer-events-none"></div>
+<div id="crtOverlay" class="fixed inset-0 z-[90] pointer-events-none"></div>
+
+<!-- Ambient background (same as the landing page) -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+  <div class="absolute inset-0 bg-[#0a0d1a]"></div>
+  <canvas class="absolute inset-0 w-full h-full opacity-70" id="starfield-canvas"></canvas>
+  <div class="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-cyan-900/20 blur-3xl"></div>
+  <div class="absolute bottom-10 -right-24 w-[30rem] h-[30rem] rounded-full bg-indigo-900/20 blur-3xl"></div>
+</div>
+
+<header id="siteHeader" data-title="Lesson Module" data-actions="skip"></header>
+<script src="site-header.js"></script>
+
+<!-- Lesson card -->
+<main class="relative z-10 flex-1 flex items-start justify-center px-4 py-8 sm:px-6 md:px-8">
+  <div class="w-full max-w-3xl">
+    <div class="border-2 border-cyan-400/60 bg-[#081b2b]/85 shadow-[0_0_28px_rgba(122,232,255,0.1)] backdrop-blur-sm">
+
+      <!-- progress -->
+      <div class="px-4 sm:px-8 pt-5">
+        <div class="flex items-center justify-between mb-2">
+          <span id="lessonCount" class="font-pixel text-[9px] text-cyan-300 tracking-wider"></span>
+          <span id="lessonTag" class="tag sys"></span>
+        </div>
+        <div id="steps" class="grid grid-cols-5 gap-2"></div>
+      </div>
+
+      <!-- content -->
+      <div id="lessonBody" class="px-4 sm:px-8 py-6 anim-pop" aria-live="polite"></div>
+
+      <!-- nav -->
+      <div class="px-4 sm:px-8 py-4 border-t border-cyan-400/25 flex items-center justify-between gap-3">
+        <button id="btnBack" class="btn btn-ghost pixel-btn-border" type="button">◀ BACK</button>
+        <span class="hidden sm:block font-pixel text-[7px] text-slate-500 tracking-widest uppercase">Use ← → keys</span>
+        <button id="btnNext" class="btn btn-primary pixel-btn-border" type="button">NEXT ▶</button>
+      </div>
+    </div>
+    <p class="mt-4 text-center font-pixel text-[7px] text-slate-500 tracking-[0.25em] uppercase">Read the lessons, then fix the bugs in the room<span class="caret">_</span></p>
+    <p class="mt-2 text-center text-[11px] text-slate-500">Examples run in your browser with <a class="underline" href="https://pyodide.org" target="_blank" rel="noopener noreferrer">Pyodide</a>. References are from the official <a class="underline" href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer">Python 3 documentation</a>.</p>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script src="starfield.js"></script>
+<script src="pyrunner.js"></script>
+<script src="puzzles.js"></script>
+<script src="adaptive.js"></script>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+// Only logged-in players can use the module, same as the game room
+try { requireLogin().catch(e => console.error(e)); } catch (e) { console.error(e); }
+
+/* ---------- Lesson content ---------- */
+// Each lesson teaches one topic of the room (not the room's exact puzzles).
+// code blocks: [style, html]. style: '' | 'bad' | 'good'
+// more: extra "level up" sections. They open automatically for players at that level or higher.
+const LESSONS = [
+{
+  tag: 'BASICS', title: 'How to Read a Bug',
+  intro: 'Every bug in the room shows up as an error message or as the wrong output. Both tell you where to look.',
+  points: [
+    '<b>Run the code first.</b> Do not guess. The error message is a clue.',
+    '<b>Read the last line of the error.</b> It names the type of problem, such as IndexError or TypeError, and says what went wrong.',
+    '<b>Check the line number</b> above it. That is where Python noticed the problem. The cause can be a line or two earlier.',
+    '<b>Change one thing, then run again.</b> Fixing one line at a time shows you which change worked.'
+  ],
+  code: [['bad', `Traceback (most recent call last):
+  File "main.py", line 3, in &lt;module&gt;
+    total += stars[i]
+<span class="er">IndexError: list index out of range</span>`]],
+  note: 'In the room: use RUN TEST to try your fix as many times as you like. Only SUBMIT counts as your answer. Each object in the room trains one topic: the window is Index, the fridge is Type, the kettle is Recursion and the clock is Scope.',
+  tryit: { task: "Run it and read the error. Then change the index so it prints blue.", goal: "blue", code: "colors = [\"red\", \"blue\"]\nprint(colors[2])" },
+  refs: [["Errors and Exceptions (Python Tutorial)", "https://docs.python.org/3/tutorial/errors.html"], ["Built-in Exceptions", "https://docs.python.org/3/library/exceptions.html"]]
+},
+{
+  tag: 'INDEX FAULT', title: 'Lists and Index Errors',
+  intro: 'A list keeps items in order, and each item has a position number called an index. Python starts counting at 0, not 1. This is the window puzzles in the room.',
+  points: [
+    'A list with <b>3 items</b> has the indexes <b>0, 1, 2</b>. The last valid index is always <b>len(list) - 1</b>.',
+    'Asking for an index that does not exist causes an <b>IndexError</b>.',
+    'The most common cause is an <b>off-by-one</b> mistake: a loop or a lookup that goes one step too far.',
+    'To go through every item safely, loop over the list itself.'
+  ],
+  code: [
+    ['', `fruits = ["apple", "mango", "kiwi"]
+print(fruits[0])   <span class="cm"># apple</span>
+print(fruits[2])   <span class="cm"># kiwi</span>`],
+    ['bad', `print(fruits[3])   <span class="cm"># there is no index 3</span>
+<span class="er">IndexError: list index out of range</span>`],
+    ['good', `<span class="kw">for</span> fruit <span class="kw">in</span> fruits:
+    print(fruit)       <span class="cm"># never goes past the end</span>`]
+  ],
+  note: 'Watch for: len(items) used as an index. The length is a count, so it is one more than the last index.',
+  more: [
+    { level: 'INTERMEDIATE', title: 'While loops and counters',
+      points: [
+        'In a while loop you manage the index yourself: start it, test it, and add 1 each time.',
+        'Test with <b>i &lt; len(items)</b>. With <b>&lt;=</b> the loop runs once with i equal to len(items), and that index does not exist.',
+        'Forget <b>i += 1</b> and the loop never ends. Start at 1 and you skip the first item.',
+        'A for loop with range(len(items)) already gives exactly 0 to len - 1. Do not add or subtract anything inside it.'
+      ],
+      code: [
+        ['bad', `cups = [2, 4, 6]
+i = 0
+<span class="kw">while</span> i &lt;= len(cups):    <span class="cm"># runs with i = 3</span>
+    print(cups[i])
+    i += 1
+<span class="er">IndexError: list index out of range</span>`],
+        ['good', `<span class="kw">while</span> i &lt; len(cups):     <span class="cm"># stops at the last index</span>`]
+      ] },
+    { level: 'ADVANCED', title: 'Neighbours and grids',
+      points: [
+        'When you read <b>items[i + 1]</b>, the last i has no neighbour. Stop one early: <b>range(len(items) - 1)</b>.',
+        'A grid is a list of lists: <b>grid[row][col]</b>. Rows and columns each have their own last index: <b>len(grid) - 1</b> and <b>len(grid[0]) - 1</b>.',
+        'Trace the first and the last loop round by hand before you run. Most index bugs hide in the last round.'
+      ],
+      code: [
+        ['good', `temps = [5, 8, 6]
+<span class="kw">for</span> i <span class="kw">in</span> range(len(temps) - 1):
+    print(temps[i + 1] - temps[i])   <span class="cm"># 3, then -2</span>
+
+board = [[1, 2], [3, 4]]
+print(board[1][1])   <span class="cm"># 4: row 1, column 1 are the last indexes</span>`]
+      ] }
+  ],
+  tryit: { task: "Run it. It crashes. Fix it so it prints the last letter, d.", goal: "d", code: "letters = [\"a\", \"b\", \"c\", \"d\"]\nprint(letters[4])" },
+  refs: [["Lists (Python Tutorial)", "https://docs.python.org/3/tutorial/introduction.html#lists"], ["for Statements (Python Tutorial)", "https://docs.python.org/3/tutorial/controlflow.html#for-statements"], ["The while statement", "https://docs.python.org/3/reference/compound_stmts.html#the-while-statement"], ["IndexError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#IndexError"]]
+},
+{
+  tag: 'TYPE FAULT', title: 'Data Types and Type Errors',
+  intro: 'Every value has a type. Text is a string (str) and whole numbers are integers (int). Python will not mix them in math. This is the fridge puzzles in the room.',
+  points: [
+    'Anything inside quotes is a <b>string</b>, even if it looks like a number: <b>"7"</b> is text, <b>7</b> is a number.',
+    'Adding a string and an integer causes a <b>TypeError</b>.',
+    'Use <b>int()</b> to turn a numeric string into a number before doing math.',
+    'Two strings added with + are joined together: "5" + "5" gives "55", not 10.'
+  ],
+  code: [
+    ['bad', `age = "15"
+print(age + 1)
+<span class="er">TypeError: can only concatenate str (not "int") to str</span>`],
+    ['good', `age = "15"
+print(int(age) + 1)   <span class="cm"># 16</span>`]
+  ],
+  note: 'If the error mentions str and int together, check the quotes around your numbers.',
+  more: [
+    { level: 'INTERMEDIATE', title: 'Joining and comparing',
+      points: [
+        'To put a number inside a message, convert it with <b>str()</b> or use an f-string: <b>f"Level: {level}"</b>.',
+        'Comparisons like <b>&lt;</b> and <b>&gt;</b> also need matching types. <b>"4" &lt; 5</b> is a TypeError.',
+        'Use <b>float()</b> for text with a decimal point. <b>int("4.5")</b> fails with a ValueError.'
+      ],
+      code: [
+        ['bad', `level = 3
+print("Level: " + level)
+<span class="er">TypeError: can only concatenate str (not "int") to str</span>`],
+        ['good', `print("Level: " + str(level))
+print(f"Level: {level}")
+print(float("4.5") &lt; 5)   <span class="cm"># True</span>`]
+      ] },
+    { level: 'ADVANCED', title: 'Mixed data',
+      points: [
+        'Data that comes from outside (a file, a form, a feed) is often text, or a mix of text and numbers.',
+        'When you loop over such data, convert each value at the moment you use it: <b>total += int(value)</b>.',
+        'Looping a dictionary with <b>.items()</b> gives you the key and the value. The value is what needs converting, not the key.',
+        'Not sure what you have? <b>print(type(value))</b> shows it.'
+      ],
+      code: [
+        ['good', `data = {"a": "2", "b": 3}
+total = 0
+<span class="kw">for</span> key, value <span class="kw">in</span> data.items():
+    total += int(value)    <span class="cm"># works for "2" and for 3</span>
+print(total)               <span class="cm"># 5</span>`]
+      ] }
+  ],
+  tryit: { task: "Run it and read the error. Then fix it so it prints 95.", goal: "95", code: "score = \"90\"\nbonus = 5\nprint(score + bonus)" },
+  refs: [["Text Sequence Type: str", "https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str"], ["int() (Built-in Functions)", "https://docs.python.org/3/library/functions.html#int"], ["float() (Built-in Functions)", "https://docs.python.org/3/library/functions.html#float"], ["Formatted string literals", "https://docs.python.org/3/tutorial/inputoutput.html#formatted-string-literals"], ["TypeError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#TypeError"]]
+},
+{
+  tag: 'RECURSION FAULT', title: 'Recursion',
+  intro: 'A recursive function calls itself. To work correctly it needs two things, or it will never stop. This is the kettle puzzles in the room.',
+  points: [
+    'A <b>base case</b>: the condition where the function stops and returns an answer.',
+    '<b>Progress</b>: each call must change something so the next call gets closer to the base case.',
+    'If the base case is never reached, Python stops it with a <b>RecursionError</b>.',
+    'When you debug, ask: does the value I check ever change between calls?'
+  ],
+  code: [
+    ['bad', `<span class="kw">def</span> countdown(n):
+    <span class="kw">if</span> n == 0:
+        <span class="kw">return</span> <span class="st">"liftoff"</span>
+    <span class="kw">return</span> countdown(n)        <span class="cm"># n never changes</span>
+<span class="er">RecursionError: maximum recursion depth exceeded</span>`],
+    ['good', `<span class="kw">def</span> countdown(n):
+    <span class="kw">if</span> n == 0:
+        <span class="kw">return</span> <span class="st">"liftoff"</span>
+    <span class="kw">return</span> countdown(n - 1)    <span class="cm"># moves toward 0</span>`]
+  ],
+  note: 'Remember: the answer must be returned all the way back up, so keep the return in front of the call.',
+  more: [
+    { level: 'INTERMEDIATE', title: 'Returning the combined answer',
+      points: [
+        'Many recursive functions build their answer on the way back: <b>return n * product(n - 1)</b>.',
+        'The base case must return the right starting value: <b>0</b> for a sum, <b>1</b> for a product.',
+        'Forget the <b>return</b> in front of the recursive call and the function gives back <b>None</b>.'
+      ],
+      code: [
+        ['bad', `<span class="kw">def</span> product(n):
+    <span class="kw">if</span> n == 1:
+        <span class="kw">return</span> 1
+    n * product(n - 1)       <span class="cm"># no return: the result is thrown away</span>
+
+print(product(3))            <span class="cm"># None</span>`],
+        ['good', `    <span class="kw">return</span> n * product(n - 1)  <span class="cm"># product(3) is 6</span>`]
+      ] },
+    { level: 'ADVANCED', title: 'Shrinking the problem',
+      points: [
+        'The problem must get smaller every call: n - 1, half of a range, or one part of a list.',
+        'When you halve a range, step past the middle you already checked: <b>mid + 1</b> or <b>mid - 1</b>. Using mid again repeats the same range forever.',
+        'Nested data (lists inside lists) fits well: a plain value is the base case, a list means call yourself on each part.',
+        'Trace two or three calls by hand and write down the arguments. If two calls have the same arguments, you found the loop.'
+      ],
+      code: [
+        ['good', `<span class="kw">def</span> depth(item):
+    <span class="kw">if not</span> isinstance(item, list):
+        <span class="kw">return</span> 0                <span class="cm"># base case: a plain value</span>
+    deepest = 0
+    <span class="kw">for</span> part <span class="kw">in</span> item:
+        deepest = max(deepest, depth(part))
+    <span class="kw">return</span> deepest + 1
+
+print(depth([1, [2, [3]]]))    <span class="cm"># 3</span>`]
+      ] }
+  ],
+  tryit: { task: "Run it and wait for the error. Then make n move toward 3 so it prints done.", goal: "done", code: "def count_up(n):\n    if n == 3:\n        return \"done\"\n    return count_up(n - 1)\n\nprint(count_up(0))" },
+  refs: [["Defining Functions (Python Tutorial)", "https://docs.python.org/3/tutorial/controlflow.html#defining-functions"], ["RecursionError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#RecursionError"]]
+},
+{
+  tag: 'SCOPE FAULT', title: 'Variable Scope',
+  intro: 'A variable created inside a function only exists inside that function. Outside, Python does not know it. This is the clock puzzles in the room.',
+  points: [
+    'Using a variable outside the place where it was created causes a <b>NameError</b>.',
+    'A function can pass a value out with <b>return</b>.',
+    'The code that calls the function must <b>catch</b> the returned value, usually by storing it in a variable.',
+    'Calling a function without storing its result throws the result away.'
+  ],
+  code: [
+    ['bad', `<span class="kw">def</span> double(n):
+    result = n * 2
+    <span class="kw">return</span> result
+
+double(4)
+print(result)
+<span class="er">NameError: name 'result' is not defined</span>`],
+    ['good', `<span class="kw">def</span> double(n):
+    result = n * 2
+    <span class="kw">return</span> result
+
+result = double(4)     <span class="cm"># catch the returned value</span>
+print(result)          <span class="cm"># 8</span>`]
+  ],
+  note: 'Local names stay inside their function. Send values out with return, and catch them where the function is called.',
+  more: [
+    { level: 'INTERMEDIATE', title: 'Changing outer variables',
+      points: [
+        'If a function assigns to a name (<b>score = score + 10</b>), Python treats that name as local to the function, even if a global with the same name exists.',
+        'Reading it before it has a value gives an <b>UnboundLocalError</b>.',
+        'Fix 1: declare it with <b>global score</b> inside the function. Fix 2 (cleaner): pass the value in and return the new one.',
+        'A name created only inside an <b>if</b> branch does not exist when the branch is skipped. Give it a value on every path.'
+      ],
+      code: [
+        ['bad', `score = 0
+<span class="kw">def</span> win():
+    score = score + 10
+win()
+<span class="er">UnboundLocalError: cannot access local variable 'score'</span>`],
+        ['good', `<span class="kw">def</span> win():
+    <span class="kw">global</span> score          <span class="cm"># use the outer score</span>
+    score = score + 10`]
+      ] },
+    { level: 'ADVANCED', title: 'Shared and remembered state',
+      points: [
+        'A default value like <b>bag=[]</b> is created once, when the function is defined, and shared by every call.',
+        'Use <b>None</b> as the default and build a fresh list inside: <b>if bag is None: bag = []</b>.',
+        'A lambda or inner function looks up outer variables when it is <i>called</i>, not when it is created. Inside a loop they all see the last value. Capture it with a default: <b>lambda n=n: n</b>.'
+      ],
+      code: [
+        ['bad', `<span class="kw">def</span> add(x, bag=[]):
+    bag.append(x)
+    <span class="kw">return</span> bag
+
+print(add(1))    <span class="cm"># [1]</span>
+print(add(2))    <span class="cm"># [1, 2]  the old list is remembered</span>`],
+        ['good', `<span class="kw">def</span> add(x, bag=None):
+    <span class="kw">if</span> bag <span class="kw">is</span> None:
+        bag = []             <span class="cm"># a new list every call</span>
+    bag.append(x)
+    <span class="kw">return</span> bag`]
+      ] }
+  ],
+  tryit: { task: "Run it and read the error. Then catch the returned value so it prints HEY.", goal: "HEY", code: "def shout(word):\n    loud = word.upper()\n    return loud\n\nshout(\"hey\")\nprint(loud)" },
+  refs: [["Python Scopes and Namespaces (Python Tutorial)", "https://docs.python.org/3/tutorial/classes.html#python-scopes-and-namespaces"], ["The return Statement (Language Reference)", "https://docs.python.org/3/reference/simple_stmts.html#return"], ["The global statement", "https://docs.python.org/3/reference/simple_stmts.html#the-global-statement"], ["Default Argument Values", "https://docs.python.org/3/tutorial/controlflow.html#default-argument-values"], ["NameError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#NameError"]]
+}
+];
+
+/* ---------- Python (Pyodide) in a Web Worker: see pyrunner.js ---------- */
+const py = createPyRunner({ onChange: () => refreshRun() });
+const runPy = code => py.run(code);
+function refreshRun(){
+  const b = $('btnRun'), n = $('loadNote');
+  const sec = Math.floor((Date.now() - py.startedAt) / 1000);
+  if (b) {
+    b.disabled = !py.ready;
+    b.textContent = py.failed ? '✖ PYTHON FAILED' : py.ready ? '▶ RUN' : 'LOADING PYTHON... ' + sec + 's';
+  }
+  if (!n) return;
+  if (py.ready) { n.classList.add('hidden'); return; }
+  if (py.failed || sec >= 25) {
+    n.classList.remove('hidden');
+    n.innerHTML = (py.failed
+      ? 'Python could not load. ' + esc(String(py.error).slice(0, 120)) + ' '
+      : 'Python is still downloading (about 10 MB). It needs an internet connection, so this can take a while on slow data. ')
+      + '<button type="button" id="btnRetry" class="underline text-cyan-300">Retry</button>';
+    const r = $('btnRetry'); if (r) r.onclick = () => py.restart();
+  } else n.classList.add('hidden');
+}
+setInterval(() => { if (!py.ready) refreshRun(); }, 1000);
+const cleanErr = m => {
+  const L = m.split('\n'), k = L.findIndex(l => l.includes('<exec>'));
+  return (k < 0 ? m.trim() : 'Traceback (most recent call last):\n' + L.slice(k).join('\n').trim()).replace(/<exec>/g, 'main.py');
+};
+
+/* ---------- State + rendering ---------- */
+let i = 0;
+const drafts = {};
+const last = LESSONS.length - 1;
+
+function goGame(){ location.href = 'game-room.html'; }
+
+function growEd(){ const e = $('ed'); if (!e) return; e.style.height = 'auto'; e.style.height = (e.scrollHeight + 2) + 'px'; }
+
+function render(){
+  const L = LESSONS[i];
+  $('lessonCount').textContent = 'LESSON ' + (i + 1) + ' / ' + LESSONS.length;
+  $('lessonTag').textContent = L.tag;
+  $('steps').innerHTML = LESSONS.map((_, k) => '<div class="step ' + (k < i ? 'done' : k === i ? 'now' : '') + '"></div>').join('');
+
+  const codes = L.code.map(c => '<pre class="code ' + c[0] + '">' + c[1] + '</pre>').join('<div class="h-2"></div>');
+  const pts = L.points.map(p => '<li class="flex gap-3"><span class="text-cyan-300 font-pixel text-[9px] mt-1.5">▸</span><span>' + p + '</span></li>').join('');
+  const lvl = LEVELS.indexOf(playerLevel);
+  const more = (L.more || []).map(m => {
+    const mc = m.code.map(c => '<pre class="code ' + c[0] + '">' + c[1] + '</pre>').join('<div class="h-2"></div>');
+    const mp = m.points.map(p => '<li class="flex gap-3"><span class="text-purple-200 font-pixel text-[9px] mt-1.5">▸</span><span>' + p + '</span></li>').join('');
+    return '<details class="mt-5 border-2 border-purple-300/30 bg-[#0b2335]/50 p-4"' + (LEVELS.indexOf(m.level) <= lvl ? ' open' : '') + '>' +
+      '<summary class="cursor-pointer font-pixel text-[8px] leading-relaxed tracking-widest text-purple-200">LEVEL UP · ' + m.level + (m.level === playerLevel ? ' · YOUR LEVEL' : '') + ' · ' + m.title.toUpperCase() + '</summary>' +
+      '<ul class="mt-3 space-y-2 text-sm sm:text-[15px] text-slate-300 leading-relaxed">' + mp + '</ul><div class="mt-3">' + mc + '</div></details>';
+  }).join('');
+  const refs = L.refs.map(r => '<li><a href="' + r[1] + '" target="_blank" rel="noopener noreferrer">' + esc(r[0]) + '</a></li>').join('');
+
+  $('lessonBody').innerHTML =
+    '<h1 class="font-pixel text-base sm:text-xl leading-snug text-[#7ae8ff]" style="text-shadow:0 0 12px rgba(122,232,255,.6)">' + L.title.toUpperCase() + '</h1>' +
+    '<p class="mt-3 text-sm sm:text-base text-slate-200/90 leading-relaxed">' + L.intro + '</p>' +
+    '<ul class="mt-4 space-y-2 text-sm sm:text-[15px] text-slate-300 leading-relaxed">' + pts + '</ul>' +
+    '<div class="mt-5">' + codes + '</div>' +
+    '<p class="mt-4 text-sm text-purple-200 leading-relaxed border-l-4 border-[#a38fc2] pl-3">' + L.note + '</p>' +
+    more +
+
+    '<div class="mt-6 border-2 border-cyan-400/30 bg-[#0b2335]/70 p-4">' +
+      '<div class="flex items-center justify-between mb-2"><span class="font-pixel text-[8px] tracking-widest text-cyan-300">TRY IT YOURSELF</span><span class="tag sys">PYTHON 3</span></div>' +
+      '<p class="text-sm text-slate-200 leading-relaxed mb-3">' + esc(L.tryit.task) + '</p>' +
+      '<textarea id="ed" class="ed" rows="4" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Python code editor"></textarea>' +
+      '<div class="mt-3 flex flex-wrap items-center gap-2">' +
+        '<button id="btnRun" class="btn btn-primary pixel-btn-border" type="button">LOADING PYTHON...</button>' +
+        '<button id="btnReset" class="btn btn-ghost pixel-btn-border" type="button">↺ RESET</button>' +
+        '<span id="status" class="tag sys hidden"></span>' +
+      '</div>' +
+      '<div id="loadNote" class="hidden mt-2 text-xs text-amber-300 leading-relaxed"></div>' +
+      '<div class="mt-3 font-pixel text-[8px] tracking-widest text-slate-400">OUTPUT</div>' +
+      '<div id="con" class="con mt-1" aria-live="polite"><span class="ph">Press RUN to see the output here.</span></div>' +
+      '<div class="mt-2 text-xs text-slate-400">Goal output: <span class="font-retro text-base text-cyan-200">' + esc(L.tryit.goal).replace(/\n/g, ' ⏎ ') + '</span></div>' +
+    '</div>' +
+
+    '<div class="mt-6 ref">' +
+      '<div class="font-pixel text-[8px] tracking-widest text-cyan-300 mb-2">REFERENCES</div>' +
+      '<ul class="text-sm text-slate-300 space-y-1 list-disc pl-5">' + refs + '</ul>' +
+    '</div>';
+
+  const box = $('lessonBody'); box.classList.remove('anim-pop'); void box.offsetWidth; box.classList.add('anim-pop');
+
+  const ed = $('ed');
+  ed.value = drafts[i] !== undefined ? drafts[i] : L.tryit.code; growEd();
+  ed.oninput = () => { drafts[i] = ed.value; growEd(); };
+  ed.onkeydown = e => {
+    if (e.key === 'Tab') { e.preventDefault(); ed.setRangeText('    ', ed.selectionStart, ed.selectionEnd, 'end'); ed.oninput(); }
+    e.stopPropagation(); // arrow keys stay for typing, not for changing lessons
+  };
+  $('btnReset').onclick = () => { ed.value = L.tryit.code; drafts[i] = L.tryit.code; growEd(); setCon(null); ed.focus(); };
+  $('btnRun').onclick = runExample;
+  refreshRun();
+
+  $('btnBack').disabled = i === 0;
+  $('btnNext').textContent = i === last ? '▶ START GAME' : 'NEXT ▶';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function setCon(text, kind){
+  const c = $('con'), st = $('status'); if (!c) return;
+  c.className = 'con mt-1' + (kind ? ' ' + kind : '');
+  if (text === null) { c.innerHTML = '<span class="ph">Press RUN to see the output here.</span>'; st.classList.add('hidden'); return; }
+  c.textContent = text === '' ? '(no output)' : text;
+}
+
+async function runExample(){
+  const L = LESSONS[i], btn = $('btnRun'), st = $('status');
+  btn.disabled = true; btn.textContent = 'RUNNING...';
+  const d = await runPy($('ed').value);
+  const out = (d.out || '').trim();
+  if (d.sys) d.err = d.sys;
+  if (d.err) {
+    setCon((out ? out + '\n' : '') + cleanErr(d.err), 'err');
+    st.className = 'tag bad'; st.textContent = 'ERROR - READ THE LAST LINE';
+  } else if (out === L.tryit.goal) {
+    setCon(out, 'ok');
+    st.className = 'tag good'; st.textContent = 'MATCHES THE GOAL';
+  } else {
+    setCon(out, '');
+    st.className = 'tag sys'; st.textContent = 'RAN - NOT THE GOAL YET';
+  }
+  refreshRun();
+}
+
+$('btnBack').onclick = () => { if (i > 0) { i--; render(); } };
+$('btnNext').onclick = () => { if (i < last) { i++; render(); } else goGame(); };
+$('skipTop').onclick = goGame;
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') $('btnNext').click();
+  else if (e.key === 'ArrowLeft' && i > 0) $('btnBack').click();
+});
+
+// Personalise the lessons for the logged-in player:
+//  - playerLevel decides which "level up" sections open (same level the game room will use).
+//  - adaptive group only: the lessons for the player's weakest topics come right after Basics.
+//  - control group (profiles.adaptive = false): fixed order, so the study comparison stays clean.
+const CAT_TAG = { Index: 'INDEX FAULT', Type: 'TYPE FAULT', Recursion: 'RECURSION FAULT', Scope: 'SCOPE FAULT' };
+let playerLevel = 'BEGINNER';
+async function personalizeLessons() {
+  try {
+    const u = await requireLogin().catch(() => null);
+    if (!u) return;
+    const prof = await getProfile(u.id);
+    if (prof && LEVELS.includes(prof.difficulty)) playerLevel = prof.difficulty;
+    if (prof && prof.adaptive === false) return;
+    const g = await db.from('game_sessions').select('next_level').not('next_level', 'is', null).order('created_at', { ascending: false }).limit(1);
+    if (g.data && g.data[0] && LEVELS.includes(g.data[0].next_level)) playerLevel = g.data[0].next_level;
+    const r = await db.from('submissions')
+      .select('category,is_correct,kind')
+      .eq('kind', 'submit')
+      .not('category', 'is', null)
+      .order('id', { ascending: false })
+      .limit(RULES.historyAttempts);
+    const weak = weakCategories(r.data || []);
+    if (!weak.length) return;
+    const weakTags = new Set(weak.map(([c]) => CAT_TAG[c]).filter(Boolean));
+    const basics = LESSONS.filter(l => l.tag === 'BASICS');
+    const front = LESSONS.filter(l => l.tag !== 'BASICS' && weakTags.has(l.tag));
+    const back = LESSONS.filter(l => l.tag !== 'BASICS' && !weakTags.has(l.tag));
+    LESSONS.splice(0, LESSONS.length, ...basics, ...front, ...back);
+  } catch (e) { console.error('lesson personalize:', e); }
+}
+personalizeLessons().then(() => render());
+})();
+</script>
+</body></html>
