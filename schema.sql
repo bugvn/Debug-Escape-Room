@@ -107,6 +107,7 @@ select
 from public.game_sessions g
 join public.profiles p on p.id = g.user_id
 left join public.submissions s on s.session_id = g.id
+where p.consented_at is not null
 group by g.id, p.adaptive, p.difficulty;
 
 create or replace view public.research_attempts with (security_invoker = true) as
@@ -119,7 +120,8 @@ select
   s.hints_used, s.elapsed_ms, s.code, s.created_at
 from public.submissions s
 join public.profiles p on p.id = s.user_id
-left join public.research_sessions rs on rs.session_id = s.session_id;
+left join public.research_sessions rs on rs.session_id = s.session_id
+where p.consented_at is not null;
 
 revoke all on public.research_sessions, public.research_attempts from anon, authenticated;
 
