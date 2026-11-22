@@ -108,6 +108,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
+<script src="score.js"></script>
 <script>
 (async function () {
   const $ = id => document.getElementById(id);
@@ -120,19 +121,9 @@
   const p = await getProfile(u.id);
   if (p) $('playerName').textContent = p.player_name;
 
-  // same score formula and ranks as test-summary.html, so the numbers match the report
-  const KETTLE = 'PUZZLE 02: RECURSIVE KETTLE LOOP';
-  const RANKS = [[90,'S'],[75,'A'],[60,'B'],[40,'C'],[0,'D']];
-  function scoreOf(s, subs) {
-    const bad = subs.filter(x => !x.is_correct).length;
-    const kettleOk = subs.some(x => x.puzzle === KETTLE && x.is_correct);
-    const bonus = s.result === 'won' ? Math.round(30 * s.time_left_sec / Math.max(1, s.time_total_sec)) : 0;
-    return Math.max(0, Math.min(100, s.solved_count * 10 + bonus + (kettleOk ? 20 : 0) - s.hints_used * 3 - Math.min(20, bad * 2)));
-  }
-
   const [sRes, subRes] = await Promise.all([
     db.from('game_sessions').select('*').order('created_at', { ascending: true }),
-    db.from('submissions').select('session_id,puzzle,is_correct,mistake_tag')
+    db.from('submissions').select('session_id,puzzle,kind,is_correct,mistake_tag')
   ]);
   $('loading').classList.add('hidden');
 
@@ -155,7 +146,8 @@
 
   /* ----- KPIs ----- */
   const wins = rows.filter(r => r.s.result === 'won');
-  const good = allSubs.filter(x => x.is_correct).length;
+  const subm = submitsOf(allSubs);   // accuracy = submits only
+  const good = subm.filter(x => x.is_correct).length;
   const best = rows.reduce((a, b) => (b.score > a.score ? b : a));
   const avgTime = wins.length ? wins.reduce((a, r) => a + r.took, 0) / wins.length : null;
   $('kGames').textContent = rows.length;
@@ -164,8 +156,8 @@
   $('kWinsSub').textContent = pct(wins.length, rows.length) + '% win rate';
   $('kBest').textContent = best.score;
   $('kBestSub').textContent = 'Rank ' + best.rank + ' · game #' + best.n;
-  $('kAcc').textContent = allSubs.length ? pct(good, allSubs.length) + '%' : '--';
-  $('kAccSub').textContent = good + ' / ' + allSubs.length + ' submits';
+  $('kAcc').textContent = subm.length ? pct(good, subm.length) + '%' : '--';
+  $('kAccSub').textContent = good + ' / ' + subm.length + ' submits';
   $('kTime').textContent = avgTime == null ? '--' : mmss(avgTime);
   $('kTimeSub').textContent = avgTime == null ? 'No escapes yet' : 'Escaped games';
 
@@ -184,7 +176,7 @@
 
   /* ----- per puzzle accuracy ----- */
   const puz = {};
-  allSubs.forEach(x => { const o = puz[x.puzzle] = puz[x.puzzle] || { t: 0, ok: 0 }; o.t++; if (x.is_correct) o.ok++; });
+  subm.forEach(x => { const o = puz[x.puzzle] = puz[x.puzzle] || { t: 0, ok: 0 }; o.t++; if (x.is_correct) o.ok++; });
   const pk = Object.keys(puz).sort();
   $('puzzleBars').innerHTML = pk.length ? pk.map(k => `
     <div><div class="bar__head"><span class="bar__name">${esc(k)}</span><span class="bar__val">${pct(puz[k].ok, puz[k].t)}% · ${puz[k].ok}/${puz[k].t}</span></div>
@@ -216,12 +208,12 @@
     ${tk.length ? `<div><div class="bar__head"><span class="bar__name">Focus next</span><span class="bar__val bar__val--bad">${esc(tk[0])}</span></div></div>` : ''}`;
 
   /* ----- history ----- */
-  const RES = { won: 'Escaped', time: 'Time up', left: 'Left' };
+  const RES = { won: 'Escaped', time: 'Time up', left: 'Left', in_progress: 'Unfinished' };
   $('history').innerHTML = rows.slice().reverse().map(r => `
     <tr>
       <td>${r.n}</td>
       <td>${new Date(r.s.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-      <td><span class="chip chip--${esc(r.s.result)}">${RES[r.s.result] || esc(r.s.result)}</span></td>
+      <td><span class="chip chip--${r.s.result === 'in_progress' ? 'left' : esc(r.s.result)}">${RES[r.s.result] || esc(r.s.result)}</span></td>
       <td>${r.s.solved_count} / 4</td>
       <td>${r.s.hints_used} / 3</td>
       <td>${mmss(r.took)}</td>

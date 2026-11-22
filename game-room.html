@@ -13,9 +13,10 @@ button{font-family:inherit}
 .hidden{display:none!important}
 .pix{font-family:'Press Start 2P',monospace}
 .dig{font-family:'VT323',monospace}
-#room{position:relative;width:100%;height:100%;max-width:1920px;max-height:1080px;aspect-ratio:16/9;margin:0 auto;overflow:hidden;background:#020617;display:flex;align-items:center;justify-content:center}
-#room>img{width:100%;height:100%;object-fit:contain;pointer-events:none}
-@media(min-width:768px){#room>img{object-fit:cover}}
+#room{position:relative;width:100%;height:100%;max-width:1920px;max-height:1080px;margin:0 auto;overflow:hidden;background:#020617;display:flex;align-items:center;justify-content:center;container-type:size}
+/* image and hotspots share one 16:9 box, so the icons stay on their objects at any window size */
+#stage{position:relative;flex:none;width:min(100cqw,calc(100cqh * 16 / 9));aspect-ratio:16/9}
+#stage>img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
 .box{border:3px solid #6366f1;box-shadow:0 0 10px rgba(99,102,241,.4),inset 0 0 10px rgba(99,102,241,.2);backdrop-filter:blur(8px);background:rgba(10,15,30,.86)}
 .btn{font:12px 'Press Start 2P',monospace;padding:12px 16px;border-radius:4px;cursor:pointer;border:2px solid #a855f7;box-shadow:0 4px 0 #6b21a8;background:#6b21a8;color:#fde047;transition:all .1s}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #6b21a8}
@@ -175,6 +176,7 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 </head>
 <body>
 <main id="room">
+<div id="stage">
 <img alt="Cozy starlit room with a window, refrigerator, kettle on the dining table and exit door" src="room_door_closed_no_girl.png"/>
 
 <div id="hotspots">
@@ -183,6 +185,7 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 <button class="hs emerald" data-hs="kettle" aria-label="Kettle, recursive kettle loop puzzle" style="top:65%;left:46.5%"><div class="wrap"><span class="ping"></span><span class="core">☕</span></div><div id="tag-kettle" class="tag"></div></button>
 <button class="hs violet" data-hs="clock" aria-label="Wall clock, chime counter" style="top:26%;left:39.5%"><div class="wrap"><span class="ping"></span><span class="core">🕰️</span></div><div id="tag-clock" class="tag"></div></button>
 <button class="hs rose" data-hs="door" aria-label="Exit door" style="top:47%;left:80%"><div class="wrap"><span class="ping"></span><span class="core">🔑</span></div><div id="tag-door" class="tag"></div></button>
+</div>
 </div>
 
 <header id="progress" class="hud box">
@@ -221,12 +224,11 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 (() => {
 const $ = id => document.getElementById(id);
 const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-try { requireLogin().catch(e => console.error(e)); } catch (e) { console.error(e); }
 sessionStorage.removeItem('lastSessionId');
 
 /* ---------- Timer (counts up from 00:00) ---------- */
 const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
-const startTs = Date.now();
+let startTs = Date.now();
 let elapsed = 0;
 function tick(){ if (over) return; elapsed = Math.floor((Date.now() - startTs) / 1000); $('timer').textContent = fmt(elapsed); const t = $('sf-time'); if (t) t.textContent = fmt(elapsed); }
 setInterval(tick, 1000);
@@ -239,63 +241,94 @@ const hintTier = {}; let lastOpen = null;
 let hints = 3, over = null, sound = true, labels = false, toastT, escFn = null;
 const count = () => got.length;
 
-/* ---------- Save result (time_total_sec = elapsed; time_left_sec kept at 0 for the existing table) ---------- */
+/* ---------- Saving: the session row is made at start, each attempt is saved as it happens ---------- */
 const TIME_LIMIT = 900; // par time (sec) used by the summary page for the time bonus
-let sessionSaved = false;
-const attempts = []; // every Run press, saved to submissions with the session
-async function saveSession(result){
-if (sessionSaved) return; sessionSaved = true;
+const attempts = [];    // attempts not saved yet (kept and retried if a save fails)
+let sessionId = null, sessionMaking = null, saveWarned = false, saveChain = Promise.resolve();
+function timeCols(){
 elapsed = Math.floor((Date.now() - startTs) / 1000);
+return { time_total_sec: Math.max(TIME_LIMIT, elapsed), time_left_sec: Math.max(0, TIME_LIMIT - elapsed) };
+}
+function ensureSession(){
+if (sessionId) return Promise.resolve(sessionId);
+if (!sessionMaking) sessionMaking = (async () => {
 try {
-const { data, error } = await db.from('game_sessions').insert({
-result, solved_count: count(), hints_used: 3 - hints, time_total_sec: Math.max(TIME_LIMIT, elapsed), time_left_sec: Math.max(0, TIME_LIMIT - elapsed)
-}).select('id').single();
+const { data, error } = await db.from('game_sessions').insert({ result:'in_progress', solved_count:0, hints_used:0, time_total_sec:TIME_LIMIT, time_left_sec:TIME_LIMIT }).select('id').single();
 if (error) throw error;
-sessionStorage.setItem('lastSessionId', data.id);
+sessionId = data.id; sessionStorage.setItem('lastSessionId', sessionId);
+} catch (e) { console.error(e); }
+sessionMaking = null; return sessionId;
+})();
+return sessionMaking;
+}
+async function saveAll(result){
+let ok = true;
+try {
+const sid = await ensureSession();
+if (!sid) throw new Error('no session');
 if (attempts.length) {
-const r = await db.from('submissions').insert(attempts.map(a => ({ ...a, session_id: data.id })));
-if (r.error) console.error(r.error);
+const batch = attempts.splice(0);
+const r = await db.from('submissions').insert(batch.map(a => ({ ...a, session_id: sid })));
+if (r.error) { attempts.unshift(...batch); throw r.error; }
 }
-} catch (e) { console.error(e); toast('Could not save result. Check connection.', true); }
+const u = await db.from('game_sessions').update({ ...(result ? { result } : {}), solved_count: count(), hints_used: 3 - hints, ...timeCols() }).eq('id', sid);
+if (u.error) throw u.error;
+} catch (e) {
+ok = false; console.error(e);
+if (!saveWarned) { saveWarned = true; toast('Could not save your progress. Check connection.', true); }
 }
+return ok;
+}
+// saves run one after another, so the final result is never overwritten by an older save
+function queueSave(result){ return (saveChain = saveChain.then(() => saveAll(result))); }
 
 /* ---------- Real Python (Pyodide) in a Web Worker, so an infinite loop cannot freeze the page ---------- */
 const WORKER_SRC = `importScripts('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js');
 const ready = loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/' });
 ready.then(() => postMessage({ ready: true }), e => postMessage({ fatal: String(e) }));
 onmessage = async e => {
-const py = await ready; let out = '';
+const { id, code } = e.data; let out = '', g;
+try {
+const py = await ready;
 py.setStdout({ batched: s => out += s + '\\n' });
 py.setStderr({ batched: s => out += s + '\\n' });
-try { await py.runPythonAsync(e.data, { globals: py.globals.get('dict')() }); postMessage({ out }); }
-catch (err) { postMessage({ out, err: String(err.message || err) }); }
+g = py.globals.get('dict')();
+await py.runPythonAsync(code, { globals: g });
+postMessage({ id, out });
+} catch (err) { postMessage({ id, out, err: String(err.message || err) }); }
+finally { if (g) g.destroy(); }
 };`;
-let worker, pending = null, pyReady = false, pyFail = false, pyErr = '';
+let worker, pending = null, pyReady = false, pyFail = false, pyErr = '', reqId = 0, chain = Promise.resolve();
 function refreshRun(){
-const b = $('run'); if (!b) return;
-b.disabled = !pyReady;
-b.textContent = pyFail ? 'PYTHON FAILED TO LOAD' : pyReady ? '▶ RUN' : 'LOADING PYTHON...';
+const b = $('sf-run'); if (!b) return;
+b.disabled = !pyReady && !pyFail;
+b.textContent = pyFail ? '✖ PYTHON FAILED' : pyReady ? '↻ RUN TEST' : 'LOADING PYTHON...';
 }
 function startWorker(){
-pyReady = false;
+pyReady = false; pyFail = false; pyErr = ''; refreshRun();
 try {
 worker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type:'text/javascript' })));
 worker.onmessage = e => {
 const d = e.data;
 if (d.ready) { pyReady = true; refreshRun(); }
 else if (d.fatal) { pyFail = true; pyErr = d.fatal; refreshRun(); }
-else if (pending) { pending(d); pending = null; }
+else if (pending && d.id === pending.id) pending.done(d);
 };
-worker.onerror = e => { pyFail = true; pyErr = e.message || 'worker error'; refreshRun(); };
+worker.onerror = e => { pyFail = true; pyErr = e.message || 'worker error'; refreshRun(); if (pending) pending.done({ sys:'Python crashed: ' + pyErr }); };
 } catch (e) { worker = null; pyFail = true; pyErr = String(e); refreshRun(); }
 }
 startWorker();
-function runPy(code){
+const wait = ms => new Promise(r => setTimeout(r, ms));
+// one run at a time, so two clicks can never swallow each other's result
+function runPy(code){ const p = chain.then(() => runOnce(code)); chain = p.catch(() => {}); return p; }
+async function runOnce(code){
+while (!pyReady && !pyFail) await wait(200);
+if (pyFail || !worker) return { sys:'Python is not available: ' + pyErr };
 return new Promise(res => {
-if (!worker) return res({ err:'Python is not available: ' + pyErr });
-const timer = setTimeout(() => { worker.terminate(); startWorker(); pending = null; res({ err:'TimeoutError: the code ran for more than 5 seconds. Check for an infinite loop.' }); }, 5000);
-pending = d => { clearTimeout(timer); res(d); };
-worker.postMessage(code);
+const id = ++reqId;
+const timer = setTimeout(() => { pending = null; worker.terminate(); startWorker(); res({ err:'TimeoutError: the code ran for more than 5 seconds. Check for an infinite loop.' }); }, 5000);
+pending = { id, done: d => { clearTimeout(timer); pending = null; res(d); } };
+worker.postMessage({ id, code });
 });
 }
 const cleanErr = m => {
@@ -307,7 +340,7 @@ return (i < 0 ? m.trim() : 'Traceback (most recent call last):\n' + L.slice(i).j
 const P = {
 window: { icon:'✦', name:'Window', title:'Star Matrix', reward:['🌠','Star Map'],
 story:'The star matrix should add up the brightness of five stars, but the program crashes. Fix the code and run it.',
-expect:'14', must:/for\s/, ban:/\b14\b/,
+expect:'14', variant:{ re:/\[3,\s*1,\s*4,\s*1,\s*5\]/, to:'[2, 7, 1, 8]', expect:'18' },
 code:`stars = [3, 1, 4, 1, 5]
 total = 0
 for i in range(len(stars) + 1):
@@ -318,7 +351,7 @@ hint:['Count the stars: 5. Now count how many times the loop runs. Do they match
 'range(len(stars) + 1) runs 6 times. Drop the + 1, or loop with for s in stars.'] },
 fridge: { icon:'🔒', name:'Refrigerator', title:'Code Lock', reward:['🗝️','Silver Key'],
 story:'The lock needs the digit that comes after 7. Fix the code and run it.',
-expect:'Lock code: 8', must:/digit/, ban:/\b8\b/,
+expect:'Lock code: 8', variant:{ re:/(digit\s*=\s*["']?)7(["']?)/, to:(m, a, b) => a + '4' + b, expect:'Lock code: 5' },
 code:`digit = "7"
 code = digit + 1
 print("Lock code:", code)`,
@@ -327,7 +360,7 @@ hint:['Look at the quotes around 7. What type does that make it?',
 'Convert it first: int(digit) + 1. Or remove the quotes around 7.'] },
 kettle: { icon:'☕', name:'Kettle', title:'Recursive Kettle Loop', reward:['📜','Cipher Note'],
 story:'The kettle on the dining table is boiling infinitely and tripping the containment seal. The heating routine should stop once the target is reached, but it crashes. Fix the code and run it.',
-expect:'kettle_ready: safe_to_pour', must:/heat_water\s*\(\s*current_temp\s*\+/, ban:/print\s*\(\s*["']kettle_ready/,
+expect:'kettle_ready: safe_to_pour', probe:{ fn:'heat_water', args:[55,100,0], expect:'kettle_ready: safe_to_pour' },
 code:`def heat_water(current_temp, target_temp, cycle):
     if current_temp >= target_temp:
         return "kettle_ready: safe_to_pour"
@@ -339,7 +372,7 @@ hint:['Does current_temp ever get bigger from one call to the next?',
 'Heat it up on every call: heat_water(current_temp + 10, target_temp, cycle + 1).'] },
 clock: { icon:'🕰️', name:'Wall Clock', title:'Chime Counter', reward:['⚙️','Clock Gear'],
 story:'At 15:00 the clock should chime 3 times, but the program crashes. Fix the code and run it.',
-expect:'Chimes: 3', must:/ring_hours[\s\S]*ring_hours\s*\(/, ban:/\b3\b/,
+expect:'Chimes: 3', probe:{ fn:'ring_hours', args:[9], expect:'9' }, needCall:'ring_hours',
 code:`def ring_hours(hour):
     chimes = hour % 12
     return chimes
@@ -484,7 +517,7 @@ $('sf-hints').onclick = () => {
 if (!hints) return sfDlg({ tone:'violet', title:'NO HINTS LEFT', badge:'HINTS', text:'All 3 hints are used.', buttons:[{ l:'OK', k:'go', f:closeSf }] });
 sfDlg({ tone:'violet', title:'USE A HINT?', badge:'CONFIRM', eyebrow:'ACTION CONFIRMATION // PUZZLE ' + no, text:`<b>${hints} of 3</b> hints remaining. A used hint cannot be returned.`,
 buttons:[{ l:'CANCEL', k:'ghost', f:closeSf }, { l:'▶ USE HINT', k:'go', f:() => {
-hints--; renderHints(); sfHints();
+hints--; renderHints(); sfHints(); queueSave();
 const t = hintTier[id] || 0; hintTier[id] = t + 1;
 sfDlg({ tone:'violet', title:'HINT', badge:'HINTS LEFT: ' + hints, text:esc(p.hint[Math.min(t, 1)]), buttons:[{ l:'OK', k:'go', f:closeSf }] });
 } }] });
@@ -493,7 +526,7 @@ $('sf-close').onclick = closeDlg;
 $('sf-reset').onclick = () => { ed.value = p.code; drafts[id] = p.code; growEd(); ed.focus(); };
 $('sf-run').onclick = async () => {
 const bad = validate(id); if (bad) return showInvalid(bad);
-sfRunning(); const j = await evaluate(id, ed.value);
+sfRunning(); const j = await evaluate(id, ed.value, 'run');
 if (j.ok) sfDlg({ tone:'cyan', title:'TEST PASSED', badge:'SUCCESS', eyebrow:'TEST RESULT // PUZZLE ' + no, text:'Your code gives the expected output. You can submit it when you are ready.', buttons:[{ l:'▶ OK', k:'go', f:closeSf }] });
 else showFail(id, j);
 };
@@ -502,15 +535,15 @@ const bad = validate(id); if (bad) return showInvalid(bad);
 sfDlg({ tone:'violet', title:'SUBMIT SOLUTION?', badge:'CONFIRM', eyebrow:'ACTION CONFIRMATION // PUZZLE ' + no,
 text:`You are about to submit your fix for Puzzle ${no}. You can still edit your code again if the test fails.`,
 buttons:[{ l:'CANCEL', k:'ghost', f:closeSf }, { l:'▶ YES, SUBMIT', k:'go', f:async () => {
-sfRunning(); const j = await evaluate(id, ed.value);
+sfRunning(); const j = await evaluate(id, ed.value, 'submit');
 if (!j.ok) return showFail(id, j);
-got.push(id); renderAll(); sfHud(); $('sf-badge').textContent = 'SOLVED'; $('sf-fault').textContent = 'FAULT CLEARED';
+got.push(id); renderAll(); sfHud(); queueSave(); $('sf-badge').textContent = 'SOLVED'; $('sf-fault').textContent = 'FAULT CLEARED';
 sfDlg({ tone:'cyan', title:esc(p.title.toUpperCase()) + ' SOLVED', badge:'SUCCESS', eyebrow:'TEST RESULT // PUZZLE ' + no,
 text:`${esc(p.why)}<br><br>Item unlocked: ${p.reward[0]} ${p.reward[1]}`,
 buttons:[{ l:'▶ OK, CONTINUE', k:'go', f:() => { closeSf(); closeDlg(); toast(`Item unlocked: ${p.reward[1]} (${count()} / 4)`); } }] });
 } }] });
 };
-ed.focus();
+ed.focus(); refreshRun();
 }
 function sfHud(){
 if (!$('sf-prog')) return; const n = count();
@@ -523,18 +556,52 @@ function validate(id){
 const v = $('ed').value;
 if (v.trim() === '') return { title:'SUBMISSION IS EMPTY', badge:'REQUIRED FIELD', text:'Your submission is empty. Write your fix in the form before submitting.' };
 if (id === 'clock' && !/def\s+ring_hours\s*\(/.test(v)) return { title:'FUNCTION NOT FOUND', badge:'INVALID FORMAT', text:'Your code must define the function, starting with: def ring_hours(' };
+if (id === 'kettle' && !/def\s+heat_water\s*\(/.test(v)) return { title:'FUNCTION NOT FOUND', badge:'INVALID FORMAT', text:'Your code must define the function, starting with: def heat_water(' };
 if (v.length > MAX_CHARS) return { title:'CODE IS TOO LONG', badge:'LENGTH LIMIT', text:`Your code is ${v.length} characters. The limit is ${MAX_CHARS}.` };
 return null;
 }
 function showInvalid(v){ sfDlg({ tone:'pink', title:v.title, badge:v.badge, text:v.text, buttons:[{ l:'↻ OK, FIX IT', k:'ghost', f:closeSf }] }); }
 function showFail(id, j){
+if (j.sys) return sfDlg({ tone:'violet', title:'PYTHON UNAVAILABLE', badge:'SYSTEM', text:j.msg + '<br><br>This run was not counted against you.', buttons:[{ l:'CLOSE', k:'ghost', f:closeSf }, { l:'↻ RETRY LOADING', k:'go', f:() => { closeSf(); startWorker(); } }] });
 sfDlg({ tone:'pink', title: j.tag === 'Infinite Loop' ? 'CODE RUNS FOREVER' : 'TEST FAILED', badge:'ERROR', fault:META[id].file, text:j.msg, buttons:[{ l:'↻ OK, TRY AGAIN', k:'ghost', f:closeSf }] });
 }
-// Runs the code in Python and checks it against the puzzle. Every check is logged for the summary page.
-async function evaluate(id, code){
-const p = P[id], nc = code.replace(/#.*$/gm, '');
-if (!pyReady && !pyFail) await new Promise(r => { const t = setInterval(() => { if (pyReady || pyFail) { clearInterval(t); r(); } }, 200); });
-const d = await runPy(code), out = (d.out || '').trim();
+// Hidden checks, so a correct fix written a different way still passes but a hardcoded answer does not:
+// 1) same code on different data, 2) call the function with a new input, 3) the result must come from a real call.
+async function hardcoded(p, code){
+if (p.variant) {
+if (!p.variant.re.test(code)) return { bad:true };   // the original data was deleted
+const d = await runPy(code.replace(p.variant.re, p.variant.to));
+if (d.sys) return { sys:d.sys };
+if (d.err || (d.out || '').trim() !== p.variant.expect) return { bad:true };
+}
+if (p.probe) {
+const f = p.probe.fn;
+const d = await runPy(code + `\nimport inspect as _i\n_n = len(_i.signature(${f}).parameters)\nprint("@@PROBE@@" + str(${f}(*${JSON.stringify(p.probe.args)}[:_n])))`);
+if (d.sys) return { sys:d.sys };
+const got = (d.out || '').split('@@PROBE@@')[1];
+if (d.err || got === undefined || got.trim() !== p.probe.expect) return { bad:true };
+}
+if (p.needCall) {
+const d = await runPy(`import ast
+src = ${JSON.stringify(code)}
+tree = ast.parse(src)
+par = {}
+for n in ast.walk(tree):
+    for c in ast.iter_child_nodes(n): par[c] = n
+ok = any(isinstance(n, ast.Call) and getattr(n.func, 'id', None) == ${JSON.stringify(p.needCall)} and not isinstance(par.get(n), ast.Expr) for n in ast.walk(tree))
+print("@@AST@@" + ("ok" if ok else "bad"))`);
+if (d.sys) return { sys:d.sys };
+if (d.err || !(d.out || '').includes('@@AST@@ok')) return { bad:true };
+}
+return {};
+}
+// Runs the code in Python and checks it against the puzzle. kind = 'run' (test button) or 'submit'.
+// Every real attempt is saved. Python failing to load is NOT an attempt and is never saved.
+async function evaluate(id, code, kind){
+const p = P[id];
+const d = await runPy(code);
+if (d.sys) return { ok:false, sys:true, msg:esc(d.sys) };
+const out = (d.out || '').trim();
 let tag = null, msg = '';
 if (d.err) {
 const last = cleanErr(d.err).trim().split('\n').pop();
@@ -542,14 +609,18 @@ const m = last.match(/^(\w*Error)/);
 tag = !m ? 'Runtime Error' : m[1] === 'TimeoutError' ? 'Infinite Loop' : m[1];
 msg = 'Python says: ' + esc(last);
 } else if (out !== p.expect) { tag = 'Wrong Output'; msg = `It ran, but printed "${esc(out)}" instead of "${esc(p.expect)}".`; }
-else if (!p.must.test(nc) || p.ban.test(nc)) { tag = 'Hardcoded Answer'; msg = 'The output matches, but no hardcoding. Keep the original code and fix the actual bug.'; }
-attempts.push({ puzzle: p.title, code: code.slice(0, 2000), is_correct: !tag, mistake_tag: tag });
+else {
+const h = await hardcoded(p, code);
+if (h.sys) return { ok:false, sys:true, msg:esc(h.sys) };
+if (h.bad) { tag = 'Hardcoded Answer'; msg = 'The output matches, but the fix only works for this one case. Keep the original code and fix the actual bug.'; }
+}
+attempts.push({ puzzle: p.title, kind, code: code.slice(0, 2000), is_correct: !tag, mistake_tag: tag });
+queueSave();
 return { ok: !tag, tag, msg };
 }
 function win(){
 over = 'won'; elapsed = Math.floor((Date.now() - startTs) / 1000); $('timer').textContent = fmt(elapsed);
-sessionStorage.setItem('lastRun', JSON.stringify({ solved: count(), elapsed, hintsLeft: hints }));
-const savedP = saveSession('won');
+const savedP = queueSave('won');
 dlg({ icon:'🎉', title:'Door unlocked!', body:`You used all 4 items to unlock the door and escaped in <b>${fmt(elapsed)}</b>.`,
 actions:[{ l:'Continue', f:async () => { await savedP; location.href = 'test-summary.html'; } }] });
 }
@@ -572,7 +643,7 @@ if (over) return toast('Hints are unavailable once the game has ended.');
 if (!hints) return dlg({ icon:'💡', title:'No hints remaining', body:'All 3 hints have been used.', actions:[OK] });
 dlg({ icon:'💡', title:'Use a hint?', body:`<b>${hints} of 3</b> hints remaining.<br>A used hint cannot be returned.`,
 actions:[ { l:'Cancel', k:'sec' }, { l:'Use Hint', f:() => {
-hints--; renderHints();
+hints--; renderHints(); queueSave();
 dlg({ icon:'💡', title:'Hint', body:`${hintText()}<p style="margin-top:12px;color:#fcd34d">Hints remaining: <b>${hints} of 3</b></p>`, actions:[OK] });
 } } ] });
 };
@@ -593,7 +664,7 @@ function confirmLeave(){
 dlg({ icon:'🚪', title:'Leave the room?', body:`Your progress (<b>${count()} / 4</b> solved) will be lost.`,
 actions:[ { l:'Stay', k:'sec' }, { l:'Leave Room', k:'dan', f:() => {
 over = 'left';
-const savedLeave = saveSession('left'); // wait for the save so the dashboard shows this game
+const savedLeave = queueSave('left'); // wait for the save so the dashboard shows this game
 dlg({ icon:'👋', title:'You left the room', body:'Saving your result and opening your dashboard...', actions:[{ l:'Enter Again', f:async () => { await savedLeave; location.reload(); } }] });
 escFn = null;
 savedLeave.then(() => { location.href = 'dashboard.html'; });
@@ -602,9 +673,9 @@ savedLeave.then(() => { location.href = 'dashboard.html'; });
 
 /* Placement helper: open room.html?place=1, then click the spot where the wall clock icon should be */
 if (new URLSearchParams(location.search).has('place')) {
-$('room').addEventListener('click', e => {
+$('stage').addEventListener('click', e => {
 if (e.target.closest('[data-hs],.hud,#modal')) return;
-const r = $('room').getBoundingClientRect();
+const r = $('stage').getBoundingClientRect();
 const x = ((e.clientX - r.left) / r.width * 100).toFixed(1), y = ((e.clientY - r.top) / r.height * 100).toFixed(1);
 const c = document.querySelector('[data-hs="clock"]'); c.style.left = x + '%'; c.style.top = y + '%';
 toast(`Wall clock icon position: top:${y}%;left:${x}%`); clearTimeout(toastT);
@@ -612,6 +683,10 @@ toast(`Wall clock icon position: top:${y}%;left:${x}%`); clearTimeout(toastT);
 }
 
 renderAll(); renderHints();
+(async () => {
+try { const u = await requireLogin(); if (!u) return; startTs = Date.now(); await ensureSession(); }
+catch (e) { console.error(e); }
+})();
 })();
 </script>
 </body></html>

@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
         email,
         password: pw.value,
         options: {
-          data: { player_name: name, difficulty: diff },
+          data: { player_name: name, difficulty: diff, consented: true },
           emailRedirectTo: pageUrl('login.html')
         }
       });

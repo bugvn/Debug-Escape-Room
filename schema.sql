@@ -4,13 +4,14 @@ create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   player_name text not null,
   difficulty text not null default 'BEGINNER' check (difficulty in ('BEGINNER','INTERMEDIATE','ADVANCED')),
+  consented_at timestamptz,
   created_at timestamptz not null default now()
 );
 
 create table public.game_sessions (
   id bigint generated always as identity primary key,
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  result text not null check (result in ('won','time','left')),
+  result text not null check (result in ('in_progress','won','time','left')),
   solved_count int not null default 0,
   hints_used int not null default 0,
   time_total_sec int not null,
@@ -24,6 +25,7 @@ create table public.submissions (
   session_id bigint references public.game_sessions(id) on delete set null,
   puzzle text not null,
   code text not null check (char_length(code) <= 2000),
+  kind text not null default 'submit' check (kind in ('run','submit')),
   is_correct boolean not null,
   mistake_tag text,
   created_at timestamptz not null default now()
@@ -48,14 +50,15 @@ create policy "subs insert own" on public.submissions for insert with check (aut
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, player_name, difficulty)
+  insert into public.profiles (id, player_name, difficulty, consented_at)
   values (
     new.id,
     left(coalesce(nullif(new.raw_user_meta_data->>'player_name',''),
                   nullif(new.raw_user_meta_data->>'full_name',''),
                   split_part(new.email,'@',1)), 20),
     case when new.raw_user_meta_data->>'difficulty' in ('BEGINNER','INTERMEDIATE','ADVANCED')
-         then new.raw_user_meta_data->>'difficulty' else 'BEGINNER' end
+         then new.raw_user_meta_data->>'difficulty' else 'BEGINNER' end,
+    case when new.raw_user_meta_data->>'consented' = 'true' then now() else null end
   );
   return new;
 end $$;
