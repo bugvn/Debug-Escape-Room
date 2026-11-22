@@ -17,23 +17,29 @@ bank = json.loads(subprocess.check_output(
 # one correct fix per puzzle id (not shipped to the browser)
 FIX = {
 'b-index-stars': ('range(len(stars) + 1)', 'range(len(stars))'),
+'b-index-last': ('sky[len(sky)]', 'sky[len(sky) - 1]'),
 'b-type-lock': ('code = digit + 1', 'code = int(digit) + 1'),
+'b-type-magnets': ('total = magnets + extra', 'total = int(magnets) + extra'),
 'b-recursion-kettle': ('return heat_water(current_temp, target_temp, cycle + 1)', 'return heat_water(current_temp + 10, target_temp, cycle + 1)'),
+'b-recursion-steep': ('steep(minutes + 1)', 'steep(minutes - 1)'),
 'b-scope-clock': ('ring_hours(15)\nprint', 'chimes = ring_hours(15)\nprint'),
-'b-syntax-bowls': ('for b in bowls\n', 'for b in bowls:\n'),
-'b-logic-thermostat': ('temp > 25', 'temp >= 25'),
-'i-index-shelf': ('i <= len(shelf)', 'i < len(shelf)'),
+'b-scope-alarm': ('    time = "07:00"\n\nset_alarm()', '    time = "07:00"\n    return time\n\ntime = set_alarm()'),
+'i-index-shelf': ('i <= len(jars)', 'i < len(jars)'),
+'i-index-rings': ('range(1, len(rings) + 1)', 'range(len(rings))'),
 'i-type-label': ('+ count', '+ str(count)'),
+'i-type-thermo': ('if reading < limit', 'if float(reading) < limit'),
 'i-recursion-factorial': ('    return n * factorial', '    if n <= 1:\n        return 1\n    return n * factorial'),
-'i-scope-total': ('def add_stars(n):\n', 'def add_stars(n):\n    global total\n'),
-'i-syntax-greeter': ('+ name\n', '+ name)\n'),
-'i-logic-door': ('has_key or', 'has_key and'),
+'i-recursion-cups': ('    n + sum_cups', '    return n + sum_cups'),
+'i-scope-total': ('def add_ticks(n):\n', 'def add_ticks(n):\n    global total\n'),
+'i-scope-chimes': ('    return chimes', '    else:\n        chimes = hour\n    return chimes'),
 'a-index-pairs': ('range(len(nums))', 'range(len(nums) - 1)'),
+'a-index-panes': ('    last_row = len(grid)\n    last_col = len(grid[0])\n', '    last_row = len(grid) - 1\n    last_col = len(grid[0]) - 1\n'),
 'a-type-ledger': ('total += price', 'total += int(price)'),
+'a-type-stock': ('total += counts[item]', 'total += int(counts[item])'),
 'a-recursion-vault': ('find(items, target, mid, high)', 'find(items, target, mid + 1, high)'),
-'a-scope-jar': ('wishes=[]):\n    wishes.append', 'wishes=None):\n    if wishes is None:\n        wishes = []\n    wishes.append'),
-'a-syntax-countdown': ('     print("Liftoff!")', '    print("Liftoff!")'),
-'a-logic-bright': ('        else:\n            return None\n', '    return None\n'),
+'a-recursion-leaves': ('        total += total_leaves(item)\n', '        if isinstance(item, list):\n            total += total_leaves(item)\n        else:\n            total += item\n'),
+'a-scope-jar': ('alarms=[]):\n    alarms.append', 'alarms=None):\n    if alarms is None:\n        alarms = []\n    alarms.append'),
+'a-scope-hands': ('lambda: h', 'lambda h=h: h'),
 }
 
 def run(code, timeout=5):
@@ -108,7 +114,9 @@ for p in bank:
     cheat = f"print({json.dumps(p['expect'])})" if '\n' not in p['expect'] else '\n'.join(f'print({json.dumps(l)})' for l in p['expect'].split('\n'))
     check(grade(p, cheat) is not None, 'hardcoded print PASSES (should be rejected)')
 print('\ncoverage (category x level):')
-for c in ['Index','Type','Recursion','Scope','Syntax','Logic']:
+for c in ['Index','Type','Recursion','Scope']:
     print(f'  {c:10}', ' '.join(f"{lv[:3]}={len(cats.get((c, lv), []))}" for lv in ['BEGINNER','INTERMEDIATE','ADVANCED']))
+for k, v in cats.items():
+    check(len(v) >= 2, f'{k} needs 2+ puzzles so rooms can rotate')
 print('\nOK' if not bad else f'\n{bad} problem(s)')
 sys.exit(1 if bad else 0)

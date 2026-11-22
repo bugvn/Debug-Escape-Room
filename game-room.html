@@ -181,17 +181,17 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 <img alt="Cozy starlit room with a window, refrigerator, kettle on the dining table and exit door" src="room_door_closed_no_girl.png"/>
 
 <div id="hotspots">
-<button class="hs orange" data-hs="window" aria-label="Window, Star Matrix puzzle" style="top:16%;left:49%"><div class="wrap"><span class="ping"></span><span class="core">✦</span></div><div id="tag-window" class="tag"></div></button>
-<button class="hs amber" data-hs="fridge" aria-label="Refrigerator, code lock" style="top:43%;left:43.5%"><div class="wrap"><span class="ping"></span><span class="core">🔒</span></div><div id="tag-fridge" class="tag"></div></button>
-<button class="hs emerald" data-hs="kettle" aria-label="Kettle, recursive kettle loop puzzle" style="top:65%;left:46.5%"><div class="wrap"><span class="ping"></span><span class="core">☕</span></div><div id="tag-kettle" class="tag"></div></button>
-<button class="hs violet" data-hs="clock" aria-label="Wall clock, chime counter" style="top:26%;left:39.5%"><div class="wrap"><span class="ping"></span><span class="core">🕰️</span></div><div id="tag-clock" class="tag"></div></button>
+<button class="hs orange" data-hs="window" aria-label="Window puzzle" style="top:16%;left:49%"><div class="wrap"><span class="ping"></span><span class="core">✦</span></div><div id="tag-window" class="tag"></div></button>
+<button class="hs amber" data-hs="fridge" aria-label="Refrigerator puzzle" style="top:43%;left:43.5%"><div class="wrap"><span class="ping"></span><span class="core">🔒</span></div><div id="tag-fridge" class="tag"></div></button>
+<button class="hs emerald" data-hs="kettle" aria-label="Kettle puzzle" style="top:65%;left:46.5%"><div class="wrap"><span class="ping"></span><span class="core">☕</span></div><div id="tag-kettle" class="tag"></div></button>
+<button class="hs violet" data-hs="clock" aria-label="Wall clock puzzle" style="top:26%;left:39.5%"><div class="wrap"><span class="ping"></span><span class="core">🕰️</span></div><div id="tag-clock" class="tag"></div></button>
 <button class="hs rose" data-hs="door" aria-label="Exit door" style="top:47%;left:80%"><div class="wrap"><span class="ping"></span><span class="core">🔑</span></div><div id="tag-door" class="tag"></div></button>
 </div>
 </div>
 
 <header id="progress" class="hud box">
 <div class="row"><div class="l pix"><span class="dot"></span>ROOM PROGRESS</div><span id="prog-text" class="pix">0 / 4 SOLVED</span></div>
-<div id="nodes"><span class="node" title="Star Window"></span><span class="node" title="Recursive Kettle Loop"></span><span class="node" title="Code Lock"></span><span class="node" title="Wall Clock"></span></div>
+<div id="nodes"><span class="node" title="Window"></span><span class="node" title="Kettle"></span><span class="node" title="Refrigerator"></span><span class="node" title="Wall Clock"></span></div>
 <div class="bar"><div id="prog-bar"></div></div>
 </header>
 
@@ -312,10 +312,8 @@ clock: { icon:'🕰️', name:'Wall Clock', reward:['⚙️','Clock Gear'] }
 };
 const P = {}, META = {};   // filled by buildRoom(): spot -> puzzle
 let roomReady = false, roomLevel = 'BEGINNER', roomAdaptive = true, roomPuzzleIds = [];
-// Each appliance is thematically tied to one category.
-// buildRoom() assigns puzzles to spots by category match so the
-// clock always gets a Scope puzzle, the kettle always Recursion, etc.
-const SPOT_CATEGORY = { window:'Index', fridge:'Type', kettle:'Recursion', clock:'Scope' };
+// Each object is tied to one category (SPOT_CATEGORY, from puzzles.js) and every puzzle of that category
+// is themed on that object. buildRoom() assigns puzzles to spots by category match.
 function buildRoom(picked){
 const used = new Set(), assigned = {};
 // pass 1: exact category match
@@ -477,7 +475,7 @@ $('modal').innerHTML = `<div class="sf main" role="dialog" aria-modal="true" ari
 <div class="tp mid"><span class="tbl"></span><span class="tbr"></span><div class="lb">TIME ELAPSED</div><div class="vl" id="sf-time">${fmt(elapsed)}</div></div>
 <div class="tp rt"><span class="tbl"></span><span class="tbr"></span><div class="lb">KEYS COLLECTED</div><div class="vl" id="sf-keys"></div></div></div>
 <div class="sec pk"><div class="head"><div class="title" id="dt"><span class="sq pink"></span>PUZZLE ${no}: ${esc(p.title.toUpperCase())}</div><span class="badge pink" id="sf-fault">${m.badge}</span></div>
-<div class="eyebrow">DEBUGGING TERMINAL // ${esc(p.name.toUpperCase())} LOCK</div>
+<div class="eyebrow">DEBUGGING TERMINAL // ${esc(p.name.toUpperCase())} CONSOLE</div>
 <div class="mission"><b>MISSION:</b> ${esc(p.story.replace(/\s*Fix the code and run it\.$/, ''))} Inspect the code below, <u>identify the bug</u>, and provide the corrected code. Expected output: <b>${esc(p.expect)}</b></div>
 <div class="cc"><div class="tagrow"><span class="ctag">BUG</span><span class="status">${m.file} // ${m.status}</span></div><div class="sfcode">${bugCode}</div></div></div>
 <div class="sec vi"><div class="head"><div class="title"><span class="sq violet"></span>SUBMISSION FORM</div><span class="badge violet" id="sf-badge">AWAITING PATCH</span></div>

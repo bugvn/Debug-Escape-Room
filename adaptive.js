@@ -3,7 +3,7 @@
 //
 // 1) nextLevel()   after each game: did the player do well enough to move up or down?
 // 2) weakCategories()  which categories the player keeps missing
-// 3) pickRoom()    choose the 4 puzzles for the next room from the bank
+// 3) pickRoom()    choose the 4 puzzles (one per object in the room) for the next room from the bank
 //
 // Needs puzzles.js (LEVELS, PUZZLE_BANK) loaded first in the browser.
 
@@ -13,13 +13,15 @@ const RULES = {
   demoteAccuracy: 0.4,     // below this submit accuracy move down
   demoteMaxSolved: 1,      // or: left the room having solved this few or fewer
   parSec: { BEGINNER: 300, INTERMEDIATE: 420, ADVANCED: 600 },  // finish under par to move up
-  weakMisses: 2,           // wrong submits in one category before it counts as "weak"
+  weakMisses: 2,           // wrong submits (inside the window below) before a category counts as "weak"
+  weakWindow: 4,           // only the player's last N submits in a category count, so old misses expire
   weakSlots: 2,            // at most this many of the 4 puzzles are chosen because of weakness
   historyAttempts: 60      // how many recent submits to look at for weakness
 };
 
 const _levels = (typeof LEVELS !== 'undefined') ? LEVELS : require('./puzzles.js').LEVELS;
 const _bank = (typeof PUZZLE_BANK !== 'undefined') ? PUZZLE_BANK : require('./puzzles.js').PUZZLE_BANK;
+const _spots = (typeof SPOT_CATEGORY !== 'undefined') ? SPOT_CATEGORY : require('./puzzles.js').SPOT_CATEGORY;
 
 // accuracy over real submits only (test runs do not count). null when there were none.
 function accuracyOf(subs) {
@@ -41,10 +43,14 @@ function nextLevel(g, subs) {
 }
 
 // recent = submit rows, newest first: [{ category, is_correct, kind }]. Returns [[category, misses], ...] worst first.
+// Only the last weakWindow submits of each category count, so a category the player has since fixed stops being "weak".
 function weakCategories(recent) {
-  const miss = {};
-  (recent || []).filter((x) => (x.kind || 'submit') === 'submit' && !x.is_correct && x.category)
-    .slice(0, RULES.historyAttempts).forEach((x) => { miss[x.category] = (miss[x.category] || 0) + 1; });
+  const seen = {}, miss = {};
+  (recent || []).filter((x) => (x.kind || 'submit') === 'submit' && x.category)
+    .slice(0, RULES.historyAttempts).forEach((x) => {
+      seen[x.category] = (seen[x.category] || 0) + 1;
+      if (seen[x.category] <= RULES.weakWindow && !x.is_correct) miss[x.category] = (miss[x.category] || 0) + 1;
+    });
   return Object.entries(miss).filter((e) => e[1] >= RULES.weakMisses).sort((a, b) => b[1] - a[1]);
 }
 
@@ -54,30 +60,24 @@ function shuffle(a, rnd) {
   return a;
 }
 
-// Choose n puzzles.
+// Choose the room's puzzles: exactly one per object in the room.
+//   Each object owns one category (SPOT_CATEGORY in puzzles.js) and every puzzle of that category is themed
+//   on that object, so what you click is what you get.
 //   level     where the player is now
 //   weak      output of weakCategories() ([] for the non-adaptive group)
-//   lastIds   puzzle ids of the player's previous room (avoided when there are other choices)
+//   lastIds   puzzle ids of the player's previous room (avoided when there is another choice)
 //   rnd       Math.random, or a seeded fn in tests
-// The 4 spot-pinned categories that the room always needs one of each.
-// pickRoom returns exactly one puzzle per spot-category so buildRoom can
-// assign them to the right appliance. Weak-slot overrides stay inside this set.
-const SPOT_CATS = ['Index', 'Type', 'Recursion', 'Scope'];
+// Adaptivity: a weak category (up to weakSlots of them) gets an easier puzzle, one level down.
+const SPOT_CATS = Object.values(_spots);
 
-function pickRoom({ level, weak = [], lastIds = [], n = 4, bank = _bank, rnd = Math.random }) {
+function pickRoom({ level, weak = [], lastIds = [], bank = _bank, rnd = Math.random }) {
   const li = Math.max(0, _levels.indexOf(level));
-  // closest levels first, so a small bank still fills the room
-  const order = _levels.map((l, i) => [l, Math.abs(i - li)]).sort((a, b) => a[1] - b[1]).map((x) => x[0]);
-
-  // Only pick from spot-pinned categories so buildRoom can always match appliance→category.
-  // weak slots: demote by 1 level (capped at 0) for the weakest matching categories.
   const weakCats = weak.map(([c]) => c).filter((c) => SPOT_CATS.includes(c)).slice(0, RULES.weakSlots);
-  const chosen = {}; // cat -> puzzle
+  const chosen = {};
 
   for (const cat of SPOT_CATS) {
-    const demote = weakCats.includes(cat);
-    // try preferred level (demoted for weak), then fall back outward
-    const wantLi = demote ? Math.max(0, li - 1) : li;
+    const wantLi = weakCats.includes(cat) ? Math.max(0, li - 1) : li;
+    // wanted level first, then the closest levels, so a small bank still fills the room
     const tryOrder = _levels.map((_, i) => i).sort((a, b) => Math.abs(a - wantLi) - Math.abs(b - wantLi) || a - b);
     for (const k of tryOrder) {
       const pool = shuffle(bank.filter((p) => p.category === cat && p.level === _levels[k]), rnd);
@@ -86,8 +86,7 @@ function pickRoom({ level, weak = [], lastIds = [], n = 4, bank = _bank, rnd = M
       if (pick) { chosen[cat] = pick; break; }
     }
   }
-  // return in SPOT_CATS order so buildRoom sees a consistent array
   return SPOT_CATS.map((c) => chosen[c]).filter(Boolean);
 }
 
-if (typeof module !== 'undefined') module.exports = { RULES, accuracyOf, nextLevel, weakCategories, pickRoom };
+if (typeof module !== 'undefined') module.exports = { RULES, SPOT_CATS, accuracyOf, nextLevel, weakCategories, pickRoom };
