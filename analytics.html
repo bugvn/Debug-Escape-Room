@@ -288,7 +288,7 @@
   // (migration-03.sql) Row Level Security returns only the player's own rows, so nobody gains data by skipping this check.
   let isAdmin = false;
   try { const prof = await getProfile(u.id); isAdmin = !!(prof && prof.is_admin); } catch (e) { console.error(e); }
-  if (isAdmin) { const w = $('whoChip'); w.textContent = 'Admin · ' + (u.email || 'signed in'); w.hidden = false; }
+  if (isAdmin) { const w = $('whoChip'); w.textContent = 'Admin · Cohort view'; w.hidden = false; }
   if (!isAdmin) {
     document.querySelector('.an').innerHTML = '<section class="card pixel-box"><h2 class="card__title">Admins only</h2>' +
       '<p class="zero">The analytics page is for the researchers.<br>Your own results are on the <a href="dashboard.html" style="color:var(--ad)">Dashboard</a>.</p></section>';
@@ -328,7 +328,7 @@
   }
   function pressed(id) { ['btnDb', 'btnCsv', 'btnSample'].forEach(b => $(b).setAttribute('aria-pressed', String(b === id))); }
 
-  $('btnDb').onclick = async () => {
+  async function loadDatabase() {
     say('Loading from the database...');
     try {
       const [s, a] = await Promise.all([
@@ -340,7 +340,8 @@
       catch (e) { igNote = ' Anti-cheat log not available (run migration-03.sql).'; }
       if (load(normalizeSessions(s), normalizeAttempts(a), normalizeIntegrity(ig), false, 'Database')) { pressed('btnDb'); if (igNote) say($('banner').innerHTML + igNote); }
     } catch (e) { console.error(e); say(dbHelp(e), 'err'); }
-  };
+  }
+  $('btnDb').onclick = loadDatabase;
   $('btnCsv').onclick = () => $('fileCsv').click();
   $('fileCsv').onchange = async e => {
     let s = null, a = null, g = null;
@@ -567,6 +568,7 @@
   // charts are drawn in dark-theme colours: redraw them in print colours while printing (all tabs are shown in print)
   window.addEventListener('beforeprint', () => { if (R) { PRINTING = true; drawCharts(); drawAdaptation(); drawIntegrity(); } });
   window.addEventListener('afterprint', () => { if (R) { PRINTING = false; drawCharts(); drawAdaptation(); drawIntegrity(); } });
+  loadDatabase();
 })();
 </script>
 </body>

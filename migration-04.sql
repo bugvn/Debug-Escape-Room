@@ -37,7 +37,8 @@ select
   e.event_type, e.puzzle_id, e.away_ms, e.strike, e.created_at
 from public.integrity_events e
 join public.profiles p on p.id = e.user_id
-left join public.research_sessions rs on rs.session_id = e.session_id;
+left join public.research_sessions rs on rs.session_id = e.session_id
+where p.consented_at is not null;
 
 -- the previous revoke is what caused "permission denied": undo it for logged-in users.
 -- anon (not logged in) stays blocked. Row Level Security still limits which rows come back.
