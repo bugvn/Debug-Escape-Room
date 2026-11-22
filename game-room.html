@@ -224,6 +224,7 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 <script src="pyrunner.js"></script>
 <script src="puzzles.js"></script>
 <script src="adaptive.js"></script>
+<script src="integrity.js"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
@@ -251,6 +252,7 @@ const count = () => got.length;
 
 /* ---------- Saving: the session row is made at start, each attempt is saved as it happens ---------- */
 const attempts = [];    // attempts not saved yet (kept and retried if a save fails)
+const integrityQueue = []; let integrityFails = 0; // anti-cheat events not saved yet (see integrity.js)
 const allAttempts = []; // every attempt of this game, used by the level rules at the end
 let sessionId = null, sessionMaking = null, saveWarned = false, saveChain = Promise.resolve();
 function timeCols(){
@@ -279,6 +281,12 @@ const batch = attempts.splice(0);
 const r = await db.from('submissions').insert(batch.map(a => ({ ...a, session_id: sid })));
 if (r.error) { attempts.unshift(...batch); throw r.error; }
 }
+// anti-cheat log: saved on the side. If migration-03.sql was not run yet this must never break saving the game
+if (integrityQueue.length && integrityFails < 3) {
+const ev = integrityQueue.splice(0);
+const r = await db.from('integrity_events').insert(ev.map(e => ({ ...e, session_id: sid })));
+if (r.error) { integrityFails++; console.warn('integrity_events not saved:', r.error.message); if (integrityFails < 3) integrityQueue.unshift(...ev); }
+}
 const u = await db.from('game_sessions').update({ ...(result ? { result, next_level: roomAdaptive ? nextLevel({ level: roomLevel, result, solved_count: count(), hints_used: 3 - hints, elapsed_sec: timeCols().elapsed_sec }, allAttempts) : roomLevel } : {}), solved_count: count(), hints_used: 3 - hints, ...timeCols() }).eq('id', sid);
 if (u.error) throw u.error;
 } catch (e) {
@@ -289,6 +297,20 @@ return ok;
 }
 // saves run one after another, so the final result is never overwritten by an older save
 function queueSave(result){ return (saveChain = saveChain.then(() => saveAll(result))); }
+
+/* ---------- Anti-cheat (integrity.js): no copy/paste, no leaving the window, 3 strikes closes the room ---------- */
+const guard = createIntegrityGuard({
+  getPuzzleId: () => (typeof openId === 'string' && P[openId] ? P[openId].pid : null),
+  onEvent: ev => { integrityQueue.push(ev); queueSave(); },
+  onLimit: () => {
+    if (over) return;
+    over = 'left'; guard.stop(); closeDlg();
+    const saved = queueSave('left');
+    dlg({ icon:'🚫', title:'Room closed', body:'You reached 3 integrity strikes (copy/paste or leaving the game window). This room has ended and the game is marked as flagged for the researchers.',
+      actions:[{ l:'Open Dashboard', f: async () => { await saved; location.href = 'dashboard.html'; } }] });
+    escFn = null;
+  }
+});
 
 /* ---------- Real Python (Pyodide) in a Web Worker: see pyrunner.js ---------- */
 const py = createPyRunner({ onChange: () => refreshRun() });
@@ -480,8 +502,8 @@ $('modal').innerHTML = `<div class="sf main" role="dialog" aria-modal="true" ari
 <div class="cc"><div class="tagrow"><span class="ctag">BUG</span><span class="status">${m.file} // ${m.status}</span></div><div class="sfcode">${bugCode}</div></div></div>
 <div class="sec vi"><div class="head"><div class="title"><span class="sq violet"></span>SUBMISSION FORM</div><span class="badge violet" id="sf-badge">AWAITING PATCH</span></div>
 <div class="meta" style="display:flex;justify-content:space-between"><span>PYTHON 3.X // MONOSPACE MODE</span><button class="xbtn" id="sf-reset" type="button" title="Restore the original code">↺ RESET</button></div>
-<textarea id="ed" spellcheck="false" rows="5" aria-label="Python code editor"></textarea>
-<div class="tip">TIP: keep the original code and fix the actual bug. Hardcoding the answer will not pass.</div>
+<textarea id="ed" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" data-gramm="false" rows="5" aria-label="Python code editor"></textarea>
+<div class="tip">TIP: keep the original code and fix the actual bug. Hardcoding the answer will not pass. Copy, paste and leaving this window are disabled and logged.</div>
 <div class="foot"><button class="hints" id="sf-hints" type="button"></button>
 <div class="btns"><button class="sb ghost" id="sf-run" type="button">↻ RUN TEST</button><button class="sb go" id="sf-submit" type="button">▶ SUBMIT SOLUTION</button></div></div></div></div>`;
 $('modal').classList.remove('hidden'); $('modal').classList.add('pz'); syncInert(); escFn = closeDlg; sfHud();
@@ -602,7 +624,7 @@ queueSave();
 return { ok: !tag, tag, msg };
 }
 function win(){
-over = 'won'; elapsed = Math.floor((Date.now() - startTs) / 1000); $('timer').textContent = fmt(elapsed);
+guard.stop(); over = 'won'; elapsed = Math.floor((Date.now() - startTs) / 1000); $('timer').textContent = fmt(elapsed);
 const savedP = queueSave('won');
 dlg({ icon:'🎉', title:'Door unlocked!', body:`You used all 4 items to unlock the door and escaped in <b>${fmt(elapsed)}</b>.`,
 actions:[{ l:'Continue', f:async () => { await savedP; location.href = 'test-summary.html'; } }] });
@@ -659,7 +681,7 @@ $('cb-labels').onchange = e => setLabels(e.target.checked);
 function confirmLeave(){
 dlg({ icon:'🚪', title:'Leave the room?', body:`Your progress (<b>${count()} / 4</b> solved) will be lost.`,
 actions:[ { l:'Stay', k:'sec' }, { l:'Leave Room', k:'dan', f:() => {
-over = 'left';
+over = 'left'; guard.stop();
 const savedLeave = queueSave('left'); // wait for the save so the dashboard shows this game
 dlg({ icon:'👋', title:'You left the room', body:'Saving your result and opening your dashboard...', actions:[{ l:'Enter Again', f:async () => { await savedLeave; location.reload(); } }] });
 escFn = null;
@@ -680,7 +702,7 @@ toast(`Wall clock icon position: top:${y}%;left:${x}%`); clearTimeout(toastT);
 
 renderHints();
 (async () => {
-try { const u = await requireLogin(); if (!u) return; await setupRoom(u); startTs = Date.now(); await ensureSession(); }
+try { const u = await requireLogin(); if (!u) return; await setupRoom(u); startTs = Date.now(); await ensureSession(); guard.start(); }
 catch (e) { console.error(e); }
 })();
 })();

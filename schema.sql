@@ -122,3 +122,6 @@ join public.profiles p on p.id = s.user_id
 left join public.research_sessions rs on rs.session_id = s.session_id;
 
 revoke all on public.research_sessions, public.research_attempts from anon, authenticated;
+
+-- After this file, also run migration-03.sql: it lets the analytics page read the views above
+-- (admin flag + grants) and adds the anti-cheat log table.

@@ -1,7 +1,7 @@
 // Run with:  node --test
 const test = require('node:test');
 const assert = require('node:assert');
-const { welch, tTwoSided, normalizeSessions, normalizeAttempts, analyze, insights, reportCSV, parseCSV, sampleData } = require('./analytics.js');
+const { welch, tTwoSided, normalizeSessions, normalizeAttempts, normalizeIntegrity, analyze, insights, reportCSV, parseCSV, sampleData } = require('./analytics.js');
 
 test('welch t-test matches a hand-checked example', () => {
   const r = welch([1, 2, 3, 4, 5], [2, 3, 4, 5, 6]);
@@ -71,4 +71,46 @@ test('insights and report always produce something readable', () => {
   assert.ok(ins.length >= 4 && ins.every((i) => i.text.length > 10));
   assert.ok(reportCSV(r).split('\n').length > 20);
   assert.strictEqual(insights(analyze([], []))[0].kind, 'info');   // empty data does not crash
+});
+test('integrity rows are cleaned and counted per group', () => {
+  const ev = normalizeIntegrity([
+    { participant: 'a1', study_group: 'adaptive', session_no: '1', event_type: 'paste', strike: 't' },
+    { participant: 'a1', study_group: 'adaptive', session_no: '1', event_type: 'window_blur', away_ms: '4000', strike: 'true' },
+    { participant: 'c1', study_group: 'control', session_no: '1', event_type: 'contextmenu', strike: 'f' },
+    { participant: 'c1', study_group: 'control', session_no: '1', event_type: '' }     // no type: dropped
+  ]);
+  assert.strictEqual(ev.length, 3);
+  const mk = (participant, group) => ({ participant, group, sessionNo: 1, level: 'BEGINNER', result: 'won', solved: 4, hints: 0, elapsed: 100, submits: 4, correct: 4, accuracy: 1 });
+  const r = analyze([mk('a1', 'adaptive'), mk('c1', 'control')], [], {}, ev);
+  assert.strictEqual(r.integrity.perGroup.adaptive.flaggedGames, 1);
+  assert.strictEqual(r.integrity.perGroup.control.flaggedGames, 0);   // a free event is not a strike
+  assert.strictEqual(r.integrity.awaySec, 4);
+});
+
+test('excluding flagged games removes them from every number', () => {
+  const { sessions, attempts, integrity } = sampleData(7);
+  const all = analyze(sessions, attempts, {}, integrity);
+  const clean = analyze(sessions, attempts, { excludeStrikes: 1 }, integrity);
+  assert.ok(all.integrity.flaggedGames > 0);
+  assert.strictEqual(clean.n.sessions, all.n.sessions - clean.integrity.dropped);
+  assert.ok(clean.integrity.dropped > 0 && clean.n.sessions < all.n.sessions);
+  assert.ok(clean.n.attempts < all.n.attempts);
+  assert.strictEqual(clean.integrity.perGroup.adaptive.flaggedGames + clean.integrity.perGroup.control.flaggedGames, 0);
+  const strict = analyze(sessions, attempts, { excludeStrikes: 3 }, integrity);
+  assert.ok(strict.n.sessions >= clean.n.sessions);                  // a higher bar drops fewer games
+});
+
+test('analysis without any integrity data still works and says so', () => {
+  const { sessions, attempts } = sampleData(7);
+  const r = analyze(sessions, attempts);
+  assert.strictEqual(r.integrity.hasData, false);
+  assert.ok(r.players.length === 24 && r.players.every((p) => p.strikes === 0));
+  assert.ok(!insights(r).some((i) => i.text.startsWith('Anti-cheat')));
+});
+
+test('insights and report mention integrity when it exists', () => {
+  const { sessions, attempts, integrity } = sampleData(7);
+  const r = analyze(sessions, attempts, {}, integrity);
+  assert.ok(insights(r).some((i) => i.text.startsWith('Anti-cheat')));
+  assert.ok(reportCSV(r).includes('integrity_event'));
 });

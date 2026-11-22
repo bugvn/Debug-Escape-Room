@@ -6,38 +6,10 @@
 <title>REMEDIATE: Analytics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="test-summary.css">
 <link rel="stylesheet" href="dashboard.css">
-<style>
-.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; padding: 1rem; background: rgba(10,13,26,.95); border: 2px solid var(--edge); }
-.toolbar label { font-size: 1rem; text-transform: uppercase; color: #94a3b8; display: flex; align-items: center; gap: .5rem; }
-.toolbar select { font: inherit; font-size: 1.1rem; padding: .35rem .5rem; background: #0a0d1a; color: #e2e8f0; border: 1px solid var(--edge); }
-.toolbar .sp { flex: 1; }
-.banner { padding: .75rem 1rem; font-size: 1.1rem; line-height: 1.4; border: 2px solid var(--edge); background: rgba(10,13,26,.95); color: #cbd5e1; }
-.banner--sim { border-color: var(--gold); color: var(--gold); }
-.banner--err { border-color: var(--crimson); color: #fca5a5; }
-.kpis6 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; }
-@media (min-width: 900px) { .kpis6 { grid-template-columns: repeat(6, minmax(0,1fr)); } .grid2 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-.chartbox { position: relative; height: 300px; }
-.chartbox--tall { height: 620px; }
-.hint { margin-top: .75rem; font-size: 1.05rem; line-height: 1.3; color: #94a3b8; }
-table.cmp { width: 100%; border-collapse: collapse; font-size: 1.15rem; }
-table.cmp th, table.cmp td { padding: .4rem .5rem; text-align: right; border-bottom: 1px solid rgba(35,42,78,.8); }
-table.cmp th:first-child, table.cmp td:first-child { text-align: left; }
-table.cmp th { color: #94a3b8; text-transform: uppercase; font-weight: normal; }
-.ins { list-style: none; padding: 0; margin: 0; display: grid; gap: .75rem; }
-.ins li { padding: .75rem 1rem; border-left: 4px solid var(--cyan); background: rgba(10,13,26,.9); font-size: 1.2rem; line-height: 1.35; color: #e2e8f0; }
-.ins li.good { border-color: #4ade80; } .ins li.warn { border-color: var(--gold); } .ins li.info { border-color: var(--lavender); }
-.hidden { display: none !important; }
-@media print {
-  .scanlines, .glow, .topbar, .toolbar, .noprint { display: none !important; }
-  body, .page { background: #fff !important; color: #000 !important; }
-  .card, .kpi, .banner, .ins li { background: #fff !important; color: #000 !important; border-color: #888 !important; }
-  .card__title, .kpi__value, .kpi__label, .kpi__sub, table.cmp th, table.cmp td, .hint { color: #000 !important; }
-  .card { break-inside: avoid; }
-}
-</style>
+<link rel="stylesheet" href="analytics.css">
 </head>
 <body>
 
@@ -62,63 +34,177 @@ table.cmp th { color: #94a3b8; text-transform: uppercase; font-weight: normal; }
 </header>
 
 <div class="page">
-<main class="dash">
+<main class="an">
 
-  <section class="toolbar" aria-label="Data source and filters">
-    <button class="act act--go" id="btnDb" type="button">LOAD FROM DATABASE</button>
-    <label class="act act--menu" style="cursor:pointer">UPLOAD CSV<input id="fileCsv" type="file" accept=".csv" multiple hidden></label>
-    <button class="act act--menu" id="btnSample" type="button">LOAD SAMPLE DATA</button>
-    <span class="sp"></span>
-    <label>Room level
-      <select id="fLevel"><option value="">All levels</option><option>BEGINNER</option><option>INTERMEDIATE</option><option>ADVANCED</option></select>
-    </label>
-    <button class="act act--menu" id="btnCsv" type="button">DOWNLOAD REPORT</button>
-    <button class="act act--menu" id="btnPrint" type="button">PRINT / PDF</button>
+  <section class="head">
+    <div>
+      <h2 class="head__title">Does the adaptive room teach better?</h2>
+      <p class="head__sub">Compare players in the adaptive game with the fixed-level control group: accuracy over time, weak topics, hard puzzles, and which games to trust.</p>
+    </div>
+    <span class="srcchip" id="srcChip">No data loaded</span>
   </section>
 
-  <div id="banner" class="banner">Choose a data source above. Database mode reads the researcher views (research_sessions, research_attempts); an admin account sees every player, other accounts only see their own games. CSV mode accepts those two views exported from Supabase.</div>
+  <section class="ctrl" aria-label="Data source and filters">
+    <div class="fld">Data source
+      <div class="seg" role="group" aria-label="Data source">
+        <button class="seg__b" id="btnDb" type="button" aria-pressed="false">Database</button>
+        <button class="seg__b" id="btnCsv" type="button" aria-pressed="false">Upload CSV</button>
+        <button class="seg__b" id="btnSample" type="button" aria-pressed="false">Sample data</button>
+      </div>
+      <input id="fileCsv" type="file" accept=".csv" multiple hidden>
+    </div>
+    <label class="fld">Room level
+      <select id="fLevel"><option value="">All levels</option><option>BEGINNER</option><option>INTERMEDIATE</option><option>ADVANCED</option></select>
+    </label>
+    <label class="fld">Games to include
+      <select id="fIntegrity">
+        <option value="0">All games</option>
+        <option value="1">Hide games with 1+ strikes</option>
+        <option value="3">Hide games with 3+ strikes</option>
+      </select>
+    </label>
+    <div class="ctrl__out">
+      <button class="btn" id="btnReport" type="button" disabled>Download report</button>
+      <button class="btn" id="btnPrint" type="button" disabled>Print / PDF</button>
+    </div>
+  </section>
+
+  <div id="banner" class="banner hidden" role="status"></div>
+
+  <section id="empty" aria-label="Choose a data source">
+    <div class="empty3">
+      <button class="srcc" type="button" data-go="btnDb">
+        <span class="srcc__t">Database</span>
+        <span class="srcc__d">Live games from Supabase. Admins see every player, other accounts only see their own games.</span>
+        <span class="srcc__n">Needs migration-03.sql run once, and is_admin set on your profile.</span>
+      </button>
+      <button class="srcc srcc--lav" type="button" data-go="btnCsv">
+        <span class="srcc__t">Upload CSV</span>
+        <span class="srcc__d">Use files exported from Supabase. Works offline and keeps the data you present fixed.</span>
+        <span class="srcc__n">Select research_sessions.csv, plus research_attempts.csv and research_integrity.csv for all charts.</span>
+      </button>
+      <button class="srcc srcc--gold" type="button" data-go="btnSample">
+        <span class="srcc__t">Sample data</span>
+        <span class="srcc__d">24 simulated players so you can see every chart and rehearse the demo.</span>
+        <span class="srcc__n">Simulated. Never present these numbers as research results.</span>
+      </button>
+    </div>
+  </section>
 
   <div id="content" class="hidden">
     <section class="kpis6" aria-label="Key performance indicators" id="kpis"></section>
 
-    <div class="grid2" style="margin-top:2rem">
-      <section class="card pixel-box">
-        <h2 class="card__title">Learning curve</h2>
-        <div class="chartbox"><canvas id="cCurve" role="img" aria-label="Accuracy by game number, adaptive vs control"></canvas></div>
-        <p class="hint">Average submit accuracy of each player's game number N. A rising line means players are learning. The adaptive line should climb faster than control.</p>
-      </section>
-      <section class="card card--lav pixel-box">
-        <h2 class="card__title">Level progression</h2>
-        <div class="chartbox"><canvas id="cLevel" role="img" aria-label="Average room level by game number"></canvas></div>
-        <p class="hint">Average level of the room players got. Control stays flat by design. Adaptive should drift up as players improve.</p>
-      </section>
-      <section class="card card--pink pixel-box">
-        <h2 class="card__title">Weak topics</h2>
-        <div class="chartbox"><canvas id="cCat" role="img" aria-label="Share of wrong submits per topic"></canvas></div>
-        <p class="hint">Share of submits that were wrong, per topic. Tall bars show where lessons and puzzles need work.</p>
-      </section>
-      <section class="card pixel-box">
-        <h2 class="card__title">Mistake types</h2>
-        <div class="chartbox"><canvas id="cMistake" role="img" aria-label="Most common mistake types"></canvas></div>
-        <p class="hint">What went wrong in failed submits. This drives the recommendations shown after each game.</p>
-      </section>
-    </div>
+    <div class="stack" style="margin-top:24px">
+      <div class="tabs" role="tablist" aria-label="Analytics sections" id="tabs">
+        <button class="tab" role="tab" id="t-overview" aria-controls="p-overview" aria-selected="true" type="button" data-tab="overview">Overview</button>
+        <button class="tab" role="tab" id="t-learning" aria-controls="p-learning" aria-selected="false" tabindex="-1" type="button" data-tab="learning">Learning</button>
+        <button class="tab" role="tab" id="t-puzzles" aria-controls="p-puzzles" aria-selected="false" tabindex="-1" type="button" data-tab="puzzles">Puzzles</button>
+        <button class="tab" role="tab" id="t-integrity" aria-controls="p-integrity" aria-selected="false" tabindex="-1" type="button" data-tab="integrity">Integrity<span class="tab__n hidden" id="integrityBadge"></span></button>
+        <button class="tab" role="tab" id="t-players" aria-controls="p-players" aria-selected="false" tabindex="-1" type="button" data-tab="players">Players</button>
+      </div>
 
-    <section class="card card--lav pixel-box" style="margin-top:2rem">
-      <h2 class="card__title">Puzzle difficulty</h2>
-      <div class="chartbox chartbox--tall"><canvas id="cPuzzle" role="img" aria-label="Success rate per puzzle"></canvas></div>
-      <p class="hint">Share of submits that were correct, per puzzle (hardest first). A puzzle far below its level's average may need better hints or a different level.</p>
-    </section>
-
-    <div class="grid2" style="margin-top:2rem">
-      <section class="card pixel-box">
-        <h2 class="card__title">Adaptive vs control</h2>
-        <table class="cmp" id="cmp"></table>
-        <p class="hint" id="cmpNote"></p>
+      <!-- OVERVIEW -->
+      <section class="tabpanel on" role="tabpanel" id="p-overview" aria-labelledby="t-overview">
+        <div class="stack">
+          <section class="card card--pink pixel-box">
+            <h2 class="card__title">Findings and recommendations</h2>
+            <p class="card__sub">Written from the numbers on this page. Use them as your talking points for the "expected benefits" part of the presentation.</p>
+            <ul class="ins" id="ins"></ul>
+          </section>
+          <div class="grid2">
+            <section class="card pixel-box">
+              <h2 class="card__title">Learning curve</h2>
+              <div class="chartbox"><canvas id="cCurve" role="img" aria-label="Accuracy by game number, adaptive vs control"></canvas></div>
+              <p class="hint">Average submit accuracy of each player's game number N. The adaptive line should climb faster than control.</p>
+            </section>
+            <section class="card card--lav pixel-box">
+              <h2 class="card__title">Adaptive vs control</h2>
+              <table class="cmp" id="cmp"></table>
+              <p class="hint" id="cmpNote"></p>
+            </section>
+          </div>
+        </div>
       </section>
-      <section class="card card--pink pixel-box">
-        <h2 class="card__title">Insights and recommendations</h2>
-        <ul class="ins" id="ins"></ul>
+
+      <!-- LEARNING -->
+      <section class="tabpanel" role="tabpanel" id="p-learning" aria-labelledby="t-learning" hidden>
+        <div class="grid2">
+          <section class="card card--lav pixel-box">
+            <h2 class="card__title">Level progression</h2>
+            <div class="chartbox"><canvas id="cLevel" role="img" aria-label="Average room level by game number"></canvas></div>
+            <p class="hint">Average level of the room players got. Control stays flat by design. Adaptive should drift up as players improve.</p>
+          </section>
+          <section class="card card--pink pixel-box">
+            <h2 class="card__title">Weak topics</h2>
+            <div class="chartbox"><canvas id="cCat" role="img" aria-label="Share of wrong submits per topic"></canvas></div>
+            <p class="hint">Share of submits that were wrong, per topic. Tall bars show where lessons and puzzles need work.</p>
+          </section>
+          <section class="card pixel-box">
+            <h2 class="card__title">Mistake types</h2>
+            <div class="chartbox"><canvas id="cMistake" role="img" aria-label="Most common mistake types"></canvas></div>
+            <p class="hint">What went wrong in failed submits. This drives the recommendations shown after each game.</p>
+          </section>
+          <section class="card card--lav pixel-box">
+            <h2 class="card__title">Where players end up</h2>
+            <div class="chartbox"><canvas id="cEnd" role="img" aria-label="Level players reach by the end, adaptive vs control"></canvas></div>
+            <p class="hint">Players per level after their last game. Adaptive players should spread upward; control players stay where they started.</p>
+          </section>
+        </div>
+      </section>
+
+      <!-- PUZZLES -->
+      <section class="tabpanel" role="tabpanel" id="p-puzzles" aria-labelledby="t-puzzles" hidden>
+        <section class="card card--lav pixel-box">
+          <h2 class="card__title">Puzzle difficulty</h2>
+          <div class="chartbox chartbox--tall"><canvas id="cPuzzle" role="img" aria-label="Success rate per puzzle"></canvas></div>
+          <p class="hint">Share of submits that were correct, per puzzle, hardest first. Red under 40%, gold under 70%. A puzzle far below its level's average needs better hints or a different level.</p>
+        </section>
+      </section>
+
+      <!-- INTEGRITY -->
+      <section class="tabpanel" role="tabpanel" id="p-integrity" aria-labelledby="t-integrity" hidden>
+        <div class="stack">
+          <div class="ikp" id="ikp"></div>
+          <div id="integrityEmpty" class="card pixel-box hidden"><p class="zero">No anti-cheat events recorded yet.<br>Events appear after players use the updated game room. Run migration-03.sql first, or load the sample data to preview this page.</p></div>
+          <div class="grid2" id="integrityCharts">
+            <section class="card card--pink pixel-box">
+              <h2 class="card__title">What was caught</h2>
+              <div class="chartbox chartbox--mid"><canvas id="cInt" role="img" aria-label="Anti-cheat events by type"></canvas></div>
+              <p class="hint">Pasting and copying are blocked, but every attempt is still counted. Grey bars are logged only and cost no strike.</p>
+            </section>
+            <section class="card pixel-box">
+              <h2 class="card__title">Flagged games by group</h2>
+              <div class="chartbox chartbox--mid"><canvas id="cIntGroup" role="img" aria-label="Share of flagged games, adaptive vs control"></canvas></div>
+              <p class="hint">A flagged game has at least one strike. If one group is flagged much more, its results need a closer look.</p>
+            </section>
+          </div>
+          <section class="card card--lav pixel-box">
+            <h2 class="card__title">Rules in the game room</h2>
+            <ul class="rules">
+              <li>Copy, cut, paste, drag-and-drop text and one-shot insertions are blocked. Each attempt is a strike.</li>
+              <li>Leaving the game window for 2 seconds or more (alt-tab, another tab or monitor) is a strike. The room is blurred until the player returns.</li>
+              <li>Right-click and developer-tools shortcuts are blocked and logged, with no strike.</li>
+              <li>3 strikes closes the room and the game is stored as left, with the integrity log attached.</li>
+            </ul>
+            <p class="note" style="margin-top:16px">This runs in the browser, so it deters and documents cheating. It cannot stop someone using a phone or a second computer. Use the "Games to include" filter above to compare results with and without flagged games.</p>
+          </section>
+        </div>
+      </section>
+
+      <!-- PLAYERS -->
+      <section class="tabpanel" role="tabpanel" id="p-players" aria-labelledby="t-players" hidden>
+        <section class="card pixel-box">
+          <h2 class="card__title">Player explorer</h2>
+          <p class="card__sub">One row per anonymous player. Click a column to sort.</p>
+          <div class="ptools">
+            <label class="fld">Search player id<input id="pSearch" type="search" placeholder="e.g. 3fa9" autocomplete="off"></label>
+            <label class="fld">Group
+              <select id="pGroup"><option value="">Both groups</option><option value="adaptive">Adaptive</option><option value="control">Control</option></select>
+            </label>
+            <span class="hint" id="pCount" style="margin:0 0 12px"></span>
+          </div>
+          <div class="table-wrap"><table class="ptable" id="ptable"></table></div>
+        </section>
       </section>
     </div>
   </div>
@@ -138,11 +224,25 @@ table.cmp th { color: #94a3b8; text-transform: uppercase; font-weight: normal; }
   $('logoutBtn').onclick = logout;
   const u = await requireLogin(); if (!u) return;
 
-  let SESS = [], ATT = [], SIM = false, LABEL = '', charts = [], PRINTING = false;
+  let SESS = [], ATT = [], INT = [], SIM = false, LABEL = '', charts = [], PRINTING = false, R = null;
+  let sortKey = 'games', sortDir = -1;
   const C = { adaptive: '#38e1ff', control: '#a594f9', warn: '#ffc857', bad: '#ff5c8a', ok: '#4ade80' };
   const GROUP_LABEL = { adaptive: 'Adaptive', control: 'Control' };
+  const EVENT_LABEL = { paste: 'Paste', copy: 'Copy', cut: 'Cut', drop: 'Drag-drop', big_jump: 'Text inserted at once', tab_hidden: 'Switched tab', window_blur: 'Switched window',
+    contextmenu: 'Right-click', devtools_key: 'Dev-tools key', fullscreen_exit: 'Left fullscreen', auto_end: 'Room closed' };
 
-  function say(text, kind) { const b = $('banner'); b.textContent = text; b.className = 'banner' + (kind ? ' banner--' + kind : ''); }
+  /* ---------- messages ---------- */
+  function say(html, kind) { const b = $('banner'); b.innerHTML = html; b.className = 'banner' + (kind ? ' banner--' + kind : ''); }
+  const plain = s => { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
+  function dbHelp(e) {
+    const m = String(e && e.message || e);
+    if (/permission denied/i.test(m) || /does not exist/i.test(m) || /relation .* not/i.test(m))
+      return '<b>The database refused the request</b> (' + plain(m) + ').<ol>' +
+        '<li>In Supabase, open <b>SQL Editor</b> and run <code>migration-03.sql</code> once.</li>' +
+        '<li>Make your account an admin: <code>update public.profiles set is_admin = true where id = (select id from auth.users where email = \'you@example.com\');</code></li>' +
+        '<li>Reload this page and press <b>Database</b> again. Or use <b>Upload CSV</b> / <b>Sample data</b> in the meantime.</li></ol>';
+    return '<b>Could not read the research views:</b> ' + plain(m) + '. Try again, or use Upload CSV / Sample data.';
+  }
 
   /* ---------- data sources ---------- */
   async function fetchAll(makeQuery) {   // Supabase returns at most 1000 rows per request
@@ -154,6 +254,8 @@ table.cmp th { color: #94a3b8; text-transform: uppercase; font-weight: normal; }
       if (data.length < 1000) return out;
     }
   }
+  function pressed(id) { ['btnDb', 'btnCsv', 'btnSample'].forEach(b => $(b).setAttribute('aria-pressed', String(b === id))); }
+
   $('btnDb').onclick = async () => {
     say('Loading from the database...');
     try {
@@ -161,91 +263,109 @@ table.cmp th { color: #94a3b8; text-transform: uppercase; font-weight: normal; }
         fetchAll(() => db.from('research_sessions').select('*').order('created_at', { ascending: true })),
         fetchAll(() => db.from('research_attempts').select('*').order('created_at', { ascending: true }))
       ]);
-      load(normalizeSessions(s), normalizeAttempts(a), false, 'Database (research views)');
-    } catch (e) {
-      console.error(e);
-      say('Could not read the research views: ' + (e.message || e) + '. Run schema.sql / migration-03.sql, or use CSV or sample data.', 'err');
-    }
+      let ig = [], igNote = '';
+      try { ig = await fetchAll(() => db.from('research_integrity').select('*').order('created_at', { ascending: true })); }
+      catch (e) { igNote = ' Anti-cheat log not available (run migration-03.sql).'; }
+      if (load(normalizeSessions(s), normalizeAttempts(a), normalizeIntegrity(ig), false, 'Database')) { pressed('btnDb'); if (igNote) say($('banner').innerHTML + igNote); }
+    } catch (e) { console.error(e); say(dbHelp(e), 'err'); }
   };
+  $('btnCsv').onclick = () => $('fileCsv').click();
   $('fileCsv').onchange = async e => {
-    let s = null, a = null;
+    let s = null, a = null, g = null;
     for (const f of e.target.files) {
       const rows = parseCSV(await f.text());
-      if (rows[0] && 'study_group' in rows[0] && 'session_no' in rows[0] && 'puzzle_id' in rows[0]) a = rows;        // research_attempts
-      else if (rows[0] && 'study_group' in rows[0] && 'session_no' in rows[0]) s = rows;                              // research_sessions
+      const h = rows[0] || {};
+      if ('event_type' in h && 'session_no' in h) g = rows;                                            // research_integrity
+      else if ('study_group' in h && 'session_no' in h && 'puzzle_id' in h) a = rows;                  // research_attempts
+      else if ('study_group' in h && 'session_no' in h) s = rows;                                      // research_sessions
     }
-    if (!s) return say('Select research_sessions.csv (and optionally research_attempts.csv). The file needs study_group and session_no columns.', 'err');
-    load(normalizeSessions(s), normalizeAttempts(a || []), false, 'CSV upload' + (a ? '' : ' (sessions only: puzzle and mistake charts need research_attempts.csv)'));
     e.target.value = '';
+    if (!s) return say('Select <b>research_sessions.csv</b>. It needs the columns <code>study_group</code> and <code>session_no</code>. You can add research_attempts.csv and research_integrity.csv in the same selection.', 'err');
+    const missing = [!a && 'puzzle and mistake charts need research_attempts.csv', !g && 'the integrity tab needs research_integrity.csv'].filter(Boolean);
+    if (load(normalizeSessions(s), normalizeAttempts(a || []), normalizeIntegrity(g || []), false, 'CSV upload')) { pressed('btnCsv'); if (missing.length) say($('banner').innerHTML + ' Missing: ' + missing.join('; ') + '.'); }
   };
-  $('btnSample').onclick = () => { const d = sampleData(7); load(d.sessions, d.attempts, true, 'Sample data'); };
+  $('btnSample').onclick = () => { const d = sampleData(7); if (load(d.sessions, d.attempts, d.integrity, true, 'Sample data')) pressed('btnSample'); };
+  document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => $(b.dataset.go).click());
 
-  function load(s, a, simulated, label) {
-    SESS = s; ATT = a; SIM = simulated; LABEL = label;
-    if (!SESS.length) return say('No finished games in that source yet. Non-admin accounts only see their own games.', 'err');
-    render();
+  function load(s, a, g, simulated, label) {
+    if (!s.length) { say('No finished games in that source yet. Non-admin accounts only see their own games.', 'err'); return false; }
+    SESS = s; ATT = a; INT = g; SIM = simulated; LABEL = label;
+    render(); return true;
   }
 
-  /* ---------- drawing ---------- */
+  /* ---------- formatting ---------- */
   const fmtSec = x => x === null || x === undefined ? '--' : Math.floor(x / 60) + 'm ' + String(Math.round(x % 60)).padStart(2, '0') + 's';
   const pc = x => x === null || x === undefined ? '--' : Math.round(x * 1000) / 10 + '%';
   const n1 = x => x === null || x === undefined ? '--' : (Math.round(x * 10) / 10).toFixed(1);
+  const rel = (a, b, max) => { const m = max || Math.max(a || 0, b || 0, 1e-9); return [Math.max(0, Math.min(100, 100 * (a || 0) / m)), Math.max(0, Math.min(100, 100 * (b || 0) / m))]; };
 
-  function kpi(label, key, fmt, cls) {
-    const r = $('kpis'); const k = R.kpis;
-    const d = document.createElement('div'); d.className = 'kpi';
-    d.innerHTML = '<div class="kpi__label"></div><div class="kpi__value ' + (cls || '') + '"></div><div class="kpi__sub"></div>';
-    d.children[0].textContent = label;
-    d.children[1].textContent = fmt(k.all[key]);
-    d.children[2].textContent = 'Adaptive ' + fmt(k.adaptive[key]) + ' · Control ' + fmt(k.control[key]);
-    r.append(d);
+  /* ---------- KPI cards with comparison bars ---------- */
+  function kpi(label, key, fmt, max) {
+    const k = R.kpis, a = k.adaptive[key], c = k.control[key], w = rel(a, c, max);
+    const d = document.createElement('div'); d.className = 'kp';
+    d.innerHTML = '<div class="kp__l"></div><div class="kp__v"></div>' +
+      '<div class="kp__row"><i></i><span class="kp__bar"><b></b></span><span class="va"></span></div>' +
+      '<div class="kp__row kp__row--c"><i></i><span class="kp__bar"><b></b></span><span class="vc"></span></div>';
+    d.querySelector('.kp__l').textContent = label;
+    d.querySelector('.kp__v').textContent = fmt(k.all[key]);
+    const bars = d.querySelectorAll('.kp__bar b'); bars[0].style.width = w[0] + '%'; bars[1].style.width = w[1] + '%';
+    d.querySelector('.va').textContent = fmt(a); d.querySelector('.vc').textContent = fmt(c);
+    d.setAttribute('aria-label', label + ': ' + fmt(k.all[key]) + '. Adaptive ' + fmt(a) + ', control ' + fmt(c) + '.');
+    $('kpis').append(d);
   }
 
-  let R = null;
+  /* ---------- render ---------- */
   function render() {
-    R = analyze(SESS, ATT, { level: $('fLevel').value });
-    $('content').classList.remove('hidden');
-    say((SIM ? 'SAMPLE DATA: simulated players for demonstration only. These numbers are not research results. ' : '') + 'Source: ' + LABEL + ' · ' + R.n.sessions + ' games, ' + R.n.attempts + ' submits' + ($('fLevel').value ? ' · level ' + $('fLevel').value : '') + '.', SIM ? 'sim' : '');
+    R = analyze(SESS, ATT, { level: $('fLevel').value, excludeStrikes: +$('fIntegrity').value }, INT);
+    $('empty').classList.add('hidden'); $('content').classList.remove('hidden');
+    $('btnReport').disabled = false; $('btnPrint').disabled = false;
+    const chip = $('srcChip'); chip.textContent = (SIM ? 'Simulated: ' : '') + LABEL + ' · ' + R.n.sessions + ' games'; chip.className = 'srcchip ' + (SIM ? 'srcchip--sim' : 'srcchip--on');
+    const parts = [R.n.sessions + ' games and ' + R.n.attempts + ' submits shown'];
+    if ($('fLevel').value) parts.push('level ' + $('fLevel').value);
+    if (R.integrity.dropped) parts.push(R.integrity.dropped + ' flagged games hidden');
+    say((SIM ? '<b>SAMPLE DATA:</b> simulated players for demonstration only. These numbers are not research results. ' : '') + plain(parts.join(' · ')) + '.', SIM ? 'sim' : '');
 
     $('kpis').innerHTML = '';
     kpi('Players', 'participants', x => x);
-    kpi('Games', 'sessions', x => x, 'kpi__value--lav');
-    kpi('Escape rate', 'escapeRate', pc, 'kpi__value--gold');
-    kpi('Submit accuracy', 'accuracy', pc);
-    kpi('First-try rate', 'firstTryRate', pc, 'kpi__value--lav');
-    kpi('Hints per game', 'avgHints', n1, 'kpi__value--peach');
+    kpi('Games', 'sessions', x => x);
+    kpi('Escape rate', 'escapeRate', pc, 1);
+    kpi('Submit accuracy', 'accuracy', pc, 1);
+    kpi('First-try rate', 'firstTryRate', pc, 1);
+    kpi('Hints per game', 'avgHints', n1, 3);
 
-    drawCharts(); drawTable(); drawInsights();
+    const bad = R.integrity.flaggedGames;
+    const badge = $('integrityBadge'); badge.textContent = bad; badge.classList.toggle('hidden', !bad);
+
+    drawCharts(); drawTable(); drawInsights(); drawIntegrity(); drawPlayers();
   }
 
   function mk(id, cfg) {
     const old = charts.find(c => c.canvas.id === id); if (old) { old.destroy(); charts = charts.filter(c => c !== old); }
-    if (typeof Chart === 'undefined') { $(id).parentElement.textContent = 'Charts need the Chart.js library (internet connection).'; return; }
-    cfg.options = Object.assign({ responsive: true, maintainAspectRatio: false }, cfg.options);
-    charts.push(new Chart($(id), cfg));
+    const el = $(id); if (!el) return;
+    if (typeof Chart === 'undefined') { el.parentElement.textContent = 'Charts need the Chart.js library (internet connection).'; return; }
+    cfg.options = Object.assign({ responsive: true, maintainAspectRatio: false, animation: { duration: PRINTING ? 0 : 400 } }, cfg.options);
+    charts.push(new Chart(el, cfg));
   }
-  const ink = () => PRINTING ? '#111' : '#94a3b8';
+  const ink = () => PRINTING ? '#111' : '#9aa6c4';
   const gridc = () => PRINTING ? '#ccc' : 'rgba(35,42,78,.9)';
+  const ax = (title, extra) => Object.assign({ grid: { color: gridc() }, title: title ? { display: true, text: title } : undefined }, extra);
+  const ds = (g, data) => ({ label: GROUP_LABEL[g], data, borderColor: C[g], backgroundColor: C[g], tension: .25, spanGaps: true, pointRadius: 4 });
 
   function drawCharts() {
-    if (typeof Chart !== 'undefined') { Chart.defaults.color = ink(); Chart.defaults.font.family = 'VT323, monospace'; Chart.defaults.font.size = 15; }
-    const ax = (title, extra) => Object.assign({ grid: { color: gridc() }, title: title ? { display: true, text: title } : undefined }, extra);
-    const ds = (g, data) => ({ label: GROUP_LABEL[g], data, borderColor: C[g], backgroundColor: C[g], tension: .25, spanGaps: true, pointRadius: 4 });
+    if (typeof Chart !== 'undefined') { Chart.defaults.color = ink(); Chart.defaults.font.family = 'VT323, monospace'; Chart.defaults.font.size = 16; }
     const cv = R.curve;
-
     mk('cCurve', { type: 'line', data: { labels: cv.labels, datasets: [ds('adaptive', cv.adaptive), ds('control', cv.control)] },
       options: { scales: { y: ax('Accuracy (%)', { min: 0, max: 100 }), x: ax() }, plugins: { tooltip: { callbacks: { afterLabel: c => 'players: ' + (c.datasetIndex ? cv.nControl : cv.nAdaptive)[c.dataIndex] } } } } });
-
     mk('cLevel', { type: 'line', data: { labels: cv.labels, datasets: [ds('adaptive', cv.levelAdaptive), ds('control', cv.levelControl)] },
       options: { scales: { y: ax('Room level', { min: 0, max: 2, ticks: { stepSize: 1, callback: v => ['Beginner', 'Intermediate', 'Advanced'][v] } }), x: ax() } } });
-
     mk('cCat', { type: 'bar', data: { labels: R.categories.map(c => c.category), datasets: ['adaptive', 'control'].map(g => ({ label: GROUP_LABEL[g], data: R.categories.map(c => c[g]), backgroundColor: C[g] })) },
       options: { scales: { y: ax('Wrong submits (%)', { min: 0, max: 100 }), x: ax() } } });
-
     const top = R.mistakes.slice(0, 6), pal = [C.adaptive, C.control, C.warn, C.bad, C.ok, '#94a3b8'];
     mk('cMistake', { type: 'doughnut', data: { labels: top.map(m => m.tag), datasets: [{ data: top.map(m => m.n), backgroundColor: pal, borderColor: PRINTING ? '#fff' : '#0a0d1a' }] },
       options: { plugins: { legend: { position: 'right' } } } });
-
+    const L = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
+    mk('cEnd', { type: 'bar', data: { labels: ['Beginner', 'Intermediate', 'Advanced'], datasets: ['adaptive', 'control'].map(g => ({ label: GROUP_LABEL[g], data: L.map(l => R.levelEnd[g][l]), backgroundColor: C[g] })) },
+      options: { scales: { y: ax('Players', { beginAtZero: true, ticks: { precision: 0 } }), x: ax() } } });
     const pz = R.puzzles;
     mk('cPuzzle', { type: 'bar', data: { labels: pz.map(p => p.title + ' (' + p.n + ')'), datasets: [{ label: 'Correct submits (%)', data: pz.map(p => p.success),
         backgroundColor: pz.map(p => p.success < 40 ? C.bad : p.success < 70 ? C.warn : C.ok) }] },
@@ -255,17 +375,12 @@ table.cmp th { color: #94a3b8; text-transform: uppercase; font-weight: normal; }
   function drawTable() {
     const t = R.test, k = R.kpis, A = k.adaptive, Cc = k.control;
     const row = (label, a, c) => '<tr><td>' + label + '</td><td>' + a + '</td><td>' + c + '</td></tr>';
-    $('cmp').innerHTML = '<tr><th>Metric</th><th>Adaptive</th><th>Control</th></tr>' +
-      row('Players', A.participants, Cc.participants) +
-      row('Games', A.sessions, Cc.sessions) +
-      row('Escape rate', pc(A.escapeRate), pc(Cc.escapeRate)) +
-      row('Submit accuracy', pc(A.accuracy), pc(Cc.accuracy)) +
-      row('First-try rate', pc(A.firstTryRate), pc(Cc.firstTryRate)) +
-      row('Avg escape time', fmtSec(A.avgEscapeSec), fmtSec(Cc.avgEscapeSec)) +
-      row('Share of games at ADVANCED', pc(A.advancedShare), pc(Cc.advancedShare)) +
-      row('Learning gain, mean (pts)', n1(t.meanA), n1(t.meanB)) +
-      row('Learning gain, SD', n1(t.sdA), n1(t.sdB)) +
-      row('Players with 2+ games', t.nA, t.nB);
+    $('cmp').innerHTML = '<tr><th>Metric</th><th class="a">Adaptive</th><th class="c">Control</th></tr>' +
+      row('Players', A.participants, Cc.participants) + row('Games', A.sessions, Cc.sessions) +
+      row('Escape rate', pc(A.escapeRate), pc(Cc.escapeRate)) + row('Submit accuracy', pc(A.accuracy), pc(Cc.accuracy)) +
+      row('First-try rate', pc(A.firstTryRate), pc(Cc.firstTryRate)) + row('Avg escape time', fmtSec(A.avgEscapeSec), fmtSec(Cc.avgEscapeSec)) +
+      row('Games at ADVANCED', pc(A.advancedShare), pc(Cc.advancedShare)) +
+      row('Learning gain, mean (pts)', n1(t.meanA), n1(t.meanB)) + row('Learning gain, SD', n1(t.sdA), n1(t.sdB)) + row('Players with 2+ games', t.nA, t.nB);
     $('cmpNote').textContent = t.p === null
       ? 'Learning gain = accuracy of a player\'s last game minus their first. Not enough players with 2+ games in both groups for a significance test.'
       : 'Learning gain = accuracy of a player\'s last game minus their first. Welch t-test: t=' + n1(t.t) + ', df=' + n1(t.df) + ', p=' + t.p.toFixed(3) + ', Cohen\'s d=' + n1(t.d) + (t.p < 0.05 ? ' (significant at 0.05).' : ' (not significant at 0.05).');
@@ -276,17 +391,75 @@ table.cmp th { color: #94a3b8; text-transform: uppercase; font-weight: normal; }
     insights(R).forEach(i => { const li = document.createElement('li'); li.className = i.kind; li.textContent = i.text; ul.append(li); });
   }
 
-  /* ---------- report ---------- */
+  /* ---------- integrity tab ---------- */
+  function drawIntegrity() {
+    const ig = R.integrity, g = ig.perGroup, has = ig.hasData;
+    $('integrityEmpty').classList.toggle('hidden', has); $('integrityCharts').classList.toggle('hidden', !has);
+    const cards = [
+      ['Flagged games', ig.flaggedGames + ' / ' + ig.totalGames, 'Games with at least one strike'],
+      ['Strikes', g.adaptive.strikes + g.control.strikes, 'Adaptive ' + g.adaptive.strikes + ' · Control ' + g.control.strikes],
+      ['Time away', fmtSec(ig.awaySec), 'Total across shown games'],
+      ['Rooms closed', ig.autoEnded, 'Hit the 3-strike limit']
+    ];
+    $('ikp').innerHTML = '';
+    cards.forEach(([l, v, s]) => { const d = document.createElement('div'); d.className = 'kp'; d.innerHTML = '<div class="kp__l"></div><div class="kp__v"></div><div class="kp__l" style="font-size:1rem"></div>';
+      d.children[0].textContent = l; d.children[1].textContent = has ? v : '--'; d.children[2].textContent = has ? s : 'No events yet'; $('ikp').append(d); });
+    if (!has) return;
+    const ev = ig.events;
+    mk('cInt', { type: 'bar', data: { labels: ev.map(e => EVENT_LABEL[e.type] || e.type), datasets: [{ label: 'Events', data: ev.map(e => e.n), backgroundColor: ev.map(e => ['contextmenu', 'devtools_key'].includes(e.type) ? '#4d5a85' : C.bad) }] },
+      options: { indexAxis: 'y', scales: { x: ax('Events', { beginAtZero: true, ticks: { precision: 0 } }), y: ax() }, plugins: { legend: { display: false } } } });
+    const share = k => g[k].games ? Math.round(1000 * g[k].flaggedGames / g[k].games) / 10 : 0;
+    mk('cIntGroup', { type: 'bar', data: { labels: ['Adaptive', 'Control'], datasets: [{ label: 'Flagged games (%)', data: [share('adaptive'), share('control')], backgroundColor: [C.adaptive, C.control] }] },
+      options: { scales: { y: ax('Flagged games (%)', { min: 0, max: 100 }), x: ax() }, plugins: { legend: { display: false } } } });
+  }
+
+  /* ---------- player explorer ---------- */
+  const COLS = [['participant', 'Player'], ['group', 'Group'], ['games', 'Games'], ['escapeRate', 'Escape'], ['accuracy', 'Accuracy'], ['hints', 'Hints/game'], ['level', 'Level now'], ['strikes', 'Strikes']];
+  function drawPlayers() {
+    const q = $('pSearch').value.trim().toLowerCase(), grp = $('pGroup').value;
+    let rows = R.players.filter(p => (!grp || p.group === grp) && (!q || p.participant.toLowerCase().includes(q)));
+    rows.sort((a, b) => { const x = a[sortKey], y = b[sortKey]; if (x === y) return 0; if (x === null || x === undefined) return 1; if (y === null || y === undefined) return -1; return (x > y ? 1 : -1) * sortDir; });
+    $('pCount').textContent = rows.length + ' of ' + R.players.length + ' players';
+    const head = '<thead><tr>' + COLS.map(([k, l]) => '<th scope="col"><button class="th-sort" type="button" data-k="' + k + '"' + (k === sortKey ? ' aria-sort="' + (sortDir > 0 ? 'ascending' : 'descending') + '"' : '') + '>' + l + '</button></th>').join('') + '</tr></thead>';
+    const body = '<tbody>' + rows.slice(0, 300).map(p => '<tr><td>' + plain(p.participant) + '</td><td><span class="tag tag--' + (p.group === 'adaptive' ? 'a' : 'c') + '">' + GROUP_LABEL[p.group] + '</span></td><td>' + p.games + '</td><td>' + pc(p.escapeRate) +
+      '</td><td>' + pc(p.accuracy) + '</td><td>' + n1(p.hints) + '</td><td>' + plain(p.level ? p.level.charAt(0) + p.level.slice(1).toLowerCase() : '--') + '</td><td>' +
+      (p.strikes ? '<span class="tag tag--bad">' + p.strikes + '</span>' : '<span class="tag tag--ok">0</span>') + '</td></tr>').join('') + '</tbody>';
+    $('ptable').innerHTML = head + body;
+  }
+  $('ptable').addEventListener('click', e => {
+    const b = e.target.closest('.th-sort'); if (!b) return;
+    const k = b.dataset.k; if (k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = (k === 'participant' || k === 'group' || k === 'level') ? 1 : -1; }
+    drawPlayers(); const nb = document.querySelector('.th-sort[data-k="' + k + '"]'); if (nb) nb.focus();
+  });
+  $('pSearch').oninput = () => R && drawPlayers();
+  $('pGroup').onchange = () => R && drawPlayers();
+
+  /* ---------- tabs ---------- */
+  const tabs = [...document.querySelectorAll('.tab')];
+  function openTab(name, focus) {
+    tabs.forEach(t => { const on = t.dataset.tab === name; t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1; const p = $('p-' + t.dataset.tab); p.classList.toggle('on', on); p.hidden = !on; if (on && focus) t.focus(); });
+    charts.forEach(c => c.resize());
+  }
+  tabs.forEach((t, i) => {
+    t.onclick = () => openTab(t.dataset.tab);
+    t.onkeydown = e => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (d) { e.preventDefault(); openTab(tabs[(i + d + tabs.length) % tabs.length].dataset.tab, true); }
+    };
+  });
+
+  /* ---------- filters, report ---------- */
   $('fLevel').onchange = () => { if (SESS.length) render(); };
-  $('btnCsv').onclick = () => {
-    if (!R) return say('Load data first.', 'err');
+  $('fIntegrity').onchange = () => { if (SESS.length) render(); };
+  $('btnReport').onclick = () => {
+    if (!R) return;
     const blob = new Blob([(SIM ? '# SAMPLE DATA - simulated players, not research results\n' : '') + reportCSV(R)], { type: 'text/csv' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'remediate-analytics-report.csv'; a.click(); URL.revokeObjectURL(a.href);
   };
-  $('btnPrint').onclick = () => { if (!R) return say('Load data first.', 'err'); window.print(); };
-  // charts are drawn with dark-theme colours: redraw them in print colours while printing
-  window.addEventListener('beforeprint', () => { if (R) { PRINTING = true; drawCharts(); } });
-  window.addEventListener('afterprint', () => { if (R) { PRINTING = false; drawCharts(); } });
+  $('btnPrint').onclick = () => { if (R) window.print(); };
+  // charts are drawn in dark-theme colours: redraw them in print colours while printing (all tabs are shown in print)
+  window.addEventListener('beforeprint', () => { if (R) { PRINTING = true; drawCharts(); drawIntegrity(); } });
+  window.addEventListener('afterprint', () => { if (R) { PRINTING = false; drawCharts(); drawIntegrity(); } });
 })();
 </script>
 </body>

@@ -7,7 +7,7 @@
 //   reportCSV(result)                       flat summary file for the paper / slides
 //   sampleData(seed)                        SIMULATED players, for demos only (never mix with real data)
 //
-// Data sources are the two researcher views already in schema.sql: research_sessions and research_attempts.
+// Data sources are the researcher views: research_sessions, research_attempts (schema.sql) and research_integrity (migration-03.sql, anti-cheat log).
 // In the browser, puzzles.js and adaptive.js must be loaded first (same rule as adaptive.js).
 
 const _P = (typeof PUZZLE_BANK !== 'undefined') ? { PUZZLE_BANK, LEVELS } : require('./puzzles.js');
@@ -87,7 +87,7 @@ function normalizeSessions(rows) {
     const submits = toNum(r.submits) || 0, correct = toNum(r.submits_correct) || 0;
     return {
       participant: String(r.participant), group: r.study_group === 'control' ? 'control' : 'adaptive',
-      sessionNo: toNum(r.session_no), level: r.level, nextLevel: r.next_level || null, result: r.result,
+      sessionNo: toNum(r.session_no), sessionId: toNum(r.session_id), level: r.level, nextLevel: r.next_level || null, result: r.result,
       solved: toNum(r.solved_count) || 0, hints: toNum(r.hints_used) || 0, elapsed: toNum(r.elapsed_sec) || 0,
       submits, correct, accuracy: submits ? correct / submits : null
     };
@@ -99,6 +99,14 @@ function normalizeAttempts(rows) {
     sessionNo: toNum(r.session_no), puzzleId: r.puzzle_id, category: r.category, kind: r.kind || 'submit',
     attemptNo: toNum(r.attempt_no), ok: toBool(r.is_correct), tag: r.mistake_tag || null
   })).filter((a) => a.kind === 'submit' && a.category);
+}
+
+// anti-cheat log (research_integrity): one row per blocked or suspicious event
+function normalizeIntegrity(rows) {
+  return (rows || []).map((r) => ({
+    participant: String(r.participant), group: r.study_group === 'control' ? 'control' : 'adaptive',
+    sessionNo: toNum(r.session_no), type: r.event_type, awayMs: toNum(r.away_ms), strike: toBool(r.strike)
+  })).filter((e) => e.type && e.sessionNo !== null);
 }
 
 /* ---------------- the analysis ---------------- */
@@ -121,11 +129,20 @@ function groupKpis(sessions, attempts) {
 }
 
 // opts.level: only rooms played at this level ('' = all)
-function analyze(sessionsIn, attemptsIn, opts = {}) {
+// opts.excludeStrikes: drop games with this many integrity strikes or more (0 / missing = keep every game)
+function analyze(sessionsIn, attemptsIn, opts = {}, integrityIn = []) {
   const lv = opts.level || '';
-  const sessions = lv ? sessionsIn.filter((s) => s.level === lv) : sessionsIn;
-  const keep = new Set(sessions.map((s) => s.participant + '#' + s.sessionNo));
-  const attempts = lv ? attemptsIn.filter((a) => keep.has(a.participant + '#' + a.sessionNo)) : attemptsIn;
+  const key = (x) => x.participant + '#' + x.sessionNo;
+  const strikesBy = {};                                   // strikes per game
+  integrityIn.filter((e) => e.strike).forEach((e) => { strikesBy[key(e)] = (strikesBy[key(e)] || 0) + 1; });
+  const cut = opts.excludeStrikes || 0;
+  const flagged = (s) => cut > 0 && (strikesBy[key(s)] || 0) >= cut;
+  let sessions = lv ? sessionsIn.filter((s) => s.level === lv) : sessionsIn;
+  const before = sessions.length;
+  sessions = sessions.filter((s) => !flagged(s));
+  const dropped = before - sessions.length;
+  const keep = new Set(sessions.map(key));
+  const attempts = (lv || cut) ? attemptsIn.filter((a) => keep.has(key(a))) : attemptsIn;
   const by = (arr, g) => arr.filter((x) => x.group === g);
 
   const kpis = {};
@@ -194,7 +211,45 @@ function analyze(sessionsIn, attemptsIn, opts = {}) {
     Object.values(last).forEach((s) => { const k = s.nextLevel || s.level; if (levelEnd[g][k] !== undefined) levelEnd[g][k]++; });
   });
 
-  return { kpis, curve, categories, mistakes, puzzles, improvement, test, levelEnd, n: { sessions: sessions.length, attempts: attempts.length } };
+  // integrity: how often, what kind, and in which group (over the games that are kept)
+  const events = integrityIn.filter((e) => keep.has(key(e)));
+  const typeCount = {};
+  events.forEach((e) => { typeCount[e.type] = (typeCount[e.type] || 0) + 1; });
+  const perGroup = {};
+  GROUPS.forEach((g) => {
+    const gs = by(sessions, g), ge = by(events, g);
+    const gk = new Set(gs.map(key));
+    const struck = new Set(ge.filter((e) => e.strike).map(key));
+    perGroup[g] = {
+      games: gs.length,
+      flaggedGames: [...struck].filter((k) => gk.has(k)).length,
+      events: ge.length, strikes: ge.filter((e) => e.strike).length,
+      eventsPerGame: gs.length ? ge.length / gs.length : null
+    };
+  });
+  const allGames = sessionsIn.length, struckAll = new Set(integrityIn.filter((e) => e.strike).map(key));
+  const integrity = {
+    hasData: integrityIn.length > 0,
+    events: Object.entries(typeCount).sort((a, b) => b[1] - a[1]).map(([type, n]) => ({ type, n })),
+    perGroup,
+    flaggedGames: sessionsIn.filter((s) => struckAll.has(key(s))).length, totalGames: allGames,
+    awaySec: events.filter((e) => e.awayMs !== null).reduce((s, e) => s + e.awayMs, 0) / 1000,
+    autoEnded: events.filter((e) => e.type === 'auto_end').length,
+    dropped
+  };
+
+  // one row per player for the explorer table
+  const perPlayer = {};
+  sessions.forEach((s) => {
+    const o = perPlayer[s.participant] || (perPlayer[s.participant] = { participant: s.participant, group: s.group, games: 0, won: 0, hints: 0, sub: 0, ok: 0, last: null, strikes: 0 });
+    o.games++; if (s.result === 'won') o.won++; o.hints += s.hints; o.sub += s.submits; o.ok += s.correct;
+    if (!o.last || s.sessionNo > o.last.sessionNo) o.last = s;
+    o.strikes += strikesBy[key(s)] || 0;
+  });
+  const players = Object.values(perPlayer).map((o) => ({ participant: o.participant, group: o.group, games: o.games, escapeRate: o.games ? o.won / o.games : null,
+    accuracy: o.sub ? o.ok / o.sub : null, hints: o.games ? o.hints / o.games : null, level: o.last ? (o.last.nextLevel || o.last.level) : null, strikes: o.strikes }));
+
+  return { kpis, curve, categories, mistakes, puzzles, improvement, test, levelEnd, integrity, players, n: { sessions: sessions.length, attempts: attempts.length } };
 }
 
 /* ---------------- plain-language findings ---------------- */
@@ -235,6 +290,13 @@ function insights(r) {
 
   const stuck = r.levelEnd.adaptive.BEGINNER, total = Object.values(r.levelEnd.adaptive).reduce((s, x) => s + x, 0);
   if (total >= 4 && stuck / total > 0.4) out.push({ kind: 'warn', text: `${Math.round(100 * stuck / total)}% of adaptive players are still at BEGINNER after their last game. The promotion rules (75% accuracy, 1 hint, under par time) may be too strict.` });
+  const ig = r.integrity;
+  if (ig && ig.hasData) {
+    const pc1 = ig.totalGames ? Math.round(1000 * ig.flaggedGames / ig.totalGames) / 10 : 0;
+    const top = ig.events[0];
+    out.push({ kind: pc1 >= 20 ? 'warn' : 'info', text: `Anti-cheat: ${ig.flaggedGames} of ${ig.totalGames} games (${pc1}%) had at least one strike${top ? '; most common event: ' + top.type.replace('_', ' ') + ' (' + top.n + ')' : ''}.` +
+      (ig.dropped ? ` ${ig.dropped} flagged games are excluded from the charts above.` : ' Use the integrity filter to exclude flagged games before drawing conclusions.') });
+  }
   return out;
 }
 
@@ -252,6 +314,11 @@ function reportCSV(r) {
   rows.push(['learning_gain_points', 'mean', t.meanA === null ? null : f1(t.meanA), t.meanB === null ? null : f1(t.meanB), '']);
   rows.push(['learning_gain_points', 'n', t.nA, t.nB, '']);
   rows.push(['learning_gain_test', 'welch_t / df / p / cohens_d', t.t === null ? null : f1(t.t), t.df === null ? null : f1(t.df), t.p === null ? null : t.p.toFixed(4) + ' / d=' + (t.d === null ? '' : f1(t.d))]);
+  if (r.integrity && r.integrity.hasData) {
+    rows.push(['integrity', 'flagged_games / total_games', '', '', r.integrity.flaggedGames + ' / ' + r.integrity.totalGames]);
+    GROUPS.forEach((g) => rows.push(['integrity_' + g, 'games / flagged / events / strikes', r.integrity.perGroup[g].games, r.integrity.perGroup[g].flaggedGames, r.integrity.perGroup[g].events + ' / ' + r.integrity.perGroup[g].strikes]));
+    r.integrity.events.forEach((e) => rows.push(['integrity_event', e.type, '', '', e.n]));
+  }
   r.puzzles.forEach((p) => rows.push(['puzzle_success_pct', p.title + ' (' + p.id + ')', '', '', p.success]));
   return rows.map((row) => row.map(csvCell).join(',')).join('\n');
 }
@@ -309,8 +376,26 @@ function sampleData(seed = 7) {
       sessions[sessions.length - 1].nextLevel = next; li = A_LEVELS.indexOf(next);
     }
   }
-  return { sessions, attempts };
+  return { sessions, attempts, integrity: sampleIntegrity(sessions, seed) };
 }
 
-const _api = { welch, tTwoSided, mean, sd, median, normalizeSessions, normalizeAttempts, analyze, insights, reportCSV, parseCSV, sampleData };
+// SIMULATED anti-cheat events: a minority of games get a few. For demos only.
+function sampleIntegrity(sessions, seed = 7) {
+  let s = (seed * 7919) % 2147483647 || 1; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const out = [];
+  sessions.forEach((g) => {
+    if (R() > 0.22) return;                                                 // about 1 game in 5 is flagged
+    const n = 1 + Math.floor(R() * 3);
+    for (let i = 0; i < n; i++) {
+      const r = R(), type = r < 0.38 ? 'window_blur' : r < 0.6 ? 'tab_hidden' : r < 0.78 ? 'paste' : r < 0.9 ? 'copy' : 'big_jump';
+      const away = type === 'window_blur' || type === 'tab_hidden';
+      const awayMs = away ? Math.round(2000 + R() * 20000) : null;
+      out.push({ participant: g.participant, group: g.group, sessionNo: g.sessionNo, type, awayMs, strike: true });
+    }
+    if (R() < 0.3) out.push({ participant: g.participant, group: g.group, sessionNo: g.sessionNo, type: 'contextmenu', awayMs: null, strike: false });
+  });
+  return out;
+}
+
+const _api = { welch, tTwoSided, mean, sd, median, normalizeSessions, normalizeAttempts, normalizeIntegrity, analyze, insights, reportCSV, parseCSV, sampleData, sampleIntegrity };
 if (typeof module !== 'undefined') module.exports = _api;
