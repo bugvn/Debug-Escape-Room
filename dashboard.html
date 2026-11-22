@@ -103,10 +103,6 @@
   $('logoutBtn').onclick = logout;
   const u = await requireLogin(); if (!u) return;
   const p = await getProfile(u.id);
-  if (p && p.is_admin) {
-    location.replace('analytics.html');
-    return;
-  }
   if (p) $('playerName').textContent = p.player_name;
 
   // Supabase returns at most 1000 rows per request, so read page by page.
