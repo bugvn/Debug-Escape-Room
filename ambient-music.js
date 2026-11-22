@@ -22,7 +22,7 @@ const RemediateAmbient = (() => {
     const s = getSettings();
     const masterLevel = typeof s.master === 'number' ? s.master : 100;
     const musicLevel = typeof s.bgm === 'number' ? s.bgm : 80;
-    return isMuted() ? 0 : (masterLevel / 100) * (musicLevel / 100) * 0.11;
+    return isMuted() ? 0 : (masterLevel / 100) * (musicLevel / 100) * 0.18;
   }
 
   function update() {
@@ -81,7 +81,7 @@ const RemediateAmbient = (() => {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(frequency, now);
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.035, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.055, now + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 3.8);
     osc.connect(gain);
     gain.connect(master);
@@ -101,9 +101,9 @@ const RemediateAmbient = (() => {
     master = context.createGain();
     master.gain.value = level();
     master.connect(context.destination);
-    addPad(110, -4, 0.15);
-    addPad(164.81, 3, 0.09);
-    addPad(220, -7, 0.055);
+    addPad(110, -4, 0.22);
+    addPad(164.81, 3, 0.14);
+    addPad(220, -7, 0.085);
     addNoise();
     started = true;
     timer = setInterval(playBell, 4800);
