@@ -20,29 +20,8 @@
 <div class="glow glow--cyan"></div>
 <div class="glow glow--violet"></div>
 
-<header class="topbar">
-  <div class="topbar__inner">
-    <a class="brand" href="dashboard.html">
-      <div class="brand__mark">&lt;&gt;</div>
-      <div>
-        <span class="brand__name">Remediate</span>
-        <span class="brand__slash">/</span>
-        <h1 class="brand__sub">Dashboard</h1>
-      </div>
-    </a>
-    <nav class="nav">
-      <a class="nav__link nav__link--on" href="dashboard.html" aria-current="page">Dashboard</a>
-      <a class="nav__link hidden" id="navAnalytics" href="analytics.html">Analytics</a>
-      <a class="nav__link" href="index.html">Lessons</a>
-      <a class="nav__link" href="game-room.html">Play</a>
-      <span class="player" style="cursor:default">
-        <span class="player__avatar">?<i></i></span>
-        <span id="playerName">Player</span>
-      </span>
-      <button class="nav__link nav__link--out" id="logoutBtn" type="button">Log out</button>
-    </nav>
-  </div>
-</header>
+<header id="siteHeader" data-title="Dashboard"></header>
+<script src="site-header.js"></script>
 
 <div class="page">
 
@@ -124,7 +103,6 @@
   $('logoutBtn').onclick = logout;
   const u = await requireLogin(); if (!u) return;
   const p = await getProfile(u.id);
-  if (p && p.is_admin) $('navAnalytics').classList.remove('hidden');   // link only for admins; the database enforces the real limit
   if (p) $('playerName').textContent = p.player_name;
 
   // Supabase returns at most 1000 rows per request, so read page by page.
