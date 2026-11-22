@@ -41,7 +41,10 @@
       <h2 class="head__title">How do players debug?</h2>
       <p class="head__sub">One group of players, described with means and SDs: how accuracy, attempts, time and hints change from room to room, which topics are weak, what the adaptive rules did, and which games to trust.</p>
     </div>
-    <span class="srcchip" id="srcChip">No data loaded</span>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+      <span class="srcchip srcchip--on" id="whoChip" hidden></span>
+      <span class="srcchip" id="srcChip">No data loaded</span>
+    </div>
   </section>
 
   <section class="ctrl" aria-label="Data source and filters">
@@ -293,6 +296,17 @@
   const $ = id => document.getElementById(id);
   $('logoutBtn').onclick = logout;
   const u = await requireLogin(); if (!u) return;
+
+  // Admin only. This hides the page for players. The real lock is the database: without profiles.is_admin
+  // (migration-03.sql) Row Level Security returns only the player's own rows, so nobody gains data by skipping this check.
+  let isAdmin = false;
+  try { const prof = await getProfile(u.id); isAdmin = !!(prof && prof.is_admin); } catch (e) { console.error(e); }
+  if (isAdmin) { const w = $('whoChip'); w.textContent = 'Admin · ' + (u.email || 'signed in'); w.hidden = false; }
+  if (!isAdmin) {
+    document.querySelector('.an').innerHTML = '<section class="card pixel-box"><h2 class="card__title">Admins only</h2>' +
+      '<p class="zero">The analytics page is for the researchers.<br>Your own results are on the <a href="dashboard.html" style="color:var(--ad)">Dashboard</a>.</p></section>';
+    return;
+  }
 
   let SESS = [], ATT = [], INT = [], SIM = false, LABEL = '', charts = [], PRINTING = false, R = null;
   let sortKey = 'rooms', sortDir = -1;
