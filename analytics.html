@@ -38,8 +38,8 @@
 
   <section class="head">
     <div>
-      <h2 class="head__title">Does the adaptive room teach better?</h2>
-      <p class="head__sub">Compare players in the adaptive game with the fixed-level control group: accuracy over time, weak topics, hard puzzles, and which games to trust.</p>
+      <h2 class="head__title">How do players debug?</h2>
+      <p class="head__sub">One group of players, described with means and SDs: how accuracy, attempts, time and hints change from room to room, which topics are weak, what the adaptive rules did, and which games to trust.</p>
     </div>
     <span class="srcchip" id="srcChip">No data loaded</span>
   </section>
@@ -55,6 +55,9 @@
     </div>
     <label class="fld">Room level
       <select id="fLevel"><option value="">All levels</option><option>BEGINNER</option><option>INTERMEDIATE</option><option>ADVANCED</option></select>
+    </label>
+    <label class="fld">Starting level
+      <select id="fStart"><option value="">All players</option><option>BEGINNER</option><option>INTERMEDIATE</option><option>ADVANCED</option></select>
     </label>
     <label class="fld">Games to include
       <select id="fIntegrity">
@@ -85,7 +88,7 @@
       </button>
       <button class="srcc srcc--gold" type="button" data-go="btnSample">
         <span class="srcc__t">Sample data</span>
-        <span class="srcc__d">24 simulated players so you can see every chart and rehearse the demo.</span>
+        <span class="srcc__d">30 simulated players, 3 rooms each, so you can see every chart and rehearse the demo.</span>
         <span class="srcc__n">Simulated. Never present these numbers as research results.</span>
       </button>
     </div>
@@ -97,8 +100,9 @@
     <div class="stack" style="margin-top:24px">
       <div class="tabs" role="tablist" aria-label="Analytics sections" id="tabs">
         <button class="tab" role="tab" id="t-overview" aria-controls="p-overview" aria-selected="true" type="button" data-tab="overview">Overview</button>
-        <button class="tab" role="tab" id="t-learning" aria-controls="p-learning" aria-selected="false" tabindex="-1" type="button" data-tab="learning">Learning</button>
-        <button class="tab" role="tab" id="t-puzzles" aria-controls="p-puzzles" aria-selected="false" tabindex="-1" type="button" data-tab="puzzles">Puzzles</button>
+        <button class="tab" role="tab" id="t-rooms" aria-controls="p-rooms" aria-selected="false" tabindex="-1" type="button" data-tab="rooms">Rooms</button>
+        <button class="tab" role="tab" id="t-topics" aria-controls="p-topics" aria-selected="false" tabindex="-1" type="button" data-tab="topics">Topics</button>
+        <button class="tab" role="tab" id="t-adapt" aria-controls="p-adapt" aria-selected="false" tabindex="-1" type="button" data-tab="adapt">Adaptation</button>
         <button class="tab" role="tab" id="t-integrity" aria-controls="p-integrity" aria-selected="false" tabindex="-1" type="button" data-tab="integrity">Integrity<span class="tab__n hidden" id="integrityBadge"></span></button>
         <button class="tab" role="tab" id="t-players" aria-controls="p-players" aria-selected="false" tabindex="-1" type="button" data-tab="players">Players</button>
       </div>
@@ -113,52 +117,121 @@
           </section>
           <div class="grid2">
             <section class="card pixel-box">
-              <h2 class="card__title">Learning curve</h2>
-              <div class="chartbox"><canvas id="cCurve" role="img" aria-label="Accuracy by game number, adaptive vs control"></canvas></div>
-              <p class="hint">Average submit accuracy of each player's game number N. The adaptive line should climb faster than control.</p>
+              <h2 class="card__title">Accuracy through the playthrough</h2>
+              <div class="chartbox"><canvas id="cCurve" role="img" aria-label="Mean accuracy and first-attempt success by room number"></canvas></div>
+              <p class="hint">Mean of each player's room N. Accuracy = correct submits out of all submits. First attempt = puzzles solved on the first submit.</p>
             </section>
             <section class="card card--lav pixel-box">
-              <h2 class="card__title">Adaptive vs control</h2>
-              <table class="cmp" id="cmp"></table>
-              <p class="hint" id="cmpNote"></p>
+              <h2 class="card__title">How rooms ended</h2>
+              <div class="chartbox"><canvas id="cOutcome" role="img" aria-label="Share of rooms escaped versus given up"></canvas></div>
+              <p class="hint">Escaped = all puzzles solved. Left = given up, or closed by the anti-cheat limit.</p>
+            </section>
+          </div>
+          <section class="card pixel-box">
+            <h2 class="card__title">Descriptive statistics</h2>
+            <table class="cmp" id="cmp"></table>
+            <p class="hint">One row per measure, over every room shown. SD = standard deviation. All comparisons in this study are descriptive.</p>
+          </section>
+        </div>
+      </section>
+
+      <!-- ROOMS -->
+      <section class="tabpanel" role="tabpanel" id="p-rooms" aria-labelledby="t-rooms" hidden>
+        <div class="stack">
+          <div class="grid2">
+            <section class="card pixel-box">
+              <h2 class="card__title">Accuracy by room</h2>
+              <div class="chartbox"><canvas id="cRoomAcc" role="img" aria-label="Mean accuracy and first-attempt success per room"></canvas></div>
+              <p class="hint">Mean per room. Hover a bar to see SD and the number of rooms.</p>
+            </section>
+            <section class="card card--lav pixel-box">
+              <h2 class="card__title">Attempts per puzzle</h2>
+              <div class="chartbox"><canvas id="cRoomAtt" role="img" aria-label="Mean submits per puzzle in each room"></canvas></div>
+              <p class="hint">Submits needed per puzzle. 1.0 means every puzzle was solved on the first try.</p>
+            </section>
+            <section class="card card--pink pixel-box">
+              <h2 class="card__title">Time per room</h2>
+              <div class="chartbox"><canvas id="cRoomTime" role="img" aria-label="Mean minutes spent per room"></canvas></div>
+              <p class="hint">Mean minutes in the room. There is no time limit, so long rooms are not failures.</p>
+            </section>
+            <section class="card pixel-box">
+              <h2 class="card__title">Hints and give-ups</h2>
+              <div class="chartbox"><canvas id="cRoomHint" role="img" aria-label="Mean hints per room and give-up share"></canvas></div>
+              <p class="hint">Bars: mean hints per room. Line: share of rooms given up.</p>
+            </section>
+            <section class="card card--lav pixel-box">
+              <h2 class="card__title">By starting level</h2>
+              <div class="chartbox"><canvas id="cStart" role="img" aria-label="Accuracy and first-attempt success by starting level"></canvas></div>
+              <p class="hint">Starting level is the level the player was placed at before room 1 (the pretest placement). Descriptive only.</p>
+            </section>
+            <section class="card card--pink pixel-box">
+              <h2 class="card__title">First room vs last room</h2>
+              <div class="chartbox"><canvas id="cChange" role="img" aria-label="Players who improved, stayed the same or dropped in accuracy"></canvas></div>
+              <p class="hint">Players with 2+ rooms. Same = within 5 accuracy points of their first room.</p>
+            </section>
+          </div>
+          <section class="card pixel-box">
+            <h2 class="card__title">Room table</h2>
+            <div class="table-wrap"><table class="cmp" id="roomTable"></table></div>
+            <p class="hint">Mean (SD) per room number.</p>
+          </section>
+        </div>
+      </section>
+
+      <!-- TOPICS -->
+      <section class="tabpanel" role="tabpanel" id="p-topics" aria-labelledby="t-topics" hidden>
+        <div class="stack">
+          <div class="grid2">
+            <section class="card card--pink pixel-box">
+              <h2 class="card__title">Weak topics</h2>
+              <div class="chartbox"><canvas id="cCat" role="img" aria-label="Share of wrong submits and first-attempt success per topic"></canvas></div>
+              <p class="hint">Wrong submits per topic. Tall pink bars show where lessons and puzzles need work. Topics are not shown equally to every player, so read these as descriptions.</p>
+            </section>
+            <section class="card pixel-box">
+              <h2 class="card__title">Mistake types</h2>
+              <div class="chartbox"><canvas id="cMistake" role="img" aria-label="Most common mistake types"></canvas></div>
+              <p class="hint">What went wrong in failed submits. This drives the recommendations shown after each game.</p>
+            </section>
+            <section class="card card--lav pixel-box">
+              <h2 class="card__title">Weakest topic per player</h2>
+              <div class="chartbox"><canvas id="cWeakest" role="img" aria-label="Number of players per weakest topic"></canvas></div>
+              <p class="hint">The topic each player misses most (2+ submits needed). This is what the post-game debrief tells them to practice.</p>
+            </section>
+            <section class="card pixel-box">
+              <h2 class="card__title">Puzzle difficulty</h2>
+              <div class="chartbox"><canvas id="cPuzzle" role="img" aria-label="Success rate per puzzle"></canvas></div>
+              <p class="hint">Correct submits per puzzle, hardest first. Red under 40%, gold under 70%.</p>
             </section>
           </div>
         </div>
       </section>
 
-      <!-- LEARNING -->
-      <section class="tabpanel" role="tabpanel" id="p-learning" aria-labelledby="t-learning" hidden>
-        <div class="grid2">
-          <section class="card card--lav pixel-box">
-            <h2 class="card__title">Level progression</h2>
-            <div class="chartbox"><canvas id="cLevel" role="img" aria-label="Average room level by game number"></canvas></div>
-            <p class="hint">Average level of the room players got. Control stays flat by design. Adaptive should drift up as players improve.</p>
-          </section>
-          <section class="card card--pink pixel-box">
-            <h2 class="card__title">Weak topics</h2>
-            <div class="chartbox"><canvas id="cCat" role="img" aria-label="Share of wrong submits per topic"></canvas></div>
-            <p class="hint">Share of submits that were wrong, per topic. Tall bars show where lessons and puzzles need work.</p>
-          </section>
-          <section class="card pixel-box">
-            <h2 class="card__title">Mistake types</h2>
-            <div class="chartbox"><canvas id="cMistake" role="img" aria-label="Most common mistake types"></canvas></div>
-            <p class="hint">What went wrong in failed submits. This drives the recommendations shown after each game.</p>
-          </section>
-          <section class="card card--lav pixel-box">
-            <h2 class="card__title">Where players end up</h2>
-            <div class="chartbox"><canvas id="cEnd" role="img" aria-label="Level players reach by the end, adaptive vs control"></canvas></div>
-            <p class="hint">Players per level after their last game. Adaptive players should spread upward; control players stay where they started.</p>
-          </section>
+      <!-- ADAPTATION -->
+      <section class="tabpanel" role="tabpanel" id="p-adapt" aria-labelledby="t-adapt" hidden>
+        <div class="stack">
+          <div class="grid2">
+            <section class="card card--lav pixel-box">
+              <h2 class="card__title">What the rules did</h2>
+              <div class="chartbox"><canvas id="cMoves" role="img" aria-label="Rooms after which the level went up, stayed or went down"></canvas></div>
+              <p class="hint">After each finished room the rules move the next level up, keep it, or move it down.</p>
+            </section>
+            <section class="card pixel-box">
+              <h2 class="card__title">Room levels by room number</h2>
+              <div class="chartbox"><canvas id="cLevels" role="img" aria-label="Number of rooms per level for each room number"></canvas></div>
+              <p class="hint">How many players got a Beginner, Intermediate or Advanced room at each step.</p>
+            </section>
+            <section class="card card--pink pixel-box">
+              <h2 class="card__title">Where players end up</h2>
+              <div class="chartbox"><canvas id="cEnd" role="img" aria-label="Level players reach after their last room"></canvas></div>
+              <p class="hint">Players per level after their last room.</p>
+            </section>
+            <section class="card pixel-box">
+              <h2 class="card__title">Rule check</h2>
+              <div id="audit"></div>
+              <p class="hint">Re-runs the adaptation rules on each room's logged submits and compares the answer with the level that was logged. This is the log-versus-rules test from Chapter 3.</p>
+            </section>
+          </div>
         </div>
-      </section>
-
-      <!-- PUZZLES -->
-      <section class="tabpanel" role="tabpanel" id="p-puzzles" aria-labelledby="t-puzzles" hidden>
-        <section class="card card--lav pixel-box">
-          <h2 class="card__title">Puzzle difficulty</h2>
-          <div class="chartbox chartbox--tall"><canvas id="cPuzzle" role="img" aria-label="Success rate per puzzle"></canvas></div>
-          <p class="hint">Share of submits that were correct, per puzzle, hardest first. Red under 40%, gold under 70%. A puzzle far below its level's average needs better hints or a different level.</p>
-        </section>
       </section>
 
       <!-- INTEGRITY -->
@@ -173,9 +246,9 @@
               <p class="hint">Pasting and copying are blocked, but every attempt is still counted. Grey bars are logged only and cost no strike.</p>
             </section>
             <section class="card pixel-box">
-              <h2 class="card__title">Flagged games by group</h2>
-              <div class="chartbox chartbox--mid"><canvas id="cIntGroup" role="img" aria-label="Share of flagged games, adaptive vs control"></canvas></div>
-              <p class="hint">A flagged game has at least one strike. If one group is flagged much more, its results need a closer look.</p>
+              <h2 class="card__title">Flagged games by room</h2>
+              <div class="chartbox chartbox--mid"><canvas id="cIntRoom" role="img" aria-label="Share of flagged games per room number"></canvas></div>
+              <p class="hint">A flagged game has at least one strike. If one room is flagged much more, its results need a closer look.</p>
             </section>
           </div>
           <section class="card card--lav pixel-box">
@@ -198,9 +271,6 @@
           <p class="card__sub">One row per anonymous player. Click a column to sort.</p>
           <div class="ptools">
             <label class="fld">Search player id<input id="pSearch" type="search" placeholder="e.g. 3fa9" autocomplete="off"></label>
-            <label class="fld">Group
-              <select id="pGroup"><option value="">Both groups</option><option value="adaptive">Adaptive</option><option value="control">Control</option></select>
-            </label>
             <span class="hint" id="pCount" style="margin:0 0 12px"></span>
           </div>
           <div class="table-wrap"><table class="ptable" id="ptable"></table></div>
@@ -225,9 +295,10 @@
   const u = await requireLogin(); if (!u) return;
 
   let SESS = [], ATT = [], INT = [], SIM = false, LABEL = '', charts = [], PRINTING = false, R = null;
-  let sortKey = 'games', sortDir = -1;
-  const C = { adaptive: '#38e1ff', control: '#a594f9', warn: '#ffc857', bad: '#ff5c8a', ok: '#4ade80' };
-  const GROUP_LABEL = { adaptive: 'Adaptive', control: 'Control' };
+  let sortKey = 'rooms', sortDir = -1;
+  const C = { main: '#38e1ff', alt: '#a594f9', warn: '#ffc857', bad: '#ff5c8a', ok: '#4ade80', grey: '#94a3b8' };
+  const PAL = [C.main, C.alt, C.warn, C.bad, C.ok, C.grey];
+  const LV = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'], LV_LABEL = ['Beginner', 'Intermediate', 'Advanced'];
   const EVENT_LABEL = { paste: 'Paste', copy: 'Copy', cut: 'Cut', drop: 'Drag-drop', big_jump: 'Text inserted at once', tab_hidden: 'Switched tab', window_blur: 'Switched window',
     contextmenu: 'Right-click', devtools_key: 'Dev-tools key', fullscreen_exit: 'Left fullscreen', auto_end: 'Room closed' };
 
@@ -276,11 +347,11 @@
       const rows = parseCSV(await f.text());
       const h = rows[0] || {};
       if ('event_type' in h && 'session_no' in h) g = rows;                                            // research_integrity
-      else if ('study_group' in h && 'session_no' in h && 'puzzle_id' in h) a = rows;                  // research_attempts
-      else if ('study_group' in h && 'session_no' in h) s = rows;                                      // research_sessions
+      else if ('puzzle_id' in h && 'session_no' in h) a = rows;                                        // research_attempts
+      else if ('result' in h && 'session_no' in h) s = rows;                                           // research_sessions
     }
     e.target.value = '';
-    if (!s) return say('Select <b>research_sessions.csv</b>. It needs the columns <code>study_group</code> and <code>session_no</code>. You can add research_attempts.csv and research_integrity.csv in the same selection.', 'err');
+    if (!s) return say('Select <b>research_sessions.csv</b>. It needs the columns <code>result</code> and <code>session_no</code>. You can add research_attempts.csv and research_integrity.csv in the same selection.', 'err');
     const missing = [!a && 'puzzle and mistake charts need research_attempts.csv', !g && 'the integrity tab needs research_integrity.csv'].filter(Boolean);
     if (load(normalizeSessions(s), normalizeAttempts(a || []), normalizeIntegrity(g || []), false, 'CSV upload')) { pressed('btnCsv'); if (missing.length) say($('banner').innerHTML + ' Missing: ' + missing.join('; ') + '.'); }
   };
@@ -297,46 +368,43 @@
   const fmtSec = x => x === null || x === undefined ? '--' : Math.floor(x / 60) + 'm ' + String(Math.round(x % 60)).padStart(2, '0') + 's';
   const pc = x => x === null || x === undefined ? '--' : Math.round(x * 1000) / 10 + '%';
   const n1 = x => x === null || x === undefined ? '--' : (Math.round(x * 10) / 10).toFixed(1);
-  const rel = (a, b, max) => { const m = max || Math.max(a || 0, b || 0, 1e-9); return [Math.max(0, Math.min(100, 100 * (a || 0) / m)), Math.max(0, Math.min(100, 100 * (b || 0) / m))]; };
+  const ms = (d, f) => d.mean === null ? '--' : f(d.mean) + (d.sd === null ? '' : ' (' + f(d.sd) + ')');   // mean (SD)
+  const P1 = x => n1(x) + '%';
 
-  /* ---------- KPI cards with comparison bars ---------- */
-  function kpi(label, key, fmt, max) {
-    const k = R.kpis, a = k.adaptive[key], c = k.control[key], w = rel(a, c, max);
+  /* ---------- KPI cards ---------- */
+  function kpi(label, value, sub) {
     const d = document.createElement('div'); d.className = 'kp';
-    d.innerHTML = '<div class="kp__l"></div><div class="kp__v"></div>' +
-      '<div class="kp__row"><i></i><span class="kp__bar"><b></b></span><span class="va"></span></div>' +
-      '<div class="kp__row kp__row--c"><i></i><span class="kp__bar"><b></b></span><span class="vc"></span></div>';
-    d.querySelector('.kp__l').textContent = label;
-    d.querySelector('.kp__v').textContent = fmt(k.all[key]);
-    const bars = d.querySelectorAll('.kp__bar b'); bars[0].style.width = w[0] + '%'; bars[1].style.width = w[1] + '%';
-    d.querySelector('.va').textContent = fmt(a); d.querySelector('.vc').textContent = fmt(c);
-    d.setAttribute('aria-label', label + ': ' + fmt(k.all[key]) + '. Adaptive ' + fmt(a) + ', control ' + fmt(c) + '.');
+    d.innerHTML = '<div class="kp__l"></div><div class="kp__v"></div><div class="kp__s"></div>';
+    d.children[0].textContent = label; d.children[1].textContent = value; d.children[2].textContent = sub || '';
+    d.setAttribute('aria-label', label + ': ' + value + (sub ? '. ' + sub : '') + '.');
     $('kpis').append(d);
   }
 
   /* ---------- render ---------- */
   function render() {
-    R = analyze(SESS, ATT, { level: $('fLevel').value, excludeStrikes: +$('fIntegrity').value }, INT);
+    R = analyze(SESS, ATT, { level: $('fLevel').value, start: $('fStart').value, excludeStrikes: +$('fIntegrity').value }, INT);
     $('empty').classList.add('hidden'); $('content').classList.remove('hidden');
     $('btnReport').disabled = false; $('btnPrint').disabled = false;
-    const chip = $('srcChip'); chip.textContent = (SIM ? 'Simulated: ' : '') + LABEL + ' · ' + R.n.sessions + ' games'; chip.className = 'srcchip ' + (SIM ? 'srcchip--sim' : 'srcchip--on');
-    const parts = [R.n.sessions + ' games and ' + R.n.attempts + ' submits shown'];
-    if ($('fLevel').value) parts.push('level ' + $('fLevel').value);
+    const chip = $('srcChip'); chip.textContent = (SIM ? 'Simulated: ' : '') + LABEL + ' · ' + R.n.sessions + ' rooms'; chip.className = 'srcchip ' + (SIM ? 'srcchip--sim' : 'srcchip--on');
+    const parts = [R.n.sessions + ' rooms and ' + R.n.attempts + ' submits shown'];
+    if ($('fLevel').value) parts.push('room level ' + $('fLevel').value);
+    if ($('fStart').value) parts.push('started at ' + $('fStart').value);
     if (R.integrity.dropped) parts.push(R.integrity.dropped + ' flagged games hidden');
     say((SIM ? '<b>SAMPLE DATA:</b> simulated players for demonstration only. These numbers are not research results. ' : '') + plain(parts.join(' · ')) + '.', SIM ? 'sim' : '');
 
+    const k = R.kpis, st = R.stats;
     $('kpis').innerHTML = '';
-    kpi('Players', 'participants', x => x);
-    kpi('Games', 'sessions', x => x);
-    kpi('Escape rate', 'escapeRate', pc, 1);
-    kpi('Submit accuracy', 'accuracy', pc, 1);
-    kpi('First-try rate', 'firstTryRate', pc, 1);
-    kpi('Hints per game', 'avgHints', n1, 3);
+    kpi('Players', k.participants, 'target 30');
+    kpi('Rooms played', k.rooms, n1(k.rooms / (k.participants || 1)) + ' per player');
+    kpi('Escape rate', pc(k.escapeRate), 'given up ' + pc(k.giveUpRate));
+    kpi('Accuracy', pc(k.accuracy), 'all submits · room SD ' + n1(st.accuracy.sd) + ' pts');
+    kpi('First attempt', pc(k.firstTryRate), 'all puzzles · room SD ' + n1(st.firstTry.sd) + ' pts');
+    kpi('Hints per room', n1(k.avgHints), 'SD ' + n1(st.hints.sd));
 
     const bad = R.integrity.flaggedGames;
     const badge = $('integrityBadge'); badge.textContent = bad; badge.classList.toggle('hidden', !bad);
 
-    drawCharts(); drawTable(); drawInsights(); drawIntegrity(); drawPlayers();
+    drawCharts(); drawTables(); drawInsights(); drawAdaptation(); drawIntegrity(); drawPlayers();
   }
 
   function mk(id, cfg) {
@@ -348,42 +416,63 @@
   }
   const ink = () => PRINTING ? '#111' : '#9aa6c4';
   const gridc = () => PRINTING ? '#ccc' : 'rgba(35,42,78,.9)';
+  const edge = () => PRINTING ? '#fff' : '#0a0d1a';
   const ax = (title, extra) => Object.assign({ grid: { color: gridc() }, title: title ? { display: true, text: title } : undefined }, extra);
-  const ds = (g, data) => ({ label: GROUP_LABEL[g], data, borderColor: C[g], backgroundColor: C[g], tension: .25, spanGaps: true, pointRadius: 4 });
+  const line = (label, data, color) => ({ label, data, borderColor: color, backgroundColor: color, tension: .25, spanGaps: true, pointRadius: 4 });
+  const bar = (label, data, color) => ({ label, data, backgroundColor: color });
+  const sdTip = (field, f) => ({ callbacks: { afterLabel: c => { const r = R.byRoom[c.dataIndex]; return r && r[field] && r[field].sd !== null ? 'SD ' + f(r[field].sd) + ' · rooms: ' + r.n : 'rooms: ' + (r ? r.n : ''); } } });
+  const pie = (id, labels, data, colors) => mk(id, { type: 'doughnut', data: { labels, datasets: [{ data, backgroundColor: colors || PAL, borderColor: edge() }] },
+    options: { plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: c => { const t = c.dataset.data.reduce((s, x) => s + x, 0); return c.label + ': ' + c.parsed + (t ? ' (' + Math.round(1000 * c.parsed / t) / 10 + '%)' : ''); } } } } } });
 
   function drawCharts() {
     if (typeof Chart !== 'undefined') { Chart.defaults.color = ink(); Chart.defaults.font.family = 'VT323, monospace'; Chart.defaults.font.size = 16; }
-    const cv = R.curve;
-    mk('cCurve', { type: 'line', data: { labels: cv.labels, datasets: [ds('adaptive', cv.adaptive), ds('control', cv.control)] },
-      options: { scales: { y: ax('Accuracy (%)', { min: 0, max: 100 }), x: ax() }, plugins: { tooltip: { callbacks: { afterLabel: c => 'players: ' + (c.datasetIndex ? cv.nControl : cv.nAdaptive)[c.dataIndex] } } } } });
-    mk('cLevel', { type: 'line', data: { labels: cv.labels, datasets: [ds('adaptive', cv.levelAdaptive), ds('control', cv.levelControl)] },
-      options: { scales: { y: ax('Room level', { min: 0, max: 2, ticks: { stepSize: 1, callback: v => ['Beginner', 'Intermediate', 'Advanced'][v] } }), x: ax() } } });
-    mk('cCat', { type: 'bar', data: { labels: R.categories.map(c => c.category), datasets: ['adaptive', 'control'].map(g => ({ label: GROUP_LABEL[g], data: R.categories.map(c => c[g]), backgroundColor: C[g] })) },
-      options: { scales: { y: ax('Wrong submits (%)', { min: 0, max: 100 }), x: ax() } } });
-    const top = R.mistakes.slice(0, 6), pal = [C.adaptive, C.control, C.warn, C.bad, C.ok, '#94a3b8'];
-    mk('cMistake', { type: 'doughnut', data: { labels: top.map(m => m.tag), datasets: [{ data: top.map(m => m.n), backgroundColor: pal, borderColor: PRINTING ? '#fff' : '#0a0d1a' }] },
-      options: { plugins: { legend: { position: 'right' } } } });
-    const L = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
-    mk('cEnd', { type: 'bar', data: { labels: ['Beginner', 'Intermediate', 'Advanced'], datasets: ['adaptive', 'control'].map(g => ({ label: GROUP_LABEL[g], data: L.map(l => R.levelEnd[g][l]), backgroundColor: C[g] })) },
-      options: { scales: { y: ax('Players', { beginAtZero: true, ticks: { precision: 0 } }), x: ax() } } });
+    const rm = R.byRoom, lab = rm.map(r => r.label);
+    const m = f => rm.map(r => r[f].mean === null ? null : Math.round(r[f].mean * 10) / 10);
+
+    // overview
+    mk('cCurve', { type: 'line', data: { labels: lab, datasets: [line('Accuracy', m('accuracy'), C.main), line('First attempt', m('firstTry'), C.alt)] },
+      options: { scales: { y: ax('Mean (%)', { min: 0, max: 100 }), x: ax() }, plugins: { tooltip: sdTip('accuracy', n1) } } });
+    pie('cOutcome', ['Escaped', 'Left'], [R.outcome.escaped, R.outcome.left], [C.ok, C.bad]);
+
+    // rooms
+    mk('cRoomAcc', { type: 'bar', data: { labels: lab, datasets: [bar('Accuracy', m('accuracy'), C.main), bar('First attempt', m('firstTry'), C.alt)] },
+      options: { scales: { y: ax('Mean (%)', { min: 0, max: 100 }), x: ax() }, plugins: { tooltip: sdTip('accuracy', n1) } } });
+    mk('cRoomAtt', { type: 'bar', data: { labels: lab, datasets: [bar('Submits per puzzle', rm.map(r => r.attempts.mean === null ? null : Math.round(r.attempts.mean * 100) / 100), C.alt)] },
+      options: { scales: { y: ax('Submits', { beginAtZero: true }), x: ax() }, plugins: { legend: { display: false }, tooltip: sdTip('attempts', n1) } } });
+    mk('cRoomTime', { type: 'bar', data: { labels: lab, datasets: [bar('Minutes per room', rm.map(r => r.time.mean === null ? null : Math.round(r.time.mean / 6) / 10), C.warn)] },
+      options: { scales: { y: ax('Minutes', { beginAtZero: true }), x: ax() }, plugins: { legend: { display: false }, tooltip: { callbacks: { afterLabel: c => { const r = rm[c.dataIndex]; return r && r.time.sd !== null ? 'SD ' + fmtSec(r.time.sd) + ' · rooms: ' + r.n : ''; } } } } } });
+    mk('cRoomHint', { data: { labels: lab, datasets: [
+        { type: 'bar', label: 'Hints per room', data: rm.map(r => r.hints.mean === null ? null : Math.round(r.hints.mean * 100) / 100), backgroundColor: C.ok, yAxisID: 'y' },
+        { type: 'line', label: 'Given up (%)', data: rm.map(r => r.giveUp), borderColor: C.bad, backgroundColor: C.bad, tension: .25, pointRadius: 4, yAxisID: 'y2' }] },
+      options: { scales: { y: ax('Hints', { beginAtZero: true }), y2: { position: 'right', min: 0, max: 100, grid: { drawOnChartArea: false }, title: { display: true, text: 'Given up (%)' } }, x: ax() } } });
+    const bs = R.byStart.filter(s => s.rooms);
+    mk('cStart', { type: 'bar', data: { labels: bs.map(s => LV_LABEL[LV.indexOf(s.level)] + ' (' + s.players + ')'),
+        datasets: [bar('Accuracy', bs.map(s => s.accuracy.mean === null ? null : Math.round(s.accuracy.mean * 10) / 10), C.main), bar('First attempt', bs.map(s => s.firstTry.mean === null ? null : Math.round(s.firstTry.mean * 10) / 10), C.alt)] },
+      options: { scales: { y: ax('Mean (%)', { min: 0, max: 100 }), x: ax() } } });
+    pie('cChange', ['Improved', 'About the same', 'Dropped'], [R.improvement.improved, R.improvement.same, R.improvement.declined], [C.ok, C.grey, C.bad]);
+
+    // topics
+    mk('cCat', { type: 'bar', data: { labels: R.categories.map(c => c.category), datasets: [bar('Wrong submits (%)', R.categories.map(c => c.wrongPct), C.bad), bar('Solved on first attempt (%)', R.categories.map(c => c.firstTryPct), C.ok)] },
+      options: { scales: { y: ax('%', { min: 0, max: 100 }), x: ax() } } });
+    const top = R.mistakes.slice(0, 6);
+    pie('cMistake', top.map(x => x.tag), top.map(x => x.n));
+    const wk = Object.entries(R.weakestCount);
+    pie('cWeakest', wk.map(([c]) => c), wk.map(([, n]) => n));
     const pz = R.puzzles;
     mk('cPuzzle', { type: 'bar', data: { labels: pz.map(p => p.title + ' (' + p.n + ')'), datasets: [{ label: 'Correct submits (%)', data: pz.map(p => p.success),
         backgroundColor: pz.map(p => p.success < 40 ? C.bad : p.success < 70 ? C.warn : C.ok) }] },
       options: { indexAxis: 'y', scales: { x: ax('Correct submits (%)', { min: 0, max: 100 }), y: ax() }, plugins: { legend: { display: false } } } });
+    const cb = $('cPuzzle'); if (cb) cb.parentElement.style.height = Math.max(300, 26 * pz.length + 70) + 'px';
   }
 
-  function drawTable() {
-    const t = R.test, k = R.kpis, A = k.adaptive, Cc = k.control;
-    const row = (label, a, c) => '<tr><td>' + label + '</td><td>' + a + '</td><td>' + c + '</td></tr>';
-    $('cmp').innerHTML = '<tr><th>Metric</th><th class="a">Adaptive</th><th class="c">Control</th></tr>' +
-      row('Players', A.participants, Cc.participants) + row('Games', A.sessions, Cc.sessions) +
-      row('Escape rate', pc(A.escapeRate), pc(Cc.escapeRate)) + row('Submit accuracy', pc(A.accuracy), pc(Cc.accuracy)) +
-      row('First-try rate', pc(A.firstTryRate), pc(Cc.firstTryRate)) + row('Avg escape time', fmtSec(A.avgEscapeSec), fmtSec(Cc.avgEscapeSec)) +
-      row('Games at ADVANCED', pc(A.advancedShare), pc(Cc.advancedShare)) +
-      row('Learning gain, mean (pts)', n1(t.meanA), n1(t.meanB)) + row('Learning gain, SD', n1(t.sdA), n1(t.sdB)) + row('Players with 2+ games', t.nA, t.nB);
-    $('cmpNote').textContent = t.p === null
-      ? 'Learning gain = accuracy of a player\'s last game minus their first. Not enough players with 2+ games in both groups for a significance test.'
-      : 'Learning gain = accuracy of a player\'s last game minus their first. Welch t-test: t=' + n1(t.t) + ', df=' + n1(t.df) + ', p=' + t.p.toFixed(3) + ', Cohen\'s d=' + n1(t.d) + (t.p < 0.05 ? ' (significant at 0.05).' : ' (not significant at 0.05).');
+  function drawTables() {
+    const st = R.stats;
+    const row = (label, d, f) => '<tr><td>' + label + '</td><td>' + (d.mean === null ? '--' : f(d.mean)) + '</td><td>' + (d.sd === null ? '--' : f(d.sd)) + '</td><td>' + (d.median === null ? '--' : f(d.median)) + '</td><td>' + d.n + '</td></tr>';
+    $('cmp').innerHTML = '<tr><th>Measure (per room)</th><th>Mean</th><th>SD</th><th>Median</th><th>n</th></tr>' +
+      row('Accuracy', st.accuracy, P1) + row('First-attempt success', st.firstTry, P1) + row('Submits per puzzle', st.attempts, x => n1(x)) +
+      row('Time in room', st.time, fmtSec) + row('Hints used', st.hints, x => n1(x)) + row('Puzzles solved', st.solved, x => n1(x));
+    $('roomTable').innerHTML = '<tr><th>Room</th><th>Rooms</th><th>Accuracy %</th><th>First attempt %</th><th>Submits / puzzle</th><th>Time</th><th>Hints</th><th>Given up</th></tr>' +
+      R.byRoom.map(r => '<tr><td>' + r.label + '</td><td>' + r.n + '</td><td>' + ms(r.accuracy, n1) + '</td><td>' + ms(r.firstTry, n1) + '</td><td>' + ms(r.attempts, n1) + '</td><td>' + ms(r.time, fmtSec) + '</td><td>' + ms(r.hints, n1) + '</td><td>' + (r.giveUp === null ? '--' : r.giveUp + '%') + '</td></tr>').join('');
   }
 
   function drawInsights() {
@@ -391,13 +480,29 @@
     insights(R).forEach(i => { const li = document.createElement('li'); li.className = i.kind; li.textContent = i.text; ul.append(li); });
   }
 
+  /* ---------- adaptation tab ---------- */
+  function drawAdaptation() {
+    const a = R.adaptation, mv = a.moves;
+    pie('cMoves', ['Moved up', 'Stayed', 'Moved down'], [mv.up, mv.stay, mv.down], [C.ok, C.grey, C.warn]);
+    mk('cLevels', { type: 'bar', data: { labels: a.levelByRoom.map(r => r.label), datasets: LV.map((L, i) => bar(LV_LABEL[i], a.levelByRoom.map(r => r[L]), [C.ok, C.warn, C.bad][i])) },
+      options: { scales: { y: ax('Rooms', { beginAtZero: true, stacked: true, ticks: { precision: 0 } }), x: ax('', { stacked: true }) } } });
+    mk('cEnd', { type: 'bar', data: { labels: LV_LABEL, datasets: [bar('Players', LV.map(L => a.levelEnd[L]), C.main)] },
+      options: { scales: { y: ax('Players', { beginAtZero: true, ticks: { precision: 0 } }), x: ax() }, plugins: { legend: { display: false } } } });
+    const au = a.audit, el = $('audit');
+    if (!au.checked) { el.innerHTML = '<p class="zero">Nothing to check yet. Load research_attempts as well as research_sessions.</p>'; return; }
+    const ok = au.matched === au.checked;
+    el.innerHTML = '<div class="audit__v ' + (ok ? 'audit__v--ok' : 'audit__v--bad') + '">' + au.matched + ' / ' + au.checked + '</div><p class="audit__t">rooms where the logged next level equals what the rules give.</p>' +
+      (ok ? '' : '<table class="cmp"><tr><th>Player</th><th>Room</th><th>Logged</th><th>Rules say</th></tr>' + au.mismatches.map(x => '<tr><td>' + plain(x.participant) + '</td><td>' + x.room + '</td><td>' + plain(x.logged) + '</td><td>' + plain(x.expected) + '</td></tr>').join('') + '</table>' +
+        (au.checked - au.matched > au.mismatches.length ? '<p class="hint">First ' + au.mismatches.length + ' mismatches shown.</p>' : ''));
+  }
+
   /* ---------- integrity tab ---------- */
   function drawIntegrity() {
-    const ig = R.integrity, g = ig.perGroup, has = ig.hasData;
+    const ig = R.integrity, has = ig.hasData;
     $('integrityEmpty').classList.toggle('hidden', has); $('integrityCharts').classList.toggle('hidden', !has);
     const cards = [
       ['Flagged games', ig.flaggedGames + ' / ' + ig.totalGames, 'Games with at least one strike'],
-      ['Strikes', g.adaptive.strikes + g.control.strikes, 'Adaptive ' + g.adaptive.strikes + ' · Control ' + g.control.strikes],
+      ['Strikes', ig.strikes, 'Across shown games'],
       ['Time away', fmtSec(ig.awaySec), 'Total across shown games'],
       ['Rooms closed', ig.autoEnded, 'Hit the 3-strike limit']
     ];
@@ -408,31 +513,31 @@
     const ev = ig.events;
     mk('cInt', { type: 'bar', data: { labels: ev.map(e => EVENT_LABEL[e.type] || e.type), datasets: [{ label: 'Events', data: ev.map(e => e.n), backgroundColor: ev.map(e => ['contextmenu', 'devtools_key'].includes(e.type) ? '#4d5a85' : C.bad) }] },
       options: { indexAxis: 'y', scales: { x: ax('Events', { beginAtZero: true, ticks: { precision: 0 } }), y: ax() }, plugins: { legend: { display: false } } } });
-    const share = k => g[k].games ? Math.round(1000 * g[k].flaggedGames / g[k].games) / 10 : 0;
-    mk('cIntGroup', { type: 'bar', data: { labels: ['Adaptive', 'Control'], datasets: [{ label: 'Flagged games (%)', data: [share('adaptive'), share('control')], backgroundColor: [C.adaptive, C.control] }] },
+    const fr = ig.flaggedByRoom;
+    mk('cIntRoom', { type: 'bar', data: { labels: fr.map(r => r.label), datasets: [{ label: 'Flagged games (%)', data: fr.map(r => r.games ? Math.round(1000 * r.flagged / r.games) / 10 : 0), backgroundColor: C.alt }] },
       options: { scales: { y: ax('Flagged games (%)', { min: 0, max: 100 }), x: ax() }, plugins: { legend: { display: false } } } });
   }
 
   /* ---------- player explorer ---------- */
-  const COLS = [['participant', 'Player'], ['group', 'Group'], ['games', 'Games'], ['escapeRate', 'Escape'], ['accuracy', 'Accuracy'], ['hints', 'Hints/game'], ['level', 'Level now'], ['strikes', 'Strikes']];
+  const COLS = [['participant', 'Player'], ['startLevel', 'Started at'], ['rooms', 'Rooms'], ['escapeRate', 'Escape'], ['accuracy', 'Accuracy'], ['firstTry', 'First try'], ['hints', 'Hints/room'], ['weakest', 'Weakest topic'], ['level', 'Level now'], ['strikes', 'Strikes']];
+  const lv1 = l => l ? l.charAt(0) + l.slice(1).toLowerCase() : '--';
   function drawPlayers() {
-    const q = $('pSearch').value.trim().toLowerCase(), grp = $('pGroup').value;
-    let rows = R.players.filter(p => (!grp || p.group === grp) && (!q || p.participant.toLowerCase().includes(q)));
+    const q = $('pSearch').value.trim().toLowerCase();
+    let rows = R.players.filter(p => !q || p.participant.toLowerCase().includes(q));
     rows.sort((a, b) => { const x = a[sortKey], y = b[sortKey]; if (x === y) return 0; if (x === null || x === undefined) return 1; if (y === null || y === undefined) return -1; return (x > y ? 1 : -1) * sortDir; });
     $('pCount').textContent = rows.length + ' of ' + R.players.length + ' players';
     const head = '<thead><tr>' + COLS.map(([k, l]) => '<th scope="col"><button class="th-sort" type="button" data-k="' + k + '"' + (k === sortKey ? ' aria-sort="' + (sortDir > 0 ? 'ascending' : 'descending') + '"' : '') + '>' + l + '</button></th>').join('') + '</tr></thead>';
-    const body = '<tbody>' + rows.slice(0, 300).map(p => '<tr><td>' + plain(p.participant) + '</td><td><span class="tag tag--' + (p.group === 'adaptive' ? 'a' : 'c') + '">' + GROUP_LABEL[p.group] + '</span></td><td>' + p.games + '</td><td>' + pc(p.escapeRate) +
-      '</td><td>' + pc(p.accuracy) + '</td><td>' + n1(p.hints) + '</td><td>' + plain(p.level ? p.level.charAt(0) + p.level.slice(1).toLowerCase() : '--') + '</td><td>' +
+    const body = '<tbody>' + rows.slice(0, 300).map(p => '<tr><td>' + plain(p.participant) + '</td><td>' + lv1(p.startLevel) + '</td><td>' + p.rooms + '</td><td>' + pc(p.escapeRate) +
+      '</td><td>' + pc(p.accuracy) + '</td><td>' + pc(p.firstTry) + '</td><td>' + n1(p.hints) + '</td><td>' + plain(p.weakest || '--') + '</td><td>' + lv1(p.level) + '</td><td>' +
       (p.strikes ? '<span class="tag tag--bad">' + p.strikes + '</span>' : '<span class="tag tag--ok">0</span>') + '</td></tr>').join('') + '</tbody>';
     $('ptable').innerHTML = head + body;
   }
   $('ptable').addEventListener('click', e => {
     const b = e.target.closest('.th-sort'); if (!b) return;
-    const k = b.dataset.k; if (k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = (k === 'participant' || k === 'group' || k === 'level') ? 1 : -1; }
+    const k = b.dataset.k; if (k === sortKey) sortDir = -sortDir; else { sortKey = k; sortDir = (k === 'participant' || k === 'startLevel' || k === 'level' || k === 'weakest') ? 1 : -1; }
     drawPlayers(); const nb = document.querySelector('.th-sort[data-k="' + k + '"]'); if (nb) nb.focus();
   });
   $('pSearch').oninput = () => R && drawPlayers();
-  $('pGroup').onchange = () => R && drawPlayers();
 
   /* ---------- tabs ---------- */
   const tabs = [...document.querySelectorAll('.tab')];
@@ -450,6 +555,7 @@
 
   /* ---------- filters, report ---------- */
   $('fLevel').onchange = () => { if (SESS.length) render(); };
+  $('fStart').onchange = () => { if (SESS.length) render(); };
   $('fIntegrity').onchange = () => { if (SESS.length) render(); };
   $('btnReport').onclick = () => {
     if (!R) return;
@@ -458,8 +564,8 @@
   };
   $('btnPrint').onclick = () => { if (R) window.print(); };
   // charts are drawn in dark-theme colours: redraw them in print colours while printing (all tabs are shown in print)
-  window.addEventListener('beforeprint', () => { if (R) { PRINTING = true; drawCharts(); drawIntegrity(); } });
-  window.addEventListener('afterprint', () => { if (R) { PRINTING = false; drawCharts(); drawIntegrity(); } });
+  window.addEventListener('beforeprint', () => { if (R) { PRINTING = true; drawCharts(); drawAdaptation(); drawIntegrity(); } });
+  window.addEventListener('afterprint', () => { if (R) { PRINTING = false; drawCharts(); drawAdaptation(); drawIntegrity(); } });
 })();
 </script>
 </body>

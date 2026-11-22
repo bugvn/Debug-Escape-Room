@@ -1,13 +1,16 @@
 // DATA ANALYTICS for REMEDIATE. Pure functions (no page code, no database), so node --test can check them.
 //
+// The study has ONE group of players (no control group) and reports DESCRIPTIVE statistics only
+// (mean, SD, median, counts), as written in Chapter 3.6c. Nothing here claims the adaptive rules caused a change.
+//
 //   normalizeSessions / normalizeAttempts   rows from Supabase or a CSV  ->  clean objects
 //   analyze(sessions, attempts, opts)       everything the analytics page shows
-//   welch(a, b)                             two-group comparison (mean, SD, t, p, Cohen's d)
 //   insights(result)                        plain-language findings + recommendations
 //   reportCSV(result)                       flat summary file for the paper / slides
 //   sampleData(seed)                        SIMULATED players, for demos only (never mix with real data)
 //
 // Data sources are the researcher views: research_sessions, research_attempts (schema.sql) and research_integrity (migration-03.sql, anti-cheat log).
+// A "room" = one game. Room 1, Room 2, ... = the player's 1st, 2nd, ... game (session_no).
 // In the browser, puzzles.js and adaptive.js must be loaded first (same rule as adaptive.js).
 
 const _P = (typeof PUZZLE_BANK !== 'undefined') ? { PUZZLE_BANK, LEVELS } : require('./puzzles.js');
@@ -15,79 +18,38 @@ const _A = (typeof pickRoom !== 'undefined') ? { pickRoom, nextLevel, weakCatego
 const A_LEVELS = _P.LEVELS;
 const A_CATS = ['Index', 'Type', 'Recursion', 'Scope'];
 
-/* ---------------- small statistics helpers ---------------- */
-const mean = (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : null);
+/* ---------------- small statistics helpers (descriptive only) ---------------- */
+const nums = (a) => a.filter((x) => x !== null && x !== undefined && Number.isFinite(x));
+const mean = (a) => { a = nums(a); return a.length ? a.reduce((s, x) => s + x, 0) / a.length : null; };
 const sd = (a) => {
+  a = nums(a);
   if (a.length < 2) return null;
   const m = mean(a);
   return Math.sqrt(a.reduce((s, x) => s + (x - m) * (x - m), 0) / (a.length - 1));
 };
 const median = (a) => {
+  a = nums(a);
   if (!a.length) return null;
   const s = a.slice().sort((x, y) => x - y), h = s.length >> 1;
   return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2;
 };
+// n, mean, SD, median, min, max of a list (nulls ignored)
+const desc = (a) => { a = nums(a); return { n: a.length, mean: mean(a), sd: sd(a), median: median(a), min: a.length ? Math.min(...a) : null, max: a.length ? Math.max(...a) : null }; };
 const pct = (x) => (x === null || x === undefined ? null : Math.round(x * 1000) / 10);
-
-// log-gamma (Lanczos) and the regularised incomplete beta function, needed for the t-test p-value
-function lgamma(x) {
-  const c = [76.18009172947146, -86.50532032941677, 24.01409824083091, -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
-  let y = x, t = x + 5.5; t -= (x + 0.5) * Math.log(t);
-  let s = 1.000000000190015;
-  for (let j = 0; j < 6; j++) s += c[j] / ++y;
-  return -t + Math.log(2.5066282746310005 * s / x);
-}
-function betacf(a, b, x) {
-  let qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap;
-  if (Math.abs(d) < 1e-30) d = 1e-30;
-  d = 1 / d; let h = d;
-  for (let m = 1; m <= 200; m++) {
-    const m2 = 2 * m;
-    let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
-    d = 1 + aa * d; if (Math.abs(d) < 1e-30) d = 1e-30;
-    c = 1 + aa / c; if (Math.abs(c) < 1e-30) c = 1e-30;
-    d = 1 / d; h *= d * c;
-    aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
-    d = 1 + aa * d; if (Math.abs(d) < 1e-30) d = 1e-30;
-    c = 1 + aa / c; if (Math.abs(c) < 1e-30) c = 1e-30;
-    d = 1 / d; const del = d * c; h *= del;
-    if (Math.abs(del - 1) < 3e-12) break;
-  }
-  return h;
-}
-function ibeta(x, a, b) {
-  if (x <= 0) return 0;
-  if (x >= 1) return 1;
-  const bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
-  return x < (a + 1) / (a + b + 2) ? bt * betacf(a, b, x) / a : 1 - bt * betacf(b, a, 1 - x) / b;
-}
-// two-sided p-value of a t statistic
-const tTwoSided = (t, df) => ibeta(df / (df + t * t), df / 2, 0.5);
-
-// Welch's t-test (does not assume equal variances) + Cohen's d. Needs 2+ values in each group.
-function welch(a, b) {
-  const out = { nA: a.length, nB: b.length, meanA: mean(a), meanB: mean(b), sdA: sd(a), sdB: sd(b), t: null, df: null, p: null, d: null };
-  if (a.length < 2 || b.length < 2) return out;
-  const va = out.sdA ** 2 / a.length, vb = out.sdB ** 2 / b.length;
-  if (va + vb === 0) return out;
-  out.t = (out.meanA - out.meanB) / Math.sqrt(va + vb);
-  out.df = (va + vb) ** 2 / (va ** 2 / (a.length - 1) + vb ** 2 / (b.length - 1));
-  out.p = tTwoSided(out.t, out.df);
-  const sp = Math.sqrt(((a.length - 1) * out.sdA ** 2 + (b.length - 1) * out.sdB ** 2) / (a.length + b.length - 2));
-  out.d = sp ? (out.meanA - out.meanB) / sp : null;
-  return out;
-}
+const r2 = (x) => (x === null || x === undefined ? null : Math.round(x * 100) / 100);
 
 /* ---------------- cleaning rows from Supabase or CSV ---------------- */
 const toNum = (v) => (v === null || v === undefined || v === '' ? null : Number.isFinite(Number(v)) ? Number(v) : null);
 const toBool = (v) => v === true || v === 'true' || v === 't' || v === 'TRUE' || v === 1 || v === '1';
+const lvl = (v) => (A_LEVELS.includes(v) ? v : null);
 
 function normalizeSessions(rows) {
   return (rows || []).map((r) => {
     const submits = toNum(r.submits) || 0, correct = toNum(r.submits_correct) || 0;
     return {
-      participant: String(r.participant), group: r.study_group === 'control' ? 'control' : 'adaptive',
-      sessionNo: toNum(r.session_no), sessionId: toNum(r.session_id), level: r.level, nextLevel: r.next_level || null, result: r.result,
+      participant: String(r.participant),
+      sessionNo: toNum(r.session_no), sessionId: toNum(r.session_id),
+      startLevel: lvl(r.start_level), level: r.level, nextLevel: r.next_level || null, result: r.result,
       solved: toNum(r.solved_count) || 0, hints: toNum(r.hints_used) || 0, elapsed: toNum(r.elapsed_sec) || 0,
       submits, correct, accuracy: submits ? correct / submits : null
     };
@@ -95,88 +57,118 @@ function normalizeSessions(rows) {
 }
 function normalizeAttempts(rows) {
   return (rows || []).map((r) => ({
-    participant: String(r.participant), group: r.study_group === 'control' ? 'control' : 'adaptive',
+    participant: String(r.participant),
     sessionNo: toNum(r.session_no), puzzleId: r.puzzle_id, category: r.category, kind: r.kind || 'submit',
     attemptNo: toNum(r.attempt_no), ok: toBool(r.is_correct), tag: r.mistake_tag || null
   })).filter((a) => a.kind === 'submit' && a.category);
 }
-
 // anti-cheat log (research_integrity): one row per blocked or suspicious event
 function normalizeIntegrity(rows) {
   return (rows || []).map((r) => ({
-    participant: String(r.participant), group: r.study_group === 'control' ? 'control' : 'adaptive',
+    participant: String(r.participant),
     sessionNo: toNum(r.session_no), type: r.event_type, awayMs: toNum(r.away_ms), strike: toBool(r.strike)
   })).filter((e) => e.type && e.sessionNo !== null);
 }
 
 /* ---------------- the analysis ---------------- */
-const GROUPS = ['adaptive', 'control'];
+const key = (x) => x.participant + '#' + x.sessionNo;
+const levelIdx = (l) => Math.max(0, A_LEVELS.indexOf(l));
+
+// per game: first-attempt success and attempts per puzzle, from that game's submits
+function perGameFromAttempts(attempts) {
+  const games = {};
+  attempts.forEach((a) => {
+    const g = games[key(a)] || (games[key(a)] = {});
+    const p = g[a.puzzleId] || (g[a.puzzleId] = { first: null, firstNo: Infinity, n: 0 });
+    p.n++;
+    if (a.attemptNo !== null && a.attemptNo < p.firstNo) { p.firstNo = a.attemptNo; p.first = a.ok; }
+  });
+  const out = {};
+  Object.entries(games).forEach(([k, g]) => {
+    const ps = Object.values(g), submits = ps.reduce((s, p) => s + p.n, 0);
+    out[k] = { firstTry: ps.filter((p) => p.first === true).length / ps.length, attemptsPer: submits / ps.length };
+  });
+  return out;
+}
 
 function groupKpis(sessions, attempts) {
   const won = sessions.filter((s) => s.result === 'won');
   const submits = sessions.reduce((s, x) => s + x.submits, 0), correct = sessions.reduce((s, x) => s + x.correct, 0);
-  const firstTry = attempts.filter((a) => a.attemptNo === 1);
+  const first = {};
+  attempts.forEach((a) => { const k = key(a) + '|' + a.puzzleId; if (a.attemptNo !== null && (!first[k] || a.attemptNo < first[k].no)) first[k] = { no: a.attemptNo, ok: a.ok }; });
+  const fv = Object.values(first);
   return {
     participants: new Set(sessions.map((s) => s.participant)).size,
-    sessions: sessions.length,
+    rooms: sessions.length,
     escapeRate: sessions.length ? won.length / sessions.length : null,
+    giveUpRate: sessions.length ? sessions.filter((s) => s.result === 'left').length / sessions.length : null,
     accuracy: submits ? correct / submits : null,
-    firstTryRate: firstTry.length ? firstTry.filter((a) => a.ok).length / firstTry.length : null,
+    firstTryRate: fv.length ? fv.filter((x) => x.ok).length / fv.length : null,
     avgEscapeSec: mean(won.map((s) => s.elapsed)),
-    avgHints: mean(sessions.map((s) => s.hints)),
-    advancedShare: sessions.length ? sessions.filter((s) => s.level === 'ADVANCED').length / sessions.length : null
+    avgHints: mean(sessions.map((s) => s.hints))
   };
 }
 
-// opts.level: only rooms played at this level ('' = all)
+// opts.level:         only rooms played at this level ('' = all)
+// opts.start:         only players who started at this level, the stand-in for pretest placement ('' = all)
 // opts.excludeStrikes: drop games with this many integrity strikes or more (0 / missing = keep every game)
 function analyze(sessionsIn, attemptsIn, opts = {}, integrityIn = []) {
-  const lv = opts.level || '';
-  const key = (x) => x.participant + '#' + x.sessionNo;
-  const strikesBy = {};                                   // strikes per game
+  const lv = opts.level || '', st = opts.start || '';
+  const strikesBy = {};
   integrityIn.filter((e) => e.strike).forEach((e) => { strikesBy[key(e)] = (strikesBy[key(e)] || 0) + 1; });
   const cut = opts.excludeStrikes || 0;
   const flagged = (s) => cut > 0 && (strikesBy[key(s)] || 0) >= cut;
-  let sessions = lv ? sessionsIn.filter((s) => s.level === lv) : sessionsIn;
+  let sessions = sessionsIn;
+  if (lv) sessions = sessions.filter((s) => s.level === lv);
+  if (st) sessions = sessions.filter((s) => s.startLevel === st);
   const before = sessions.length;
   sessions = sessions.filter((s) => !flagged(s));
   const dropped = before - sessions.length;
   const keep = new Set(sessions.map(key));
-  const attempts = (lv || cut) ? attemptsIn.filter((a) => keep.has(key(a))) : attemptsIn;
-  const by = (arr, g) => arr.filter((x) => x.group === g);
+  const attempts = (lv || st || cut) ? attemptsIn.filter((a) => keep.has(key(a))) : attemptsIn;
 
-  const kpis = {};
-  GROUPS.forEach((g) => { kpis[g] = groupKpis(by(sessions, g), by(attempts, g)); });
-  kpis.all = groupKpis(sessions, attempts);
-
-  // learning curve: mean accuracy of game number n (per player first, so one busy player cannot dominate)
-  const maxNo = Math.min(8, Math.max(0, ...sessions.map((s) => s.sessionNo)));
-  const curve = { labels: [], adaptive: [], control: [], nAdaptive: [], nControl: [], levelAdaptive: [], levelControl: [] };
-  for (let n = 1; n <= maxNo; n++) {
-    curve.labels.push('Game ' + n);
-    GROUPS.forEach((g) => {
-      const rows = by(sessions, g).filter((s) => s.sessionNo === n);
-      const cap = g === 'adaptive' ? 'Adaptive' : 'Control';
-      curve[g].push(rows.length ? pct(mean(rows.filter((s) => s.accuracy !== null).map((s) => s.accuracy))) : null);
-      curve['n' + cap].push(rows.length);
-      curve['level' + cap].push(rows.length ? Math.round(mean(rows.map((s) => Math.max(0, A_LEVELS.indexOf(s.level)))) * 100) / 100 : null);
-    });
-  }
-
-  // weakness by topic: share of wrong submits
-  const categories = A_CATS.map((c) => {
-    const row = { category: c };
-    GROUPS.forEach((g) => {
-      const x = by(attempts, g).filter((a) => a.category === c);
-      row[g] = x.length ? pct(x.filter((a) => !a.ok).length / x.length) : null;
-      row['n_' + g] = x.length;
-    });
-    const all = attempts.filter((a) => a.category === c);
-    row.all = all.length ? pct(all.filter((a) => !a.ok).length / all.length) : null;
-    return row;
+  const pg = perGameFromAttempts(attempts);
+  const rows = sessions.map((s) => ({ ...s, ...(pg[key(s)] || { firstTry: null, attemptsPer: null }) }));
+  const metrics = (list) => ({
+    accuracy: desc(list.map((s) => (s.accuracy === null ? null : s.accuracy * 100))),
+    firstTry: desc(list.map((s) => (s.firstTry === null ? null : s.firstTry * 100))),
+    attempts: desc(list.map((s) => s.attemptsPer)),
+    time: desc(list.map((s) => s.elapsed)),
+    hints: desc(list.map((s) => s.hints)),
+    solved: desc(list.map((s) => s.solved))
   });
 
-  // what kind of mistakes
+  const kpis = groupKpis(sessions, attempts);
+  const stats = metrics(rows);                       // mean / SD / median over all rooms shown
+  const outcome = { escaped: sessions.filter((s) => s.result === 'won').length, left: sessions.filter((s) => s.result === 'left').length };
+
+  // by room number: how performance moves through a playthrough (RQ3). Descriptive, not a cause.
+  const maxNo = Math.min(8, Math.max(0, ...sessions.map((s) => s.sessionNo)));
+  const byRoom = [];
+  for (let n = 1; n <= maxNo; n++) {
+    const g = rows.filter((s) => s.sessionNo === n);
+    const m = metrics(g);
+    byRoom.push({ room: n, label: 'Room ' + n, n: g.length, players: new Set(g.map((s) => s.participant)).size, ...m,
+      giveUp: g.length ? pct(g.filter((s) => s.result === 'left').length / g.length) : null,
+      escape: g.length ? pct(g.filter((s) => s.result === 'won').length / g.length) : null });
+  }
+
+  // by starting level (the pretest placement stand-in): who starts where, and how they do
+  const byStart = A_LEVELS.map((L) => {
+    const g = rows.filter((s) => s.startLevel === L);
+    return { level: L, players: new Set(g.map((s) => s.participant)).size, rooms: g.length, ...metrics(g) };
+  });
+
+  // weakness by topic (RQ1): share of wrong submits, and first-attempt success per topic
+  const firstOf = {};
+  attempts.forEach((a) => { const k = key(a) + '|' + a.puzzleId; if (a.attemptNo !== null && (!firstOf[k] || a.attemptNo < firstOf[k].no)) firstOf[k] = { no: a.attemptNo, ok: a.ok, cat: a.category }; });
+  const categories = A_CATS.map((c) => {
+    const x = attempts.filter((a) => a.category === c), f = Object.values(firstOf).filter((o) => o.cat === c);
+    return { category: c, submits: x.length, wrong: x.filter((a) => !a.ok).length,
+      wrongPct: x.length ? pct(x.filter((a) => !a.ok).length / x.length) : null,
+      firstTryPct: f.length ? pct(f.filter((o) => o.ok).length / f.length) : null };
+  });
+
   const tagCount = {};
   attempts.filter((a) => !a.ok && a.tag).forEach((a) => { tagCount[a.tag] = (tagCount[a.tag] || 0) + 1; });
   const mistakes = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).map(([tag, n]) => ({ tag, n }));
@@ -190,94 +182,118 @@ function analyze(sessionsIn, attemptsIn, opts = {}, integrityIn = []) {
   });
   const puzzles = Object.values(pz).map((o) => ({ ...o, success: pct(o.ok / o.n) })).sort((a, b) => a.success - b.success);
 
-  // improvement per player: accuracy of the last game minus the first game (needs 2+ games)
-  const improvement = { adaptive: [], control: [] };
-  GROUPS.forEach((g) => {
-    const per = {};
-    by(sessions, g).filter((s) => s.accuracy !== null).forEach((s) => { (per[s.participant] = per[s.participant] || []).push(s); });
-    Object.values(per).forEach((list) => {
-      if (list.length < 2) return;
-      list.sort((a, b) => a.sessionNo - b.sessionNo);
-      improvement[g].push((list[list.length - 1].accuracy - list[0].accuracy) * 100);
-    });
-  });
-  const test = welch(improvement.adaptive, improvement.control);
+  // per player: first room vs last room, strongest / weakest topic (the post-game debrief)
+  const byPlayer = {};
+  rows.forEach((s) => { (byPlayer[s.participant] = byPlayer[s.participant] || []).push(s); });
+  Object.values(byPlayer).forEach((l) => l.sort((a, b) => a.sessionNo - b.sessionNo));
+  const catByPlayer = {};
+  attempts.forEach((a) => { const o = (catByPlayer[a.participant] = catByPlayer[a.participant] || {}); const c = o[a.category] || (o[a.category] = { n: 0, wrong: 0 }); c.n++; if (!a.ok) c.wrong++; });
+  const debrief = (p) => {
+    const cs = Object.entries(catByPlayer[p] || {}).filter(([, c]) => c.n >= 2).map(([cat, c]) => ({ cat, n: c.n, wrong: c.wrong, rate: c.wrong / c.n }));
+    if (!cs.length) return { weakest: null, strongest: null };
+    const w = cs.slice().sort((a, b) => b.rate - a.rate || b.wrong - a.wrong || a.cat.localeCompare(b.cat));
+    const s = cs.slice().sort((a, b) => a.rate - b.rate || b.n - a.n || a.cat.localeCompare(b.cat));
+    return { weakest: w[0].cat, strongest: cs.length > 1 ? s[0].cat : null };
+  };
+  const weakestCount = Object.fromEntries(A_CATS.map((c) => [c, 0]));
+  Object.keys(byPlayer).forEach((p) => { const w = debrief(p).weakest; if (w && weakestCount[w] !== undefined) weakestCount[w]++; });
 
-  // where players end up: level of the last game per player
-  const levelEnd = { adaptive: { BEGINNER: 0, INTERMEDIATE: 0, ADVANCED: 0 }, control: { BEGINNER: 0, INTERMEDIATE: 0, ADVANCED: 0 } };
-  GROUPS.forEach((g) => {
-    const last = {};
-    by(sessions, g).forEach((s) => { if (!last[s.participant] || s.sessionNo > last[s.participant].sessionNo) last[s.participant] = s; });
-    Object.values(last).forEach((s) => { const k = s.nextLevel || s.level; if (levelEnd[g][k] !== undefined) levelEnd[g][k]++; });
+  const gain = [];
+  Object.values(byPlayer).forEach((l) => {
+    const ok = l.filter((s) => s.accuracy !== null);
+    if (ok.length >= 2) gain.push((ok[ok.length - 1].accuracy - ok[0].accuracy) * 100);
   });
+  const SAME = 5;                                     // within +-5 points counts as "about the same"
+  const change = { improved: gain.filter((x) => x > SAME).length, same: gain.filter((x) => Math.abs(x) <= SAME).length, declined: gain.filter((x) => x < -SAME).length };
+  const improvement = { ...desc(gain), ...change };
 
-  // integrity: how often, what kind, and in which group (over the games that are kept)
+  // adaptation (RQ2): what the rules did after each room, and whether the logged next level follows the rules
+  const moves = { up: 0, stay: 0, down: 0 };
+  const levelByRoom = byRoom.map((r) => ({ label: r.label, ...Object.fromEntries(A_LEVELS.map((L) => [L, rows.filter((s) => s.sessionNo === r.room && s.level === L).length])) }));
+  const attBy = {};
+  attempts.forEach((a) => { (attBy[key(a)] = attBy[key(a)] || []).push({ kind: 'submit', is_correct: a.ok }); });
+  const audit = { checked: 0, matched: 0, mismatches: [] };
+  rows.forEach((s) => {
+    if (!s.nextLevel) return;
+    const d = levelIdx(s.nextLevel) - levelIdx(s.level);
+    moves[d > 0 ? 'up' : d < 0 ? 'down' : 'stay']++;
+    if (!attBy[key(s)]) return;                       // cannot re-run the rules without that game's submits
+    const want = _A.nextLevel({ level: s.level, result: s.result, solved_count: s.solved, hints_used: s.hints, elapsed_sec: s.elapsed }, attBy[key(s)]);
+    audit.checked++;
+    if (want === s.nextLevel) audit.matched++;
+    else if (audit.mismatches.length < 5) audit.mismatches.push({ participant: s.participant, room: s.sessionNo, logged: s.nextLevel, expected: want });
+  });
+  const lastOf = {};
+  rows.forEach((s) => { if (!lastOf[s.participant] || s.sessionNo > lastOf[s.participant].sessionNo) lastOf[s.participant] = s; });
+  const levelEnd = Object.fromEntries(A_LEVELS.map((L) => [L, 0]));
+  Object.values(lastOf).forEach((s) => { const k = s.nextLevel || s.level; if (levelEnd[k] !== undefined) levelEnd[k]++; });
+  const adaptation = { moves, levelByRoom, audit, levelEnd };
+
+  // integrity: how often, what kind, and in which room (over the games that are kept)
   const events = integrityIn.filter((e) => keep.has(key(e)));
   const typeCount = {};
   events.forEach((e) => { typeCount[e.type] = (typeCount[e.type] || 0) + 1; });
-  const perGroup = {};
-  GROUPS.forEach((g) => {
-    const gs = by(sessions, g), ge = by(events, g);
-    const gk = new Set(gs.map(key));
-    const struck = new Set(ge.filter((e) => e.strike).map(key));
-    perGroup[g] = {
-      games: gs.length,
-      flaggedGames: [...struck].filter((k) => gk.has(k)).length,
-      events: ge.length, strikes: ge.filter((e) => e.strike).length,
-      eventsPerGame: gs.length ? ge.length / gs.length : null
-    };
+  const struckAll = new Set(integrityIn.filter((e) => e.strike).map(key));
+  const struckKept = new Set(events.filter((e) => e.strike).map(key));
+  const flaggedByRoom = byRoom.map((r) => {
+    const g = sessions.filter((s) => s.sessionNo === r.room);
+    return { label: r.label, games: g.length, flagged: g.filter((s) => struckKept.has(key(s))).length };
   });
-  const allGames = sessionsIn.length, struckAll = new Set(integrityIn.filter((e) => e.strike).map(key));
   const integrity = {
     hasData: integrityIn.length > 0,
     events: Object.entries(typeCount).sort((a, b) => b[1] - a[1]).map(([type, n]) => ({ type, n })),
-    perGroup,
-    flaggedGames: sessionsIn.filter((s) => struckAll.has(key(s))).length, totalGames: allGames,
+    strikes: events.filter((e) => e.strike).length,
+    flaggedByRoom,
+    flaggedGames: sessionsIn.filter((s) => struckAll.has(key(s))).length, totalGames: sessionsIn.length,
     awaySec: events.filter((e) => e.awayMs !== null).reduce((s, e) => s + e.awayMs, 0) / 1000,
     autoEnded: events.filter((e) => e.type === 'auto_end').length,
     dropped
   };
 
   // one row per player for the explorer table
-  const perPlayer = {};
-  sessions.forEach((s) => {
-    const o = perPlayer[s.participant] || (perPlayer[s.participant] = { participant: s.participant, group: s.group, games: 0, won: 0, hints: 0, sub: 0, ok: 0, last: null, strikes: 0 });
-    o.games++; if (s.result === 'won') o.won++; o.hints += s.hints; o.sub += s.submits; o.ok += s.correct;
-    if (!o.last || s.sessionNo > o.last.sessionNo) o.last = s;
-    o.strikes += strikesBy[key(s)] || 0;
+  const players = Object.entries(byPlayer).map(([p, l]) => {
+    const sub = l.reduce((s, x) => s + x.submits, 0), ok = l.reduce((s, x) => s + x.correct, 0), last = l[l.length - 1];
+    const d = debrief(p);
+    return { participant: p, startLevel: l[0].startLevel, rooms: l.length, escapeRate: l.filter((s) => s.result === 'won').length / l.length,
+      accuracy: sub ? ok / sub : null, firstTry: mean(l.map((s) => s.firstTry)), hints: mean(l.map((s) => s.hints)),
+      weakest: d.weakest, level: last.nextLevel || last.level, strikes: l.reduce((s, x) => s + (strikesBy[key(x)] || 0), 0) };
   });
-  const players = Object.values(perPlayer).map((o) => ({ participant: o.participant, group: o.group, games: o.games, escapeRate: o.games ? o.won / o.games : null,
-    accuracy: o.sub ? o.ok / o.sub : null, hints: o.games ? o.hints / o.games : null, level: o.last ? (o.last.nextLevel || o.last.level) : null, strikes: o.strikes }));
 
-  return { kpis, curve, categories, mistakes, puzzles, improvement, test, levelEnd, integrity, players, n: { sessions: sessions.length, attempts: attempts.length } };
+  return { kpis, stats, outcome, byRoom, byStart, categories, mistakes, puzzles, improvement, weakestCount, adaptation, integrity, players,
+    n: { sessions: sessions.length, attempts: attempts.length, players: players.length } };
 }
 
 /* ---------------- plain-language findings ---------------- */
 const f1 = (x) => (Math.round(x * 10) / 10).toFixed(1);
 const signed = (x) => (x >= 0 ? '+' : '') + f1(x);
+const TARGET_PLAYERS = 30;                           // sample size in Chapter 3.6d
 
 function insights(r) {
   const out = [];
   if (!r.n.sessions) return [{ kind: 'info', text: 'No finished games yet. Load data to see findings.' }];
-  const t = r.test;
-  if (t.p !== null) {
-    const sig = t.p < 0.05;
-    out.push({
-      kind: sig ? 'good' : 'info',
-      text: `Accuracy change from a player's first to last game: adaptive ${signed(t.meanA)} points (n=${t.nA}) vs control ${signed(t.meanB)} points (n=${t.nB}). ` +
-        (sig ? `The difference is statistically significant (Welch t-test p=${t.p.toFixed(3)}, Cohen's d=${f1(t.d)}), which supports the adaptive rules.`
-          : `The difference is not statistically significant yet (p=${t.p.toFixed(3)}). With a small sample this is expected: collect more players before concluding.`)
-    });
-  } else out.push({ kind: 'info', text: 'Not enough players with 2+ games in both groups to compare learning gain yet.' });
+  if (r.kpis.participants < TARGET_PLAYERS)
+    out.push({ kind: 'info', text: `${r.kpis.participants} players so far. The study plans ${TARGET_PLAYERS}, so treat every number below as early.` });
 
-  const a = r.kpis.adaptive, c = r.kpis.control;
-  if (a.escapeRate !== null && c.escapeRate !== null)
-    out.push({ kind: a.escapeRate >= c.escapeRate ? 'good' : 'warn', text: `Escape rate: adaptive ${pct(a.escapeRate)}% vs control ${pct(c.escapeRate)}%.` });
-  if (a.avgHints !== null && c.avgHints !== null)
-    out.push({ kind: 'info', text: `Hints per game: adaptive ${f1(a.avgHints)} vs control ${f1(c.avgHints)}. Fewer hints at the same accuracy suggests players rely less on help.` });
+  const rooms = r.byRoom.filter((x) => x.accuracy.mean !== null);
+  if (rooms.length >= 2) {
+    const a = rooms[0], b = rooms[rooms.length - 1], d = b.accuracy.mean - a.accuracy.mean;
+    out.push({ kind: d > 0 ? 'good' : 'info', text: `Mean accuracy went from ${f1(a.accuracy.mean)}% in ${a.label} (SD ${f1(a.accuracy.sd ?? 0)}, n=${a.n}) to ${f1(b.accuracy.mean)}% in ${b.label} (SD ${f1(b.accuracy.sd ?? 0)}, n=${b.n}), a change of ${signed(d)} points. ` +
+      'This is a description only. Players get different puzzles, so the change is not credited to the adaptive rules.' });
+  }
+  const im = r.improvement;
+  if (im.n) out.push({ kind: 'info', text: `Of ${im.n} players with 2+ rooms, ${im.improved} improved, ${im.same} stayed about the same and ${im.declined} dropped by more than 5 points between their first and last room (mean ${signed(im.mean)} points, SD ${im.sd === null ? '--' : f1(im.sd)}).` });
 
-  const cats = r.categories.filter((x) => x.all !== null).sort((x, y) => y.all - x.all);
-  if (cats.length) out.push({ kind: 'warn', text: `Hardest topic overall: ${cats[0].category} (${cats[0].all}% of submits wrong). Recommendation: strengthen the ${cats[0].category} lesson and add more ${cats[0].category} puzzle variants.` });
+  const k = r.kpis;
+  if (k.escapeRate !== null) out.push({ kind: k.giveUpRate > 0.3 ? 'warn' : 'info', text: `${pct(k.escapeRate)}% of rooms ended in an escape and ${pct(k.giveUpRate)}% were given up or closed. Mean hints per room: ${f1(r.stats.hints.mean ?? 0)}.` });
+
+  const h1 = rooms[0], hN = rooms[rooms.length - 1];
+  if (rooms.length >= 2 && h1.hints.mean !== null && hN.hints.mean !== null)
+    out.push({ kind: 'info', text: `Hints per room: ${f1(h1.hints.mean)} in ${h1.label} vs ${f1(hN.hints.mean)} in ${hN.label}. Fewer hints at the same accuracy would suggest players lean less on help.` });
+
+  const cats = r.categories.filter((x) => x.wrongPct !== null).sort((x, y) => y.wrongPct - x.wrongPct);
+  if (cats.length) out.push({ kind: 'warn', text: `Hardest topic overall: ${cats[0].category} (${cats[0].wrongPct}% of submits wrong). Recommendation: strengthen the ${cats[0].category} lesson and add more ${cats[0].category} puzzle variants.` });
+  const wk = Object.entries(r.weakestCount).sort((a, b) => b[1] - a[1]);
+  if (wk[0] && wk[0][1] > 0) out.push({ kind: 'info', text: `${wk[0][1]} of ${r.n.players} players have ${wk[0][0]} as their weakest topic. This is the list the post-game debrief shows.` });
 
   const hard = r.puzzles.filter((p) => p.n >= 5);
   if (hard.length) {
@@ -288,14 +304,21 @@ function insights(r) {
   }
   if (r.mistakes.length) out.push({ kind: 'info', text: `Most common mistake: ${r.mistakes[0].tag} (${r.mistakes[0].n} times). The post-game recommendations should target it first.` });
 
-  const stuck = r.levelEnd.adaptive.BEGINNER, total = Object.values(r.levelEnd.adaptive).reduce((s, x) => s + x, 0);
-  if (total >= 4 && stuck / total > 0.4) out.push({ kind: 'warn', text: `${Math.round(100 * stuck / total)}% of adaptive players are still at BEGINNER after their last game. The promotion rules (75% accuracy, 1 hint, under par time) may be too strict.` });
+  const ad = r.adaptation, mv = ad.moves, mt = mv.up + mv.stay + mv.down;
+  if (mt) out.push({ kind: 'info', text: `After ${mt} rooms the rules moved the player up ${mv.up} times, kept the level ${mv.stay} times and moved down ${mv.down} times.` });
+  if (ad.audit.checked) {
+    const ok = ad.audit.matched === ad.audit.checked;
+    out.push({ kind: ok ? 'good' : 'warn', text: `Rule check: the logged next level matches the adaptation rules in ${ad.audit.matched} of ${ad.audit.checked} rooms.` + (ok ? '' : ' The mismatches are listed on the Adaptation tab. Fix them before presenting.') });
+  }
+  const stuck = ad.levelEnd.BEGINNER, total = Object.values(ad.levelEnd).reduce((s, x) => s + x, 0);
+  if (total >= 4 && stuck / total > 0.4) out.push({ kind: 'warn', text: `${Math.round(100 * stuck / total)}% of players are still at BEGINNER after their last room. The promotion rules (75% accuracy, 1 hint, under par time) may be too strict.` });
+
   const ig = r.integrity;
   if (ig && ig.hasData) {
     const pc1 = ig.totalGames ? Math.round(1000 * ig.flaggedGames / ig.totalGames) / 10 : 0;
     const top = ig.events[0];
     out.push({ kind: pc1 >= 20 ? 'warn' : 'info', text: `Anti-cheat: ${ig.flaggedGames} of ${ig.totalGames} games (${pc1}%) had at least one strike${top ? '; most common event: ' + top.type.replace('_', ' ') + ' (' + top.n + ')' : ''}.` +
-      (ig.dropped ? ` ${ig.dropped} flagged games are excluded from the charts above.` : ' Use the integrity filter to exclude flagged games before drawing conclusions.') });
+      (ig.dropped ? ` ${ig.dropped} flagged games are excluded from the charts.` : ' Use the integrity filter to exclude flagged games before drawing conclusions.') });
   }
   return out;
 }
@@ -303,23 +326,31 @@ function insights(r) {
 /* ---------------- report export ---------------- */
 const csvCell = (v) => { const s = v === null || v === undefined ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
 function reportCSV(r) {
-  const rows = [['section', 'metric', 'adaptive', 'control', 'all']];
+  const rows = [['section', 'metric', 'mean_or_value', 'sd', 'n']];
   const k = r.kpis;
-  [['participants', 'participants'], ['games', 'sessions'], ['escape_rate', 'escapeRate', true], ['submit_accuracy', 'accuracy', true],
-    ['first_try_rate', 'firstTryRate', true], ['avg_escape_sec', 'avgEscapeSec'], ['avg_hints_per_game', 'avgHints'], ['share_games_at_advanced', 'advancedShare', true]]
-    .forEach(([name, key, isPct]) => rows.push(['kpi', name, ...['adaptive', 'control', 'all'].map((g) => (isPct ? pct(k[g][key]) : k[g][key] === null ? null : Math.round(k[g][key] * 100) / 100))]));
-  r.categories.forEach((c) => rows.push(['wrong_submit_pct', c.category, c.adaptive, c.control, c.all]));
-  r.curve.labels.forEach((l, i) => rows.push(['accuracy_pct_by_game', l, r.curve.adaptive[i], r.curve.control[i], '']));
-  const t = r.test;
-  rows.push(['learning_gain_points', 'mean', t.meanA === null ? null : f1(t.meanA), t.meanB === null ? null : f1(t.meanB), '']);
-  rows.push(['learning_gain_points', 'n', t.nA, t.nB, '']);
-  rows.push(['learning_gain_test', 'welch_t / df / p / cohens_d', t.t === null ? null : f1(t.t), t.df === null ? null : f1(t.df), t.p === null ? null : t.p.toFixed(4) + ' / d=' + (t.d === null ? '' : f1(t.d))]);
+  [['players', k.participants], ['rooms', k.rooms], ['escape_rate_pct', pct(k.escapeRate)], ['give_up_rate_pct', pct(k.giveUpRate)], ['submit_accuracy_pct', pct(k.accuracy)],
+    ['first_try_rate_pct', pct(k.firstTryRate)], ['avg_escape_sec', r2(k.avgEscapeSec)], ['avg_hints_per_room', r2(k.avgHints)]].forEach(([m, v]) => rows.push(['kpi', m, v, '', '']));
+  const st = (name, d) => rows.push([name.section, name.metric, r2(d.mean), r2(d.sd), d.n]);
+  [['accuracy_pct', 'accuracy'], ['first_attempt_pct', 'firstTry'], ['attempts_per_puzzle', 'attempts'], ['time_sec', 'time'], ['hints', 'hints'], ['puzzles_solved', 'solved']].forEach(([m, f]) => {
+    st({ section: 'all_rooms', metric: m }, r.stats[f]);
+    r.byRoom.forEach((x) => st({ section: 'by_room', metric: m + ' / ' + x.label }, x[f]));
+    r.byStart.forEach((x) => { if (x.rooms) st({ section: 'by_start_level', metric: m + ' / ' + x.level }, x[f]); });
+  });
+  r.byRoom.forEach((x) => { rows.push(['by_room', 'give_up_pct / ' + x.label, x.giveUp, '', x.n]); });
+  r.categories.forEach((c) => { rows.push(['topic', 'wrong_submit_pct / ' + c.category, c.wrongPct, '', c.submits]); rows.push(['topic', 'first_attempt_pct / ' + c.category, c.firstTryPct, '', '']); });
+  Object.entries(r.weakestCount).forEach(([c, n]) => rows.push(['weakest_topic_players', c, n, '', r.n.players]));
+  r.mistakes.forEach((m) => rows.push(['mistake', m.tag, m.n, '', '']));
+  const im = r.improvement;
+  rows.push(['first_to_last_room', 'accuracy_change_points', r2(im.mean), r2(im.sd), im.n]);
+  ['improved', 'same', 'declined'].forEach((c) => rows.push(['first_to_last_room', c, im[c], '', im.n]));
+  const mv = r.adaptation.moves;
+  ['up', 'stay', 'down'].forEach((c) => rows.push(['adaptation', 'level_' + c, mv[c], '', '']));
+  rows.push(['adaptation', 'rule_check_matched', r.adaptation.audit.matched, '', r.adaptation.audit.checked]);
   if (r.integrity && r.integrity.hasData) {
-    rows.push(['integrity', 'flagged_games / total_games', '', '', r.integrity.flaggedGames + ' / ' + r.integrity.totalGames]);
-    GROUPS.forEach((g) => rows.push(['integrity_' + g, 'games / flagged / events / strikes', r.integrity.perGroup[g].games, r.integrity.perGroup[g].flaggedGames, r.integrity.perGroup[g].events + ' / ' + r.integrity.perGroup[g].strikes]));
-    r.integrity.events.forEach((e) => rows.push(['integrity_event', e.type, '', '', e.n]));
+    rows.push(['integrity', 'flagged_games', r.integrity.flaggedGames, '', r.integrity.totalGames]);
+    r.integrity.events.forEach((e) => rows.push(['integrity_event', e.type, e.n, '', '']));
   }
-  r.puzzles.forEach((p) => rows.push(['puzzle_success_pct', p.title + ' (' + p.id + ')', '', '', p.success]));
+  r.puzzles.forEach((p) => rows.push(['puzzle_success_pct', p.title + ' (' + p.id + ')', p.success, '', p.n]));
   return rows.map((row) => row.map(csvCell).join(',')).join('\n');
 }
 
@@ -340,39 +371,40 @@ function parseCSV(text) {
 }
 
 /* ---------------- SIMULATED players (demo only) ---------------- */
-// Uses the real room picker and level rules from adaptive.js so the demo behaves like the game.
-// Adaptive players are given a slightly higher learning rate: this is an ASSUMPTION of the simulation, not a result.
+// 30 players x 3 rooms, the study's planned sample. Uses the real room picker and level rules from adaptive.js.
+// The learning rate is an ASSUMPTION of the simulation, not a result.
 function sampleData(seed = 7) {
   let s = seed; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
   const sig = (x) => 1 / (1 + Math.exp(-x));
   const tagFor = { Index: 'IndexError', Type: 'TypeError', Recursion: 'RecursionError', Scope: 'NameError' };
   const sessions = [], attempts = [];
-  for (let n = 0; n < 24; n++) {
-    const group = n < 12 ? 'adaptive' : 'control', participant = 'sim' + String(n + 1).padStart(3, '0');
-    const ability = (R() - 0.5) * 1.6, rate = group === 'adaptive' ? 0.34 : 0.16;
+  for (let n = 0; n < 30; n++) {
+    const participant = 'sim' + String(n + 1).padStart(3, '0');
+    const ability = (R() - 0.5) * 1.6, rate = 0.25;
     const hard = Object.fromEntries(A_CATS.map((c) => [c, R() * 1.2]));
-    let li = R() < 0.6 ? 0 : 1, lastIds = []; const recent = [];
-    for (let no = 1; no <= 6; no++) {
+    const r0 = R(), li0 = r0 < 0.4 ? 0 : r0 < 0.8 ? 1 : 2, startLevel = A_LEVELS[li0];
+    let li = li0, lastIds = []; const recent = [];
+    for (let no = 1; no <= 3; no++) {
       const level = A_LEVELS[li];
-      const room = _A.pickRoom({ level, weak: group === 'adaptive' ? _A.weakCategories(recent) : [], lastIds, rnd: R });
+      const room = _A.pickRoom({ level, weak: _A.weakCategories(recent), lastIds, rnd: R });
       lastIds = room.map((p) => p.id);
       let solved = 0, hints = 0, sec = 0, submits = 0, correct = 0, left = false; const subs = [];
       for (const p of room) {
         if (left) break;
-        const base = ability + rate * (no - 1) + 0.7 - 0.9 * A_LEVELS.indexOf(p.level) - hard[p.category] * (group === 'adaptive' && no > 2 ? 0.45 : 0.8);
+        const base = ability + rate * (no - 1) + 1.0 - 0.9 * A_LEVELS.indexOf(p.level) - hard[p.category] * (no > 2 ? 0.45 : 0.8);
         let ok = false;
         for (let t = 1; t <= 4 && !ok; t++) {
           ok = R() < sig(base + 0.45 * (t - 1));
           submits++; sec += 55 + R() * 70 + (ok ? 0 : 35);
-          const row = { participant, group, sessionNo: no, puzzleId: p.id, category: p.category, kind: 'submit', attemptNo: t, ok, tag: ok ? null : (R() < 0.7 ? tagFor[p.category] : 'Wrong Output') };
+          const row = { participant, sessionNo: no, puzzleId: p.id, category: p.category, kind: 'submit', attemptNo: t, ok, tag: ok ? null : (R() < 0.7 ? tagFor[p.category] : 'Wrong Output') };
           attempts.push(row); subs.push({ kind: 'submit', is_correct: ok, category: p.category }); recent.unshift(subs[subs.length - 1]);
           if (ok) correct++; else if (R() < 0.18 && hints < 3) hints++;
         }
         if (ok) solved++; else left = true;
       }
       const result = solved === 4 ? 'won' : 'left';
-      sessions.push({ participant, group, sessionNo: no, level, nextLevel: null, result, solved, hints, elapsed: Math.round(sec), submits, correct, accuracy: submits ? correct / submits : null });
-      const next = group === 'adaptive' ? _A.nextLevel({ level, result, solved_count: solved, hints_used: hints, elapsed_sec: sec }, subs) : level;
+      sessions.push({ participant, startLevel, sessionNo: no, level, nextLevel: null, result, solved, hints, elapsed: Math.round(sec), submits, correct, accuracy: submits ? correct / submits : null });
+      const next = _A.nextLevel({ level, result, solved_count: solved, hints_used: hints, elapsed_sec: sec }, subs);
       sessions[sessions.length - 1].nextLevel = next; li = A_LEVELS.indexOf(next);
     }
   }
@@ -390,12 +422,12 @@ function sampleIntegrity(sessions, seed = 7) {
       const r = R(), type = r < 0.38 ? 'window_blur' : r < 0.6 ? 'tab_hidden' : r < 0.78 ? 'paste' : r < 0.9 ? 'copy' : 'big_jump';
       const away = type === 'window_blur' || type === 'tab_hidden';
       const awayMs = away ? Math.round(2000 + R() * 20000) : null;
-      out.push({ participant: g.participant, group: g.group, sessionNo: g.sessionNo, type, awayMs, strike: true });
+      out.push({ participant: g.participant, sessionNo: g.sessionNo, type, awayMs, strike: true });
     }
-    if (R() < 0.3) out.push({ participant: g.participant, group: g.group, sessionNo: g.sessionNo, type: 'contextmenu', awayMs: null, strike: false });
+    if (R() < 0.3) out.push({ participant: g.participant, sessionNo: g.sessionNo, type: 'contextmenu', awayMs: null, strike: false });
   });
   return out;
 }
 
-const _api = { welch, tTwoSided, mean, sd, median, normalizeSessions, normalizeAttempts, normalizeIntegrity, analyze, insights, reportCSV, parseCSV, sampleData, sampleIntegrity };
+const _api = { mean, sd, median, desc, normalizeSessions, normalizeAttempts, normalizeIntegrity, analyze, insights, reportCSV, parseCSV, sampleData, sampleIntegrity };
 if (typeof module !== 'undefined') module.exports = _api;

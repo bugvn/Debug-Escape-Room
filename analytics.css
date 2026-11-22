@@ -1,8 +1,7 @@
 /* Analytics page. Builds on test-summary.css (tokens, starfield, topbar) and dashboard.css (nav, card, kpi).
-   Rules of this page: one 8px spacing rhythm, every control is 44px tall, adaptive = cyan, control = lavender, bad = pink, warn = gold. */
+   Rules of this page: one 8px spacing rhythm, every control is 44px tall, main = cyan, second series = lavender, bad = pink, warn = gold. */
 :root {
   --ad: var(--cyan);
-  --ct: var(--lavender);
   --ink-dim: #9aa6c4;
   --ink-soft: #cdd5ee;
   --ctl-h: 44px;
@@ -61,19 +60,14 @@
 .srcc__d { font-size: 1.25rem; line-height: 1.3; color: var(--ink-soft); }
 .srcc__n { margin-top: auto; padding-top: 8px; font-family: var(--mono); font-size: .6875rem; line-height: 1.6; color: var(--ink-dim); }
 
-/* ---------- KPI cards with built-in comparison bars ---------- */
+/* ---------- KPI cards ---------- */
 .kpis6 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 @media (min-width: 720px) { .kpis6 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1100px) { .kpis6 { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 .kp { display: flex; flex-direction: column; gap: 8px; padding: 16px; background: var(--card); border: 2px solid var(--edge); }
 .kp__l { font-size: 1.15rem; line-height: 1.1; color: var(--ink-dim); }
 .kp__v { font-family: var(--pixel); font-size: 1.25rem; line-height: 1.4; color: #fff; }
-.kp__row { display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 8px; font-family: var(--mono); font-size: .6875rem; color: var(--ink-soft); }
-.kp__row i { width: 8px; height: 8px; background: var(--ad); }
-.kp__row--c i { background: var(--ct); }
-.kp__bar { height: 6px; background: #12172c; }
-.kp__bar b { display: block; height: 100%; background: var(--ad); }
-.kp__row--c .kp__bar b { background: var(--ct); }
+.kp__s { font-family: var(--mono); font-size: .6875rem; line-height: 1.4; color: var(--ink-dim); }
 
 /* ---------- tabs ---------- */
 .tabs { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 2px solid var(--edge); padding-bottom: 0; }
@@ -101,7 +95,6 @@ table.cmp { width: 100%; border-collapse: collapse; font-size: 1.2rem; }
 table.cmp th, table.cmp td { padding: 8px; text-align: right; border-bottom: 1px solid rgba(35, 42, 78, .8); white-space: normal; }
 table.cmp th:first-child, table.cmp td:first-child { text-align: left; }
 table.cmp th { font-family: var(--mono); font-size: .6875rem; color: var(--ink-dim); text-transform: none; letter-spacing: 0; }
-table.cmp th.a { color: var(--ad); } table.cmp th.c { color: var(--ct); }
 table.cmp tr:hover td { background: transparent; }
 
 /* ---------- insights ---------- */
@@ -118,6 +111,11 @@ table.cmp tr:hover td { background: transparent; }
 .note { padding: 12px 16px; font-size: 1.15rem; line-height: 1.3; color: var(--ink-soft); border: 2px dashed #3a4573; }
 .zero { padding: 40px 16px; text-align: center; font-size: 1.3rem; line-height: 1.3; color: var(--ink-dim); }
 
+/* ---------- rule check ---------- */
+.audit__v { font-family: var(--pixel); font-size: 1.5rem; line-height: 1.4; }
+.audit__v--ok { color: #4ade80; } .audit__v--bad { color: var(--crimson); }
+.audit__t { margin: 4px 0 16px; font-size: 1.2rem; line-height: 1.3; color: var(--ink-soft); }
+
 /* ---------- player table ---------- */
 .ptools { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 16px; }
 .fld input { height: var(--ctl-h); min-width: 220px; padding: 0 12px; font: 1.2rem var(--retro); color: #fff; background: var(--night); border: 2px solid var(--edge); }
@@ -129,8 +127,6 @@ table.cmp tr:hover td { background: transparent; }
 .th-sort[aria-sort='ascending']::after { content: ' ▴'; }
 .ptable td { padding: 10px 12px; font-size: .8125rem; }
 .tag { display: inline-block; padding: 1px 8px; border: 1px solid; font-size: .6875rem; }
-.tag--a { color: var(--ad); border-color: rgba(56, 225, 255, .5); background: rgba(56, 225, 255, .08); }
-.tag--c { color: var(--ct); border-color: rgba(165, 148, 249, .5); background: rgba(165, 148, 249, .08); }
 .tag--bad { color: var(--crimson); border-color: rgba(255, 92, 138, .6); background: rgba(255, 92, 138, .1); }
 .tag--ok { color: #4ade80; border-color: rgba(74, 222, 128, .45); background: rgba(74, 222, 128, .08); }
 
@@ -142,6 +138,6 @@ table.cmp tr:hover td { background: transparent; }
   body, .page { background: #fff !important; color: #000 !important; }
   .tabpanel { display: block !important; margin-top: 24px; break-before: auto; }
   .card, .kp, .banner, .ins li, .note, .srcchip { background: #fff !important; color: #000 !important; border-color: #888 !important; }
-  .card__title, .kp__v, .kp__l, .kp__row, .card__sub, .hint, table.cmp th, table.cmp td, .head__title, .head__sub, .ptable td { color: #000 !important; }
+  .card__title, .kp__v, .kp__l, .kp__s, .card__sub, .hint, table.cmp th, table.cmp td, .head__title, .head__sub, .ptable td { color: #000 !important; }
   .card { break-inside: avoid; }
 }
