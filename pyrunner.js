@@ -29,7 +29,9 @@ onmessage = async e => {
 function createPyRunner(hooks) {
   let worker = null, pending = null, ready = false, failed = false, error = '';
   let reqId = 0, chain = Promise.resolve(), startedAt = Date.now();
-  const changed = () => { if (hooks && hooks.onChange) hooks.onChange(); };
+  // async on purpose: start() runs while createPyRunner() is still returning, so the caller's
+  // `const py = ...` is not ready yet. Calling onChange right away would crash the page.
+  const changed = () => setTimeout(() => { if (hooks && hooks.onChange) hooks.onChange(); }, 0);
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
   function start() {
