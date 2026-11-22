@@ -227,6 +227,7 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 <script src="starfield.js"></script>
 <script src="settings.js"></script>
 <script src="ambient-music.js"></script>
+<script src="shared-settings.js"></script>
 <script src="pyrunner.js"></script>
 <script src="puzzles.js"></script>
 <script src="adaptive.js"></script>
@@ -681,7 +682,7 @@ function setLabels(v){ labels = v; $('hotspots').classList.toggle('labels-on', v
 $('btn-menu').onclick = () => {
 dlg({ icon:'⚙️', title:'Game menu', body:`
 <label><input id="cb-labels" type="checkbox" ${labels ? 'checked' : ''}> Always show object labels</label>`,
-actions:[ { l:'Leave Room', k:'dan', f:confirmLeave }, { l:'Resume' } ] });
+actions:[ { l:'Settings', k:'sec', f:() => { closeDlg(); openRemediateSettings(); } }, { l:'Leave Room', k:'dan', f:confirmLeave }, { l:'Resume' } ] });
 $('cb-labels').onchange = e => setLabels(e.target.checked);
 };
 function confirmLeave(){

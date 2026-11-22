@@ -25,6 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
     audioBtn.classList.toggle('is-muted', muted);
   });
 
+  const settingsBtn = $('settings-toggle-btn');
+  if (settingsBtn) settingsBtn.addEventListener('click', () => {
+    if (typeof openRemediateSettings === 'function') openRemediateSettings();
+  });
+
   pwBtn.addEventListener('click', () => {
     const showing = pw.type === 'text';
     pw.type = showing ? 'password' : 'text';

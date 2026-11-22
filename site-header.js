@@ -12,7 +12,7 @@
   var NAV = [['index.html', 'Menu', 'navHome']];
   var ACTIONS = {
     rules: '<button class="sh-link" type="button" onclick="openModal(\'rulesModal\')">Rules</button>',
-    settings: '<button class="sh-link" type="button" onclick="openSettings()">Settings</button>',
+    settings: '<button class="sh-link" type="button" onclick="typeof openSettings===\'function\'?openSettings():openRemediateSettings()">Settings</button>',
     skip: '<button class="sh-link sh-link--go" id="skipTop" type="button">Skip to game</button>'
   };
 
