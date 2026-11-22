@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -e
+
+echo "Running Remediate pre-push validation..."
+npm run check
+git diff --check
+
+echo "Pre-push validation passed."
