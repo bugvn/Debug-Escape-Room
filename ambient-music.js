@@ -16,6 +16,7 @@ const RemediateAmbient = (() => {
   function setMuted(muted) {
     localStorage.setItem(MUTE_KEY, muted ? 'true' : 'false');
     update();
+    updateButtons();
   }
 
   function level() {
