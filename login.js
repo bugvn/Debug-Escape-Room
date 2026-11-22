@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const goHome = () => { location.href = 'index.html'; };
 
   let mode = 'login';          // 'login' | 'create' | 'reset'
-  let recovering = /type=recovery/.test(location.hash);
+  let recovering = /type=recovery/.test(INITIAL_HASH);
 
   const pw = $('account-password');
   const pwBtn = $('toggle-password-btn');
@@ -381,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // google (or the email link) can send the user back with an error in the url
   function urlError() {
     const found = new URLSearchParams(location.search);
-    const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+    const hash = new URLSearchParams(INITIAL_HASH.replace(/^#/, ''));
     return found.get('error_description') || hash.get('error_description') || '';
   }
   const failure = urlError();

@@ -8,8 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box}
-body{margin:0;height:100vh;width:100vw;overflow:hidden;background:#000;color:#f1f5f9;user-select:none;display:flex;justify-content:center;align-items:center;font-family:monospace}
+body{margin:0;height:100vh;width:100vw;overflow:hidden;background:#000;color:#f1f5f9;display:flex;justify-content:center;align-items:center;font-family:monospace}
 button{font-family:inherit}
+#hotspots,.hud{user-select:none}
 .hidden{display:none!important}
 .pix{font-family:'Press Start 2P',monospace}
 .dig{font-family:'VT323',monospace}
@@ -200,7 +201,6 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 </div>
 
 <aside id="controls" class="hud">
-<button id="btn-sound" class="hbtn box" data-tip="Turn sound effects on or off" aria-pressed="true">🔊 SOUND: ON</button>
 <button id="btn-menu" class="hbtn box" data-tip="Open game menu">⚙️ MENU</button>
 </aside>
 
@@ -220,6 +220,8 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
+<script src="settings.js"></script>
+<script src="pyrunner.js"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
@@ -238,22 +240,21 @@ const PUZ = ['window', 'kettle', 'fridge', 'clock'];
 const got = []; // puzzle ids solved, in order (one inventory item each)
 const drafts = {}; // the player's unsaved edits per puzzle
 const hintTier = {}; let lastOpen = null;
-let hints = 3, over = null, sound = true, labels = false, toastT, escFn = null;
+let hints = 3, over = null, labels = false, toastT, escFn = null;
 const count = () => got.length;
 
 /* ---------- Saving: the session row is made at start, each attempt is saved as it happens ---------- */
-const TIME_LIMIT = 900; // par time (sec) used by the summary page for the time bonus
 const attempts = [];    // attempts not saved yet (kept and retried if a save fails)
 let sessionId = null, sessionMaking = null, saveWarned = false, saveChain = Promise.resolve();
 function timeCols(){
 elapsed = Math.floor((Date.now() - startTs) / 1000);
-return { time_total_sec: Math.max(TIME_LIMIT, elapsed), time_left_sec: Math.max(0, TIME_LIMIT - elapsed) };
+return { elapsed_sec: elapsed };
 }
 function ensureSession(){
 if (sessionId) return Promise.resolve(sessionId);
 if (!sessionMaking) sessionMaking = (async () => {
 try {
-const { data, error } = await db.from('game_sessions').insert({ result:'in_progress', solved_count:0, hints_used:0, time_total_sec:TIME_LIMIT, time_left_sec:TIME_LIMIT }).select('id').single();
+const { data, error } = await db.from('game_sessions').insert({ result:'in_progress', solved_count:0, hints_used:0, elapsed_sec:0 }).select('id').single();
 if (error) throw error;
 sessionId = data.id; sessionStorage.setItem('lastSessionId', sessionId);
 } catch (e) { console.error(e); }
@@ -282,54 +283,13 @@ return ok;
 // saves run one after another, so the final result is never overwritten by an older save
 function queueSave(result){ return (saveChain = saveChain.then(() => saveAll(result))); }
 
-/* ---------- Real Python (Pyodide) in a Web Worker, so an infinite loop cannot freeze the page ---------- */
-const WORKER_SRC = `importScripts('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js');
-const ready = loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/' });
-ready.then(() => postMessage({ ready: true }), e => postMessage({ fatal: String(e) }));
-onmessage = async e => {
-const { id, code } = e.data; let out = '', g;
-try {
-const py = await ready;
-py.setStdout({ batched: s => out += s + '\\n' });
-py.setStderr({ batched: s => out += s + '\\n' });
-g = py.globals.get('dict')();
-await py.runPythonAsync(code, { globals: g });
-postMessage({ id, out });
-} catch (err) { postMessage({ id, out, err: String(err.message || err) }); }
-finally { if (g) g.destroy(); }
-};`;
-let worker, pending = null, pyReady = false, pyFail = false, pyErr = '', reqId = 0, chain = Promise.resolve();
+/* ---------- Real Python (Pyodide) in a Web Worker: see pyrunner.js ---------- */
+const py = createPyRunner({ onChange: () => refreshRun() });
+const runPy = code => py.run(code);
 function refreshRun(){
 const b = $('sf-run'); if (!b) return;
-b.disabled = !pyReady && !pyFail;
-b.textContent = pyFail ? '✖ PYTHON FAILED' : pyReady ? '↻ RUN TEST' : 'LOADING PYTHON...';
-}
-function startWorker(){
-pyReady = false; pyFail = false; pyErr = ''; refreshRun();
-try {
-worker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type:'text/javascript' })));
-worker.onmessage = e => {
-const d = e.data;
-if (d.ready) { pyReady = true; refreshRun(); }
-else if (d.fatal) { pyFail = true; pyErr = d.fatal; refreshRun(); }
-else if (pending && d.id === pending.id) pending.done(d);
-};
-worker.onerror = e => { pyFail = true; pyErr = e.message || 'worker error'; refreshRun(); if (pending) pending.done({ sys:'Python crashed: ' + pyErr }); };
-} catch (e) { worker = null; pyFail = true; pyErr = String(e); refreshRun(); }
-}
-startWorker();
-const wait = ms => new Promise(r => setTimeout(r, ms));
-// one run at a time, so two clicks can never swallow each other's result
-function runPy(code){ const p = chain.then(() => runOnce(code)); chain = p.catch(() => {}); return p; }
-async function runOnce(code){
-while (!pyReady && !pyFail) await wait(200);
-if (pyFail || !worker) return { sys:'Python is not available: ' + pyErr };
-return new Promise(res => {
-const id = ++reqId;
-const timer = setTimeout(() => { pending = null; worker.terminate(); startWorker(); res({ err:'TimeoutError: the code ran for more than 5 seconds. Check for an infinite loop.' }); }, 5000);
-pending = { id, done: d => { clearTimeout(timer); pending = null; res(d); } };
-worker.postMessage({ id, code });
-});
+b.disabled = !py.ready && !py.failed;
+b.textContent = py.failed ? '✖ PYTHON FAILED' : py.ready ? '↻ RUN TEST' : 'LOADING PYTHON...';
 }
 const cleanErr = m => {
 const L = m.split('\n'), i = L.findIndex(l => l.includes('<exec>'));
@@ -385,7 +345,13 @@ hint:['Where does chimes live? Can code outside the function see it?',
 };
 
 /* ---------- Dialog manager ---------- */
-function closeDlg(){ $('modal').classList.add('hidden'); $('modal').classList.remove('pz'); $('modal').innerHTML = ''; $('modal2').classList.add('hidden'); $('modal2').innerHTML = ''; escFn = null; }
+// while a dialog is open, everything behind it is inert: no focus, no keyboard, hidden from screen readers
+function syncInert(){
+const m1 = !$('modal').classList.contains('hidden'), m2 = !$('modal2').classList.contains('hidden');
+['stage','progress','timer-box','controls','hint-wrap','inv'].forEach(id => $(id).inert = m1 || m2);
+$('modal').inert = m2;
+}
+function closeDlg(){ $('modal').classList.add('hidden'); $('modal').classList.remove('pz'); $('modal').innerHTML = ''; $('modal2').classList.add('hidden'); $('modal2').innerHTML = ''; escFn = null; syncInert(); }
 function addBtn(a){
 const b = document.createElement('button');
 b.textContent = a.l; b.className = 'btn ' + (a.k || ''); b.disabled = !!a.dis;
@@ -397,7 +363,7 @@ function dlg({ icon='', title, body, actions, wide }){
 $('modal').innerHTML = `<div class="box dialog${wide ? ' wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="dt">
 <h2 id="dt">${icon} ${title}</h2><div class="dbody">${body}</div><div id="da"></div></div>`;
 actions.forEach(addBtn);
-$('modal').classList.remove('hidden');
+$('modal').classList.remove('hidden'); syncInert();
 escFn = closeDlg;
 $('da').lastElementChild.focus();
 }
@@ -424,7 +390,13 @@ const n = count(), firstOpen = PUZ.findIndex(k => !got.includes(k));
 [...$('nodes').children].forEach((el, i) => el.className = 'node ' + (got.includes(PUZ[i]) ? 'solved' : i === firstOpen ? 'active' : ''));
 $('prog-text').textContent = `${n} / 4 SOLVED`;
 $('prog-bar').style.width = `${n * 25}%`;
-PUZ.forEach(k => $('tag-' + k).textContent = P[k].name + ' · ' + P[k].title + (got.includes(k) ? ' ✔ Solved' : ''));
+PUZ.forEach(k => {
+const done = got.includes(k), hs = document.querySelector(`[data-hs="${k}"]`);
+$('tag-' + k).textContent = P[k].name + ' · ' + P[k].title + (done ? ' ✔ Solved' : '');
+hs.querySelector('.core').textContent = done ? '✔' : P[k].icon;
+hs.setAttribute('aria-label', P[k].name + ', ' + P[k].title + (done ? ', solved' : ', not solved'));
+});
+[...$('nodes').children].forEach((el, i) => el.title = P[PUZ[i]].title + (got.includes(PUZ[i]) ? ': solved' : ': not solved'));
 $('tag-door').textContent = 'Exit Door · ' + (n === 4 ? 'Ready to open' : `Locked (${n} / 4 items)`);
 document.querySelectorAll('.slot').forEach((s, i) => {
 const k = got[i];
@@ -458,7 +430,7 @@ r = r.slice(m.index + m[0].length);
 }
 return o;
 }
-function closeSf(){ $('modal2').classList.add('hidden'); $('modal2').innerHTML = ''; const e = $('ed'); if (e && !$('modal').classList.contains('hidden')) e.focus(); }
+function closeSf(){ $('modal2').classList.add('hidden'); $('modal2').innerHTML = ''; syncInert(); const e = $('ed'); if (e && !$('modal').classList.contains('hidden')) e.focus(); }
 // opts: tone (violet|cyan|pink), title, badge, eyebrow, text, fault (file label), buttons [{l, k, f}]
 function sfDlg(o){
 const body = o.fault
@@ -469,7 +441,7 @@ $('modal2').innerHTML = `<div class="sf small ${o.tone === 'cyan' ? '' : o.tone}
 ${o.eyebrow ? `<div class="eyebrow">${o.eyebrow}</div>` : ''}${body}<div class="foot"><div></div><div class="btns" id="sfb"></div></div></div>`;
 let last;
 (o.buttons || []).forEach(x => { const b = document.createElement('button'); b.className = 'sb ' + x.k; b.textContent = x.l; b.onclick = x.f; $('sfb').append(b); last = b; });
-$('modal2').classList.remove('hidden'); fitSf();
+$('modal2').classList.remove('hidden'); syncInert(); fitSf();
 if (last) last.focus();
 }
 function fitSf(){
@@ -505,21 +477,22 @@ $('modal').innerHTML = `<div class="sf main" role="dialog" aria-modal="true" ari
 <div class="tip">TIP: keep the original code and fix the actual bug. Hardcoding the answer will not pass.</div>
 <div class="foot"><button class="hints" id="sf-hints" type="button"></button>
 <div class="btns"><button class="sb ghost" id="sf-run" type="button">↻ RUN TEST</button><button class="sb go" id="sf-submit" type="button">▶ SUBMIT SOLUTION</button></div></div></div></div>`;
-$('modal').classList.remove('hidden'); $('modal').classList.add('pz'); escFn = closeDlg; sfHud();
+$('modal').classList.remove('hidden'); $('modal').classList.add('pz'); syncInert(); escFn = closeDlg; sfHud();
 const ed = $('ed'); ed.value = drafts[id] ?? p.code; growEd();
 ed.oninput = () => { drafts[id] = ed.value; growEd(); };
 ed.onkeydown = e => {
 if (e.key === 'Tab') { e.preventDefault(); ed.setRangeText('    ', ed.selectionStart, ed.selectionEnd, 'end'); ed.oninput(); }
 };
-const sfHints = () => $('sf-hints') && (($('sf-hints').classList.toggle('none', !hints), $('sf-hints').innerHTML = `💡 USE A HINT · <b>${hints}</b> LEFT`));
+const sfHints = () => $('sf-hints') && (($('sf-hints').classList.toggle('none', !hints || !hintsOn()), $('sf-hints').innerHTML = `💡 USE A HINT · <b>${hints}</b> LEFT`));
 sfHints();
 $('sf-hints').onclick = () => {
+if (!hintsOn()) return sfDlg({ tone:'violet', title:'HINTS ARE OFF', badge:'HINTS', text:'Hints are turned off in Settings.', buttons:[{ l:'OK', k:'go', f:closeSf }] });
 if (!hints) return sfDlg({ tone:'violet', title:'NO HINTS LEFT', badge:'HINTS', text:'All 3 hints are used.', buttons:[{ l:'OK', k:'go', f:closeSf }] });
+if (!hintsLeftFor(id)) return sfDlg({ tone:'violet', title:'NO MORE HINTS HERE', badge:'HINTS', text:'You already saw every hint for this puzzle. No hint was used.', buttons:[{ l:'OK', k:'go', f:closeSf }] });
 sfDlg({ tone:'violet', title:'USE A HINT?', badge:'CONFIRM', eyebrow:'ACTION CONFIRMATION // PUZZLE ' + no, text:`<b>${hints} of 3</b> hints remaining. A used hint cannot be returned.`,
 buttons:[{ l:'CANCEL', k:'ghost', f:closeSf }, { l:'▶ USE HINT', k:'go', f:() => {
-hints--; renderHints(); sfHints(); queueSave();
-const t = hintTier[id] || 0; hintTier[id] = t + 1;
-sfDlg({ tone:'violet', title:'HINT', badge:'HINTS LEFT: ' + hints, text:esc(p.hint[Math.min(t, 1)]), buttons:[{ l:'OK', k:'go', f:closeSf }] });
+const text = takeHint(id); sfHints();
+sfDlg({ tone:'violet', title:'HINT', badge:'HINTS LEFT: ' + hints, text:esc(text), buttons:[{ l:'OK', k:'go', f:closeSf }] });
 } }] });
 };
 $('sf-close').onclick = closeDlg;
@@ -550,7 +523,7 @@ if (!$('sf-prog')) return; const n = count();
 $('sf-prog').textContent = 'CHAMBER ' + String(n).padStart(2, '0') + ' / 04'; $('sf-keys').textContent = n + ' / 4';
 document.querySelectorAll('#sf-dots i').forEach((d, i) => d.classList.toggle('on', i < n));
 }
-function sfRunning(){ sfDlg({ tone:'violet', title:'RUNNING TEST', badge:'PLEASE WAIT', text: pyReady ? 'Running your code in Python...' : 'Loading Python, please wait...', buttons:[] }); }
+function sfRunning(){ sfDlg({ tone:'violet', title:'RUNNING TEST', badge:'PLEASE WAIT', text: py.ready ? 'Running your code in Python...' : 'Loading Python, please wait...', buttons:[] }); }
 // Validation: missing field, required structure, length
 function validate(id){
 const v = $('ed').value;
@@ -562,7 +535,7 @@ return null;
 }
 function showInvalid(v){ sfDlg({ tone:'pink', title:v.title, badge:v.badge, text:v.text, buttons:[{ l:'↻ OK, FIX IT', k:'ghost', f:closeSf }] }); }
 function showFail(id, j){
-if (j.sys) return sfDlg({ tone:'violet', title:'PYTHON UNAVAILABLE', badge:'SYSTEM', text:j.msg + '<br><br>This run was not counted against you.', buttons:[{ l:'CLOSE', k:'ghost', f:closeSf }, { l:'↻ RETRY LOADING', k:'go', f:() => { closeSf(); startWorker(); } }] });
+if (j.sys) return sfDlg({ tone:'violet', title:'PYTHON UNAVAILABLE', badge:'SYSTEM', text:j.msg + '<br><br>This run was not counted against you.', buttons:[{ l:'CLOSE', k:'ghost', f:closeSf }, { l:'↻ RETRY LOADING', k:'go', f:() => { closeSf(); py.restart(); } }] });
 sfDlg({ tone:'pink', title: j.tag === 'Infinite Loop' ? 'CODE RUNS FOREVER' : 'TEST FAILED', badge:'ERROR', fault:META[id].file, text:j.msg, buttons:[{ l:'↻ OK, TRY AGAIN', k:'ghost', f:closeSf }] });
 }
 // Hidden checks, so a correct fix written a different way still passes but a hardcoded answer does not:
@@ -630,34 +603,47 @@ if (!b) return;
 try { act(b.dataset.hs); } catch (err) { console.error(err); toast('Error: ' + err.message, true); }
 });
 
-/* ---------- Hints ---------- */
-function renderHints(){ $('hint-label').textContent = `HINTS [${hints}/3 REMAINING]`; $('btn-hint').style.opacity = hints ? 1 : .6; }
-function hintText(){
-const k = lastOpen && !got.includes(lastOpen) ? lastOpen : PUZ.find(x => !got.includes(x));
-if (!k) return 'You have all 4 items. Head to the exit door.';
-const t = hintTier[k] || 0; hintTier[k] = t + 1;
-return `<b>${P[k].title}</b><p>${P[k].hint[Math.min(t, 1)]}</p>`;
+/* ---------- Hints: one pool of 3 for the whole room; every puzzle has its own hint steps ---------- */
+const hintsOn = () => RemediateSettings.get().hints;
+const hintsLeftFor = k => P[k].hint.length - (hintTier[k] || 0);   // steps this puzzle still has
+// the HUD button hints the puzzle the player opened last (if still unsolved), else the first unsolved one
+const hudTarget = () => lastOpen && !got.includes(lastOpen) ? lastOpen : PUZ.find(x => !got.includes(x));
+function takeHint(k){
+const t = hintTier[k] || 0; hintTier[k] = t + 1; hints--;
+renderHints(); queueSave();
+return P[k].hint[t];
 }
+function renderHints(){ $('hint-label').textContent = `HINTS [${hints}/3 REMAINING]`; $('btn-hint').style.opacity = hints && hintsOn() ? 1 : .6; }
 $('btn-hint').onclick = () => {
 if (over) return toast('Hints are unavailable once the game has ended.');
+if (!hintsOn()) return toast('Hints are turned off in Settings.', true);
 if (!hints) return dlg({ icon:'💡', title:'No hints remaining', body:'All 3 hints have been used.', actions:[OK] });
-dlg({ icon:'💡', title:'Use a hint?', body:`<b>${hints} of 3</b> hints remaining.<br>A used hint cannot be returned.`,
+const k = hudTarget();
+if (!k) return dlg({ icon:'💡', title:'Hint', body:'You have all 4 items. Head to the exit door.', actions:[OK] });
+if (!hintsLeftFor(k)) return dlg({ icon:'💡', title:'No more hints here', body:`You already saw every hint for <b>${P[k].title}</b>. No hint was used.`, actions:[OK] });
+dlg({ icon:'💡', title:'Use a hint?', body:`This hint is for <b>${P[k].title}</b>.<br><b>${hints} of 3</b> hints remaining.<br>A used hint cannot be returned.`,
 actions:[ { l:'Cancel', k:'sec' }, { l:'Use Hint', f:() => {
-hints--; renderHints(); queueSave();
-dlg({ icon:'💡', title:'Hint', body:`${hintText()}<p style="margin-top:12px;color:#fcd34d">Hints remaining: <b>${hints} of 3</b></p>`, actions:[OK] });
+const text = takeHint(k);
+dlg({ icon:'💡', title:'Hint', body:`<b>${P[k].title}</b><p>${esc(text)}</p><p style="margin-top:12px;color:#fcd34d">Hints remaining: <b>${hints} of 3</b></p>`, actions:[OK] });
 } } ] });
 };
 
-/* ---------- Sound + Menu ---------- */
-function setSound(v){ sound = v; $('btn-sound').textContent = v ? '🔊 SOUND: ON' : '🔇 SOUND: OFF'; $('btn-sound').setAttribute('aria-pressed', v); }
+/* ---------- Settings from the main menu (settings.js): timer, hints, hint + inventory keys ---------- */
+RemediateSettings.onChange(st => { $('timer-box').classList.toggle('hidden', !st.timer); renderHints(); });
+document.addEventListener('keydown', e => {
+if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || /^(TEXTAREA|INPUT)$/.test(e.target.tagName)) return;
+if (!$('modal').classList.contains('hidden') || !$('modal2').classList.contains('hidden')) return;
+const k = RemediateSettings.get().keys;
+if (e.code === k.hint) $('btn-hint').click();
+else if (e.code === k.inventory) toast(got.length ? 'Items: ' + got.map(x => P[x].reward.join(' ')).join(', ') : 'Your inventory is empty.');
+});
+
+/* ---------- Menu ---------- */
 function setLabels(v){ labels = v; $('hotspots').classList.toggle('labels-on', v); }
-$('btn-sound').onclick = () => setSound(!sound);
 $('btn-menu').onclick = () => {
 dlg({ icon:'⚙️', title:'Game menu', body:`
-<label><input id="cb-sound" type="checkbox" ${sound ? 'checked' : ''}> Sound effects</label>
 <label><input id="cb-labels" type="checkbox" ${labels ? 'checked' : ''}> Always show object labels</label>`,
 actions:[ { l:'Leave Room', k:'dan', f:confirmLeave }, { l:'Resume' } ] });
-$('cb-sound').onchange = e => setSound(e.target.checked);
 $('cb-labels').onchange = e => setLabels(e.target.checked);
 };
 function confirmLeave(){

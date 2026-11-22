@@ -1,3 +1,8 @@
+// supabase-js (detectSessionInUrl) removes the #hash from the address bar while it
+// reads it. Save the original first, so pages can still tell "password recovery"
+// or an auth error apart. Read INITIAL_HASH, not location.hash.
+const INITIAL_HASH = location.hash;
+
 const SUPABASE_URL = 'https://qvrhufogwyvgbwbdxtal.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_cXTah0HuNBWRl9hKr3_ntQ_TKeSwgjP';
 

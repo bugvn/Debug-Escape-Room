@@ -9,8 +9,11 @@ function submitsOf(subs) { return subs.filter((x) => (x.kind || 'submit') === 's
 
 function scoreOf(s, subs) {
   const bad = submitsOf(subs).filter((x) => !x.is_correct).length;
-  const bonus = s.result === 'won' ? Math.round(20 * s.time_left_sec / Math.max(1, s.time_total_sec)) : 0;
+  const bonus = s.result === 'won' ? Math.round(20 * Math.max(0, PAR_SEC - s.elapsed_sec) / PAR_SEC) : 0;
   const raw = s.solved_count * 20 + bonus - s.hints_used * 3 - Math.min(20, bad * 2);
   return Math.max(0, Math.min(100, raw));
 }
 function rankOf(score) { return RANKS.find((r) => score >= r[0]); }
+
+// node test runner (node --test) can load this file; browsers ignore it
+if (typeof module !== 'undefined') module.exports = { PAR_SEC, RANKS, submitsOf, scoreOf, rankOf };

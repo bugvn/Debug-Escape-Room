@@ -121,11 +121,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
 <script src="starfield.js"></script>
+<script src="pyrunner.js"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
 const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const DONE_KEY = 'remediate.lessonDone';
 
 // Only logged-in players can use the module, same as the game room
 try { requireLogin().catch(e => console.error(e)); } catch (e) { console.error(e); }
@@ -246,61 +246,28 @@ print(result)          <span class="cm"># 8</span>`]
 }
 ];
 
-/* ---------- Python (Pyodide) in a Web Worker, same setup as the game room ---------- */
-const WORKER_SRC = `importScripts('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js');
-const ready = loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/' });
-ready.then(() => postMessage({ ready: true }), e => postMessage({ fatal: String(e) }));
-onmessage = async e => {
-const py = await ready; let out = '';
-py.setStdout({ batched: s => out += s + '\\n' });
-py.setStderr({ batched: s => out += s + '\\n' });
-try { await py.runPythonAsync(e.data, { globals: py.globals.get('dict')() }); postMessage({ out }); }
-catch (err) { postMessage({ out, err: String(err.message || err) }); }
-};`;
-let worker, pending = null, pyReady = false, pyFail = false, pyErr = '';
-let loadStart = Date.now();
+/* ---------- Python (Pyodide) in a Web Worker: see pyrunner.js ---------- */
+const py = createPyRunner({ onChange: () => refreshRun() });
+const runPy = code => py.run(code);
 function refreshRun(){
   const b = $('btnRun'), n = $('loadNote');
+  const sec = Math.floor((Date.now() - py.startedAt) / 1000);
   if (b) {
-    const sec = Math.floor((Date.now() - loadStart) / 1000);
-    b.disabled = !pyReady;
-    b.textContent = pyFail ? '✖ PYTHON FAILED' : pyReady ? '▶ RUN' : 'LOADING PYTHON... ' + sec + 's';
+    b.disabled = !py.ready;
+    b.textContent = py.failed ? '✖ PYTHON FAILED' : py.ready ? '▶ RUN' : 'LOADING PYTHON... ' + sec + 's';
   }
   if (!n) return;
-  const sec = Math.floor((Date.now() - loadStart) / 1000);
-  if (pyReady) { n.classList.add('hidden'); return; }
-  if (pyFail || sec >= 25) {
+  if (py.ready) { n.classList.add('hidden'); return; }
+  if (py.failed || sec >= 25) {
     n.classList.remove('hidden');
-    n.innerHTML = (pyFail
-      ? 'Python could not load. ' + esc(String(pyErr).slice(0, 120)) + ' '
+    n.innerHTML = (py.failed
+      ? 'Python could not load. ' + esc(String(py.error).slice(0, 120)) + ' '
       : 'Python is still downloading (about 10 MB). It needs an internet connection, so this can take a while on slow data. ')
       + '<button type="button" id="btnRetry" class="underline text-cyan-300">Retry</button>';
-    const r = $('btnRetry'); if (r) r.onclick = () => { if (worker) worker.terminate(); pyFail = false; pyErr = ''; startWorker(); refreshRun(); };
+    const r = $('btnRetry'); if (r) r.onclick = () => py.restart();
   } else n.classList.add('hidden');
 }
-setInterval(() => { if (!pyReady) refreshRun(); }, 1000);
-function startWorker(){
-  pyReady = false; loadStart = Date.now();
-  try {
-    worker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type:'text/javascript' })));
-    worker.onmessage = e => {
-      const d = e.data;
-      if (d.ready) { pyReady = true; refreshRun(); }
-      else if (d.fatal) { pyFail = true; pyErr = d.fatal; refreshRun(); }
-      else if (pending) { pending(d); pending = null; }
-    };
-    worker.onerror = e => { pyFail = true; pyErr = e.message || 'worker error'; refreshRun(); };
-  } catch (e) { worker = null; pyFail = true; pyErr = String(e); refreshRun(); }
-}
-startWorker();
-function runPy(code){
-  return new Promise(res => {
-    if (!worker) return res({ err:'Python is not available: ' + pyErr });
-    const timer = setTimeout(() => { worker.terminate(); startWorker(); pending = null; res({ err:'TimeoutError: the code ran for more than 5 seconds. Check for an infinite loop.' }); }, 5000);
-    pending = d => { clearTimeout(timer); res(d); };
-    worker.postMessage(code);
-  });
-}
+setInterval(() => { if (!py.ready) refreshRun(); }, 1000);
 const cleanErr = m => {
   const L = m.split('\n'), k = L.findIndex(l => l.includes('<exec>'));
   return (k < 0 ? m.trim() : 'Traceback (most recent call last):\n' + L.slice(k).join('\n').trim()).replace(/<exec>/g, 'main.py');
@@ -311,7 +278,7 @@ let i = 0;
 const drafts = {};
 const last = LESSONS.length - 1;
 
-function goGame(){ try { localStorage.setItem(DONE_KEY, 'yes'); } catch (e) {} location.href = 'game-room.html'; }
+function goGame(){ location.href = 'game-room.html'; }
 
 function growEd(){ const e = $('ed'); if (!e) return; e.style.height = 'auto'; e.style.height = (e.scrollHeight + 2) + 'px'; }
 
@@ -382,6 +349,7 @@ async function runExample(){
   btn.disabled = true; btn.textContent = 'RUNNING...';
   const d = await runPy($('ed').value);
   const out = (d.out || '').trim();
+  if (d.sys) d.err = d.sys;
   if (d.err) {
     setCon((out ? out + '\n' : '') + cleanErr(d.err), 'err');
     st.className = 'tag bad'; st.textContent = 'ERROR - READ THE LAST LINE';

@@ -121,9 +121,20 @@
   const p = await getProfile(u.id);
   if (p) $('playerName').textContent = p.player_name;
 
+  // Supabase returns at most 1000 rows per request, so read page by page.
+  // Without this a heavy player's accuracy would be silently wrong.
+  async function fetchAll(makeQuery) {
+    const PAGE = 1000, out = [];
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await makeQuery().range(from, from + PAGE - 1);
+      if (error) return { data: null, error };
+      out.push(...data);
+      if (data.length < PAGE) return { data: out, error: null };
+    }
+  }
   const [sRes, subRes] = await Promise.all([
-    db.from('game_sessions').select('*').order('created_at', { ascending: true }),
-    db.from('submissions').select('session_id,puzzle,kind,is_correct,mistake_tag')
+    fetchAll(() => db.from('game_sessions').select('*').order('created_at', { ascending: true }).order('id', { ascending: true })),
+    fetchAll(() => db.from('submissions').select('session_id,puzzle,kind,is_correct,mistake_tag').order('id', { ascending: true }))
   ]);
   $('loading').classList.add('hidden');
 
@@ -141,7 +152,7 @@
   const rows = sessions.map((s, i) => {
     const subs = bySession[s.id] || [];
     const score = scoreOf(s, subs);
-    return { s, n: i + 1, score, rank: RANKS.find(r => score >= r[0])[1], took: s.time_total_sec - s.time_left_sec };
+    return { s, n: i + 1, score, rank: RANKS.find(r => score >= r[0])[1], took: s.elapsed_sec };
   });
 
   /* ----- KPIs ----- */
@@ -208,7 +219,7 @@
     ${tk.length ? `<div><div class="bar__head"><span class="bar__name">Focus next</span><span class="bar__val bar__val--bad">${esc(tk[0])}</span></div></div>` : ''}`;
 
   /* ----- history ----- */
-  const RES = { won: 'Escaped', time: 'Time up', left: 'Left', in_progress: 'Unfinished' };
+  const RES = { won: 'Escaped', left: 'Left', in_progress: 'Unfinished' };
   $('history').innerHTML = rows.slice().reverse().map(r => `
     <tr>
       <td>${r.n}</td>
