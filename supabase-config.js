@@ -52,19 +52,32 @@ function pageUrl(name) {
 
 // Quick local read, fine for showing/hiding UI. Not trusted for access control.
 async function getUser() {
-  const { data } = await db.auth.getSession();
-  return data.session ? data.session.user : null;
+  try {
+    const { data, error } = await db.auth.getSession();
+    if (error) throw error;
+    return data.session ? data.session.user : null;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
 }
 
 // Asks the Supabase server to check the token, so an expired,
 // revoked or hand-edited session can't get into a protected page.
 async function requireLogin() {
   document.body.style.visibility = 'hidden';
-  const { data, error } = await db.auth.getUser();
-  let user = data && data.user;
+  let user = null;
+  try {
+    const { data, error } = await db.auth.getUser();
+    user = data && data.user;
 
-  if (!user && error && error.name === 'AuthRetryableFetchError') {
-    // server unreachable: fall back to the local session, row level security still guards the data
+    if (!user && error && error.name === 'AuthRetryableFetchError') {
+      // server unreachable: fall back to the local session, row level security still guards the data
+      user = await getUser();
+    }
+  } catch (e) {
+    console.error(e);
+    // server unreachable: fall back to the local session instead of hiding the page forever
     user = await getUser();
   }
   if (!user) {
