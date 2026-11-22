@@ -9,7 +9,7 @@
   if (!host) return;
 
   var file = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
-  var NAV = [['index.html', 'Menu']];
+  var NAV = [['index.html', 'Menu', 'navHome']];
   var ACTIONS = {
     rules: '<button class="sh-link" type="button" onclick="openModal(\'rulesModal\')">Rules</button>',
     settings: '<button class="sh-link" type="button" onclick="openSettings()">Settings</button>',
@@ -62,7 +62,7 @@
 
   var links = NAV.map(function (n) {
     var on = n[0] === file;
-    return '<a class="sh-link' + (on ? ' sh-link--on' : '') + (n[2] ? ' hidden' : '') + '"' +
+    return '<a class="sh-link' + (on ? ' sh-link--on' : '') + '"' +
       (n[2] ? ' id="' + n[2] + '"' : '') + ' href="' + n[0] + '"' + (on ? ' aria-current="page"' : '') + '>' + n[1] + '</a>';
   }).join('');
   var acts = actions.map(function (a) { return ACTIONS[a] || ''; }).join('');
@@ -80,6 +80,7 @@
           '<button class="sh-player" id="shPlayer" type="button" aria-haspopup="true" aria-expanded="false"><span class="sh-av"><b id="shInitial" style="font-weight:400">?</b><i></i></span><span id="playerName">Player</span></button>' +
           '<div class="sh-menu" id="shMenu" role="menu">' +
             '<a role="menuitem" href="dashboard.html"' + (file === 'dashboard.html' ? ' class="on" aria-current="page"' : '') + '>My Dashboard</a>' +
+            '<a role="menuitem" href="lesson.html"' + (file === 'lesson.html' ? ' class="on" aria-current="page"' : '') + '>Review Lessons</a>' +
             '<a role="menuitem" id="navAnalytics" class="hidden' + (file === 'analytics.html' ? ' on' : '') + '" href="analytics.html">Cohort Analytics</a>' +
             '<hr><button role="menuitem" id="logoutBtn" type="button">Log out</button>' +
           '</div>' +
@@ -102,6 +103,12 @@
       if (!u) return;
       document.getElementById('authBtn').classList.add('hidden');
       um.classList.remove('hidden');
+      var home = document.getElementById('navHome');
+      if (home) {
+        home.href = 'dashboard.html';
+        home.textContent = 'Dashboard';
+        home.classList.toggle('sh-link--on', file === 'dashboard.html');
+      }
       if (file === 'analytics.html') document.getElementById('navAnalytics').classList.remove('hidden');
       return getProfile(u.id).then(function (p) {
         if (!p) return;

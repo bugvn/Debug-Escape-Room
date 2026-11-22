@@ -158,6 +158,11 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
           </span>
         </button>
       </div>
+      <div class="mt-4 flex justify-center">
+        <a id="reviewLessonsBtn" href="lesson.html" class="hidden px-5 py-3 border-2 border-cyan-400/50 text-cyan-200 font-pixel text-[9px] tracking-[0.14em] hover:border-cyan-300 hover:text-white transition-all">
+          REVIEW LESSONS
+        </a>
+      </div>
       <div id="launchHint" class="mt-5 text-center text-[8px] font-pixel uppercase tracking-[0.3em] text-[#7ef9ff]/80">[ Press Space or Click to Launch ]</div>
     </div>
   </div>
@@ -255,6 +260,7 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
+<script src="ambient-music.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
   const MODALS = ['rulesModal', 'settingsModal', 'confirmModal'];
@@ -511,11 +517,18 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
 
   tab('audio'); apply(saved); render(); labels();
 
+  getUser().then(user => {
+    $('reviewLessonsBtn').classList.toggle('hidden', !user);
+  }).catch(e => console.error(e));
+
   /* Play Now: loading feedback */
-  function startLoading() {
+  function startLoading(destination) {
     if (launching) return;
     launching = true;
-    const msgs = ['Initializing...', 'Loading kitchen assets...', 'Lighting the stars...', 'Almost there...'];
+    const goingToLessons = destination === 'lesson.html';
+    const msgs = goingToLessons
+      ? ['Initializing...', 'Loading lesson assets...', 'Lighting the stars...', 'Almost there...']
+      : ['Initializing...', 'Loading room assets...', 'Lighting the stars...', 'Almost there...'];
     let pct = 0;
     $('loadingOverlay').classList.remove('hidden');
     const iv = setInterval(() => {
@@ -528,8 +541,12 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
           $('loadingOverlay').classList.add('hidden');
           $('loadBar').style.width = '0%'; $('loadPct').textContent = '0%';
           launching = false;
-          showToast('success', 'Lessons ready!', 'Read the lessons, then start the game.');
-          setTimeout(() => { location.href = 'lesson.html'; }, 1200);
+          if (goingToLessons) {
+            showToast('success', 'Lessons ready!', 'Read the lessons, then start the game.');
+          } else {
+            showToast('success', 'Chamber ready!', 'Welcome back. Your room is ready.');
+          }
+          setTimeout(() => { location.href = destination; }, 1200);
         }, 400);
       }
     }, 160);
@@ -556,8 +573,13 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
         setTimeout(() => { location.href = 'login.html'; }, 1200);
         return;
       }
+      let destination = 'lesson.html';
+      try {
+        const { data: sessions, error } = await db.from('game_sessions').select('id').limit(1);
+        if (!error && sessions && sessions.length) destination = 'game-room.html';
+      } catch (e) { console.error(e); }
       launching = false;
-      startLoading();
+      startLoading(destination);
     }, 150);
   }
 
