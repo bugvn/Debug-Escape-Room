@@ -117,8 +117,8 @@
     }
   }
   const [sRes, subRes] = await Promise.all([
-    fetchAll(() => db.from('game_sessions').select('*').order('created_at', { ascending: true }).order('id', { ascending: true })),
-    fetchAll(() => db.from('submissions').select('session_id,puzzle,kind,is_correct,mistake_tag').order('id', { ascending: true }))
+    fetchAll(() => db.from('game_sessions').select('*').eq('user_id', u.id).order('created_at', { ascending: true }).order('id', { ascending: true })),
+    fetchAll(() => db.from('submissions').select('session_id,puzzle,kind,is_correct,mistake_tag').eq('user_id', u.id).order('id', { ascending: true }))
   ]);
   $('loading').classList.add('hidden');
 
