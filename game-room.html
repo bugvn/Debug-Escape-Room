@@ -16,6 +16,7 @@ button{font-family:inherit}
 .dig{font-family:'VT323',monospace}
 #room{position:relative;width:100%;height:100%;max-width:1920px;max-height:1080px;margin:0 auto;overflow:hidden;background:#020617;display:flex;align-items:center;justify-content:center;container-type:size}
 /* image and hotspots share one 16:9 box, so the icons stay on their objects at any window size */
+#starfield-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #stage{position:relative;flex:none;width:min(100cqw,calc(100cqh * 16 / 9));aspect-ratio:16/9}
 #stage>img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
 .box{border:3px solid #6366f1;box-shadow:0 0 10px rgba(99,102,241,.4),inset 0 0 10px rgba(99,102,241,.2);backdrop-filter:blur(8px);background:rgba(10,15,30,.86)}
@@ -177,6 +178,7 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 </head>
 <body>
 <main id="room">
+<canvas id="starfield-canvas" aria-hidden="true"></canvas>
 <div id="stage">
 <img alt="Cozy starlit room with a window, refrigerator, kettle on the dining table and exit door" src="room_door_closed_no_girl.png"/>
 
@@ -220,6 +222,7 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="supabase-config.js"></script>
+<script src="starfield.js"></script>
 <script src="settings.js"></script>
 <script src="pyrunner.js"></script>
 <script src="puzzles.js"></script>
