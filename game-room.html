@@ -19,6 +19,8 @@ button{font-family:inherit}
 #starfield-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #stage{position:relative;flex:none;width:min(100cqw,calc(100cqh * 16 / 9));aspect-ratio:16/9}
 #stage>img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 7%,#000 93%,transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 7%,#000 93%,transparent 100%)}
+/* wide windows: the room fills the whole screen like before (crops a little top/bottom); icons live inside #stage so they scale with the picture */
+@media(min-width:768px){#stage{width:max(100cqw,calc(100cqh * 16 / 9))}#stage>img{-webkit-mask-image:none;mask-image:none}}
 .box{border:3px solid #6366f1;box-shadow:0 0 10px rgba(99,102,241,.4),inset 0 0 10px rgba(99,102,241,.2);backdrop-filter:blur(8px);background:rgba(10,15,30,.86)}
 .btn{font:12px 'Press Start 2P',monospace;padding:12px 16px;border-radius:4px;cursor:pointer;border:2px solid #a855f7;box-shadow:0 4px 0 #6b21a8;background:#6b21a8;color:#fde047;transition:all .1s}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #6b21a8}
