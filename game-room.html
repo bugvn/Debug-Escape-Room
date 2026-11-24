@@ -43,6 +43,22 @@ button:focus-visible,input:focus-visible{outline:3px solid #22d3ee;outline-offse
 @keyframes pulse{0%{transform:scale(.85);opacity:.9}50%{transform:scale(1.25);opacity:.4}100%{transform:scale(.85);opacity:.9}}
 @keyframes ping{75%,100%{transform:scale(2);opacity:0}}
 
+/* ---------- Living room (see LIVING in the script): one glow colour, objects light up under the mouse ---------- */
+#stage:not(.ready){opacity:0}
+#stage[data-room=living]>img.kitchen,#stage:not([data-room=living])>img.lr{display:none}
+#stage>img.lr{image-rendering:pixelated}
+#room.living{background:radial-gradient(ellipse at 50% 45%,#1b2240 0%,#0d1224 62%,#070d1b 100%)}
+@media(min-width:768px){#room.living{align-items:center}#room.living #stage{width:min(100cqw,calc(100cqh * 16 / 9));margin-top:0}}
+#stage[data-room=living]>.obj{--g:103,232,249}
+@keyframes objglow{0%,100%{filter:drop-shadow(0 0 calc(var(--px,3px) * .8) rgba(var(--g),0))}50%{filter:drop-shadow(0 0 calc(var(--px,3px) * 1.6) rgba(var(--g),.75)) brightness(1.06)}}
+#stage[data-room=living]>.obj:not(.done):not([data-k=door]),#stage[data-room=living]>.obj[data-k=door].ready{animation:objglow 2.6s ease-in-out infinite}
+#stage[data-room=living]>.obj.hov{animation:none;filter:drop-shadow(var(--px,3px) 0 0 rgb(var(--g))) drop-shadow(calc(var(--px,3px) * -1) 0 0 rgb(var(--g))) drop-shadow(0 var(--px,3px) 0 rgb(var(--g))) drop-shadow(0 calc(var(--px,3px) * -1) 0 rgb(var(--g))) drop-shadow(0 0 calc(var(--px,3px) * 3) rgba(var(--g),.8)) brightness(1.12)}
+#stage[data-room=living] .hs.hit{display:block;transform:none;pointer-events:none}
+.hs.hit .wrap{display:none}
+.hs.hit .tag{position:absolute;left:50%;bottom:100%;margin:0 0 6px;transform:translate(-50%,4px)}
+.hs.hit:focus-visible .tag,.hs.hit.show .tag,.labels-on .hs.hit .tag{opacity:1;transform:translate(-50%,0)}
+.hs.hit:focus-visible{outline:none}
+
 /* HUD */
 .hud{position:absolute;z-index:20}
 #progress{top:24px;left:24px;padding:12px 20px;border-radius:6px;min-width:280px}
@@ -182,7 +198,14 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 <main id="room">
 <canvas id="starfield-canvas" aria-hidden="true"></canvas>
 <div id="stage">
-<img alt="Cozy starlit room with a window, refrigerator, kettle on the dining table and exit door" src="room_door_closed_no_girl.png"/>
+<img class="kitchen" alt="Cozy starlit room with a window, refrigerator, kettle on the dining table and exit door" src="room_door_closed_no_girl.png"/>
+<!-- living room: background + one transparent PNG per clickable object, stacked in the same 480x270 frame (data-k = puzzle spot) -->
+<img class="lr" alt="Living room with sofas, bookshelves, a rug, a plant and a window" src="living_room/bg.png"/>
+<img class="lr obj" data-k="door" alt="" src="living_room/door.png"/>
+<img class="lr obj" data-k="kettle" alt="" src="living_room/roomba.png"/>
+<img class="lr obj" data-k="clock" alt="" src="living_room/laptop.png"/>
+<img class="lr obj" data-k="window" alt="" src="living_room/tv.png"/>
+<img class="lr obj" data-k="fridge" alt="" src="living_room/greenbox.png"/>
 
 <div id="hotspots">
 <button class="hs orange" data-hs="window" aria-label="Window puzzle" style="top:23%;left:49%"><div class="wrap"><span class="ping"></span><span class="core">✦</span></div><div id="tag-window" class="tag"></div></button>
@@ -364,6 +387,75 @@ roomPuzzleIds = PUZ.map(k => assigned[k].id);
 }
 // Level + puzzles for this game: the level carries over from the last finished game (adaptive.js rules),
 // categories the player keeps missing come back. Control group (profiles.adaptive = false): fixed start level, no targeting.
+/* ---------- Room art per level ----------
+   LIVING.levels = which level(s) use the living room. Every other level keeps the kitchen.
+   (Only one living room exists so far, so it sits on the middle level; add 'BEGINNER' / 'ADVANCED' to reuse it.) */
+const LIVING = {
+  levels: ['INTERMEDIATE'],
+  stars: false,              // true = keep the twinkling starfield behind this room
+  dir: 'living_room/',
+  // puzzle spot -> the object that stands in for it (puzzle ids, categories and saved data are untouched)
+  spots: {
+    window: { img:'tv',       name:'TV',        icon:'📺' },
+    fridge: { img:'greenbox', name:'Green Box', icon:'📦' },
+    kettle: { img:'roomba',   name:'Roomba',    icon:'🤖' },
+    clock:  { img:'laptop',   name:'Laptop',    icon:'💻' },
+    door:   { img:'door' }
+  },
+  box: { tv:[138,59,198,141], greenbox:[165,138,190,159], roomba:[279,137,305,160], laptop:[184,175,212,202], door:[344,81,380,184] }  // [x0,y0,x1,y1] in the 480x270 art (fallback hit area)
+};
+const LIVING_STACK = ['door', 'kettle', 'clock', 'window', 'fridge'];   // bottom to top, same as the <img> order
+let roomMode = 'kitchen', hoverKey = null;
+const masks = {};
+
+function applyRoomArt(level){
+  if (!LIVING.levels.includes(level)) return;
+  roomMode = 'living';
+  $('stage').dataset.room = 'living';
+  $('room').classList.add('living');
+  if (!LIVING.stars) $('starfield-canvas').style.display = 'none';
+  Object.entries(LIVING.spots).forEach(([k, o]) => {
+    if (SPOTS[k]) { SPOTS[k].name = o.name; SPOTS[k].icon = o.icon; }
+    const [x0, y0, x1, y1] = LIVING.box[o.img], b = document.querySelector(`[data-hs="${k}"]`);
+    Object.assign(b.style, { left:x0 / 4.8 + '%', top:y0 / 2.7 + '%', width:(x1 - x0) / 4.8 + '%', height:(y1 - y0) / 2.7 + '%' });
+    b.classList.add('hit');
+    // read the PNG's transparency so only the object's real pixels react (falls back to the box if the browser blocks it)
+    const im = new Image();
+    im.onload = () => { try { const c = document.createElement('canvas'); c.width = 480; c.height = 270; const g = c.getContext('2d'); g.drawImage(im, 0, 0); masks[o.img] = g.getImageData(0, 0, 480, 270).data; } catch (e) { console.warn('hover mask unavailable, using boxes', e); } };
+    im.src = LIVING.dir + o.img + '.png';
+  });
+  const fit = () => $('stage').style.setProperty('--px', $('stage').clientWidth / 480 + 'px');   // one art pixel on screen = the glow's outline width
+  new ResizeObserver(fit).observe($('stage')); fit();
+  const hs = $('hotspots');
+  hs.addEventListener('pointermove', e => setHover(keyAt(e.clientX, e.clientY)));
+  hs.addEventListener('pointerleave', () => setHover(null));
+  hs.addEventListener('focusin', e => { const b = e.target.closest('.hit'); if (b) setHover(b.dataset.hs); });
+  hs.addEventListener('focusout', () => setHover(null));
+  hs.addEventListener('click', e => {
+    if (e.target.closest('[data-hs]')) return;            // keyboard Enter on a button is handled by the normal listener
+    const k = keyAt(e.clientX, e.clientY); if (!k) return;
+    try { act(k); } catch (err) { console.error(err); toast('Error: ' + err.message, true); }
+  });
+}
+
+function keyAt(cx, cy){
+  const r = $('stage').getBoundingClientRect();
+  const x = Math.floor((cx - r.left) / r.width * 480), y = Math.floor((cy - r.top) / r.height * 270);
+  if (x < 0 || y < 0 || x >= 480 || y >= 270) return null;
+  for (let i = LIVING_STACK.length - 1; i >= 0; i--) {     // top-most object first
+    const k = LIVING_STACK[i], img = LIVING.spots[k].img, m = masks[img], b = LIVING.box[img];
+    if (m ? m[(y * 480 + x) * 4 + 3] > 0 : (x >= b[0] && x < b[2] && y >= b[1] && y < b[3])) return k;
+  }
+  return null;
+}
+
+function setHover(k){
+  if (k === hoverKey) return; hoverKey = k;
+  document.querySelectorAll('#stage .obj').forEach(i => i.classList.toggle('hov', i.dataset.k === k));
+  document.querySelectorAll('#hotspots .hit').forEach(b => b.classList.toggle('show', b.dataset.hs === k));
+  $('hotspots').style.cursor = k ? 'pointer' : '';
+}
+
 async function setupRoom(user){
 let level = 'BEGINNER', weak = [], lastIds = [];
 try {
@@ -380,6 +472,7 @@ weak = weakCategories(r2.data || []);
 }
 } catch (e) { console.error(e); }   // offline: start at the safe default, the game still works
 roomLevel = level;
+applyRoomArt(level);
 buildRoom(pickRoom({ level, weak: roomAdaptive ? weak : [], lastIds }));
 roomReady = true; renderAll();
 if (roomAdaptive) toast('Room level: ' + level.charAt(0) + level.slice(1).toLowerCase() + (weak.length ? ' · focus: ' + weak.slice(0, RULES.weakSlots).map(w => w[0]).join(', ') : ''));
@@ -435,9 +528,11 @@ PUZ.forEach(k => {
 const done = got.includes(k), hs = document.querySelector(`[data-hs="${k}"]`);
 $('tag-' + k).textContent = P[k].name + ' · ' + P[k].title + (done ? ' ✔ Solved' : '');
 hs.querySelector('.core').textContent = done ? '✔' : P[k].icon;
+const oi = document.querySelector(`#stage .obj[data-k="${k}"]`); if (oi) oi.classList.toggle('done', done);
 hs.setAttribute('aria-label', P[k].name + ', ' + P[k].title + (done ? ', solved' : ', not solved'));
 });
 [...$('nodes').children].forEach((el, i) => el.title = P[PUZ[i]].title + (got.includes(PUZ[i]) ? ': solved' : ': not solved'));
+const di = document.querySelector('#stage .obj[data-k="door"]'); if (di) di.classList.toggle('ready', n === 4);
 $('tag-door').textContent = 'Exit Door · ' + (n === 4 ? 'Ready to open' : `Locked (${n} / 4 items)`);
 document.querySelectorAll('.slot').forEach((s, i) => {
 const k = got[i];
@@ -711,6 +806,7 @@ renderHints();
 (async () => {
 try { const u = await requireLogin(); if (!u) return; await setupRoom(u); startTs = Date.now(); await ensureSession(); guard.start(); }
 catch (e) { console.error(e); }
+finally { $('stage').classList.add('ready'); }
 })();
 })();
 </script>
