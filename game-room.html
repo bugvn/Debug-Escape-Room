@@ -48,13 +48,13 @@ button:focus-visible,input:focus-visible{outline:3px solid #22d3ee;outline-offse
 #stage:not(.ready){opacity:0}
 #stage[data-room=living]>img.kitchen,#stage:not([data-room=living])>img.lr{display:none}
 #stage>img.lr{image-rendering:pixelated}
-#room.living{background:radial-gradient(ellipse at 50% 45%,#1b2240 0%,#0d1224 62%,#070d1b 100%)}
+#room.living{background:radial-gradient(ellipse at 50% 50%,#252e57 0%,#121830 45%,#05080f 100%)}
 @media(min-width:768px){#room.living{align-items:center}#room.living #stage{width:min(100cqw,calc(100cqh * 16 / 9));margin-top:0}}
 #stage[data-room=living]>.obj{--g:103,232,249}
 #stage[data-room=living]>.obj[data-k=door]{--g:239,68,68}
 @keyframes objglow{0%,100%{filter:drop-shadow(0 0 calc(var(--px,3px) * 1.5) rgba(var(--g),.45)) drop-shadow(0 0 calc(var(--px,3px) * .6) rgba(var(--g),.6)) brightness(1)}50%{filter:drop-shadow(0 0 calc(var(--px,3px) * 4) rgba(var(--g),1)) drop-shadow(0 0 calc(var(--px,3px) * 1.6) rgba(var(--g),1)) brightness(1.15)}}
-#stage[data-room=living]>.obj:not(.done){animation:objglow 2.6s ease-in-out infinite}
 #stage[data-room=living]>.obj.hov{animation:none;filter:drop-shadow(var(--px,3px) 0 0 rgb(var(--g))) drop-shadow(calc(var(--px,3px) * -1) 0 0 rgb(var(--g))) drop-shadow(0 var(--px,3px) 0 rgb(var(--g))) drop-shadow(0 calc(var(--px,3px) * -1) 0 rgb(var(--g))) drop-shadow(0 0 calc(var(--px,3px) * 3) rgba(var(--g),.8)) brightness(1.12)}
+#stage[data-room=living]>.obj[data-k=door]:not(.ready).hov{animation:none;filter:drop-shadow(var(--px,3px) 0 0 rgb(var(--g))) drop-shadow(calc(var(--px,3px) * -1) 0 0 rgb(var(--g))) drop-shadow(0 var(--px,3px) 0 rgb(var(--g))) drop-shadow(0 calc(var(--px,3px) * -1) 0 rgb(var(--g))) drop-shadow(0 0 calc(var(--px,3px) * 7) rgba(var(--g),1)) drop-shadow(0 0 calc(var(--px,3px) * 16) rgba(var(--g),.85)) brightness(1.3)}
 #stage[data-room=living]>.obj.done{animation:none;filter:grayscale(1) brightness(.65) drop-shadow(0 0 2px rgba(148,163,184,.25));transition:filter .4s}
 #stage[data-room=living] .hs.hit{display:block;transform:none;pointer-events:none}
 .hs.hit .wrap{display:none}
@@ -65,32 +65,48 @@ button:focus-visible,input:focus-visible{outline:3px solid #22d3ee;outline-offse
 /* ================= HUD ================= */
 .hud{position:absolute;z-index:20}
 
-/* top-left stack: progress, then integrity shields */
-#hud-left{top:24px;left:24px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;zoom:var(--ts)}
+/* shared panel look: lighter navy fill, bright border in each panel's own colour (--ac), no blue glow */
+:root{--hud-bg:rgba(34,45,90,.95)}
+.hud.box,.hbtn.box,#menu-pop{background:var(--hud-bg);border:2px solid color-mix(in srgb,var(--ac,#94a3b8) 38%,transparent);box-shadow:0 0 6px color-mix(in srgb,var(--ac,#94a3b8) 18%,transparent),inset 0 0 0 1px rgba(255,255,255,.04)}
+#progress{--ac:#fbbf24;--acg:rgba(251,191,36,.45)}
+#integrity-hud{--ac:#4ade80;--acg:rgba(74,222,128,.4)}
+#hud-left #integrity-hud{width:calc(75% - 11px);align-self:flex-start;padding:7px 12px 8px;border-radius:4px}
+#integrity-hud .hrow{margin-bottom:9px}
+#integrity-hud .hlbl,#integrity-hud .hcnt{font-size:10px}
+#integrity-hud .gbar{gap:3px;padding:2px}
+#integrity-hud .gbar>*{height:8px}
+#timer-box{--ac:#22d3ee;--acg:rgba(34,211,238,.45)}
+#timer-box.hud.box{border:3px solid #22d3ee;box-shadow:0 0 14px rgba(34,211,238,.6),inset 0 0 0 1px rgba(255,255,255,.1)}
+
+/* top-left stack: two bars of the same width. PROGRESS fills gold as puzzles are solved, INTEGRITY starts full (green) and drains on strikes */
+#hud-left{top:24px;left:24px;display:flex;flex-direction:column;align-items:stretch;gap:10px;width:clamp(240px,22vw,320px);zoom:var(--ts)}
 #hud-left .hud{position:static}
-#progress,#integrity-hud{padding:10px 16px;border-radius:6px;display:flex;align-items:center;gap:14px}
-#progress{border-color:#a5b4fc;box-shadow:0 0 14px rgba(129,140,248,.7),inset 0 0 10px rgba(129,140,248,.3)}
-#prog-text{font-size:13px;color:#fde047;font-weight:bold;text-shadow:0 0 8px rgba(253,224,71,.8);white-space:nowrap}
-#nodes{display:flex;gap:6px;margin:0}
-.node{height:14px;width:26px;border-radius:2px;border:2px solid #cbd5e1;background:rgba(148,163,184,.55)}
-.node.solved{background:#5eead4;border-color:#fff;box-shadow:0 0 10px #22d3ee,0 0 18px rgba(34,211,238,.9)}
-.node.active{background:#fde047;border-color:#fff;box-shadow:0 0 10px #fbbf24;animation:pulse 2.2s infinite}
+#progress,#integrity-hud{padding:10px 14px 12px;border-radius:6px;display:block}
+.hrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.hlbl,.hcnt{font:12px 'Press Start 2P',monospace;white-space:nowrap}
+.hlbl{letter-spacing:.06em}
+#progress .hlbl,#progress .hcnt{color:#fef08a;text-shadow:0 0 10px rgba(253,224,71,.9);font-size:13px}
+#integrity-hud .hlbl,#integrity-hud .hcnt{color:#bbf7d0;text-shadow:0 0 10px rgba(134,239,172,.9)}
+.gbar{display:flex;gap:4px;padding:3px;background:#0f172a;border:2px solid rgba(255,255,255,.55);border-radius:3px}
+.gbar>*{flex:1;height:16px;border-radius:1px;background:rgba(148,163,184,.32);transition:background .3s,box-shadow .3s}
+.gbar>.node.active{box-shadow:inset 0 0 0 2px rgba(253,224,71,.55)}
+.gbar>.node.solved{background:#fbbf24;box-shadow:0 0 10px rgba(251,191,36,.9)}
+.gbar>.seg{background:#4ade80;box-shadow:0 0 10px rgba(74,222,128,.8)}
+.gbar>.seg.warn{background:#fbbf24;box-shadow:0 0 10px rgba(251,191,36,.9)}
+.gbar>.seg.lost{background:rgba(148,163,184,.18);box-shadow:none}
 #progress .bar{display:none} /* kept in the HTML so the script that sets its width doesn't break */
-#integrity-hud{padding:8px 16px;gap:10px;border-color:#67e8f9}
-#integrity-hud .ic{font-size:18px}
-#integrity-hud .sh{font-size:20px;filter:drop-shadow(0 0 6px rgba(103,232,249,.9));transition:filter .3s}
-#integrity-hud .sh.lost{filter:grayscale(1) brightness(.5);opacity:.5}
 #ig-chip{display:none!important} /* integrity.js floating chip replaced by #integrity-hud */
 #ig-banner{top:auto!important;right:auto!important;bottom:18px!important;left:50%!important;transform:translateX(-50%)!important;max-width:min(92vw,520px)!important;text-align:center!important;pointer-events:none}
 
-#timer-box{top:24px;left:50%;transform:translateX(-50%);padding:10px 32px;border-radius:8px;display:flex;flex-direction:column;align-items:center;border:2px solid rgba(34,211,238,.8);box-shadow:0 0 20px rgba(34,211,238,.35)}
-#timer-label{font-size:9px;color:#67e8f9;letter-spacing:.1em;margin-bottom:2px}
-#timer{font-size:calc(clamp(36px,4.5vw,60px) * var(--ts));letter-spacing:.1em;line-height:1;color:#22d3ee;text-shadow:0 0 12px rgba(34,211,238,.9)}
+#timer-box{top:24px;left:50%;transform:translateX(-50%);padding:10px 32px;border-radius:8px;display:flex;flex-direction:column;align-items:center}
+#timer-label{font-size:11px;color:#67e8f9;letter-spacing:.1em;margin-bottom:4px}
+#timer{font-size:calc(clamp(36px,4.5vw,60px) * var(--ts));letter-spacing:.1em;line-height:1;color:#22d3ee;text-shadow:0 0 8px rgba(34,211,238,.55)}
 
 /* top-right: mute button, then menu at the edge */
 #controls{top:24px;right:24px;display:flex;gap:8px;align-items:flex-start;zoom:var(--ts)}
-.hbtn{font:10px 'Press Start 2P',monospace;color:#cbd5e1;padding:8px 12px;border-radius:4px;cursor:pointer;transition:color .15s,background .15s}
+.hbtn{font:11px 'Press Start 2P',monospace;color:#cbd5e1;padding:8px 12px;border-radius:4px;cursor:pointer;transition:color .15s,background .15s}
 .hbtn:hover{background:rgba(30,27,75,.8);color:#67e8f9}
+#mute-ic{font-size:20px;line-height:11px;display:inline-block}
 #btn-mute{font-size:16px;line-height:1;padding:6px 10px;min-height:34px}
 #btn-menu:hover{color:#fcd34d}
 #menu-wrap{position:relative}
@@ -101,24 +117,30 @@ button:focus-visible,input:focus-visible{outline:3px solid #22d3ee;outline-offse
 .mi.who:hover{background:none;color:#cbd5e1}
 .mi.who small{color:#64748b;font-size:8px}
 .mi .car{margin-left:auto}
+.ei{font-size:18px;line-height:12px;display:inline-block;width:24px;text-align:center}
+.ei{font-size:18px;line-height:12px;display:inline-block;width:24px;text-align:center}
 .subs{display:flex;flex-direction:column;gap:2px;padding-left:14px}
 .mi.sub{color:#a5b4fc;padding:8px 12px}
 .mi.danger{color:#fca5a5;border-top:1px solid rgba(99,102,241,.4);margin-top:4px;padding-top:12px}
 .mi.danger:hover{background:rgba(127,29,29,.5);color:#fecaca}
 
-/* bottom-left: HINTS [bulb][bulb][bulb] */
+/* bottom-left: HINTS [bulb][bulb][bulb]  (violet panel, yellow pixel bulbs: lit = hint left, dark outline = used) */
 #hint-wrap{bottom:24px;left:24px;zoom:var(--ts)}
-#btn-hint{background:rgba(88,28,135,.92);padding:12px 18px;border-radius:6px;display:flex;align-items:center;gap:12px;letter-spacing:.05em;border-color:#d8b4fe}
-#btn-hint .hl{font:11px 'Press Start 2P',monospace;color:#fde047}
-#hint-label{display:flex;gap:6px}
-#hint-label .bulb{font-size:20px;line-height:1;filter:drop-shadow(0 0 6px rgba(253,224,71,.9));transition:filter .3s}
-#hint-label .bulb.used{filter:grayscale(1) brightness(.5);opacity:.5}
+#btn-hint{--ac:#a78bfa;--acg:rgba(167,139,250,.5);background:var(--hud-bg);height:70px;padding:0 16px;border-radius:6px;display:flex;align-items:center;gap:14px;letter-spacing:.05em;border:2px solid rgba(167,139,250,.45);box-shadow:0 0 8px rgba(167,139,250,.2)}
+#btn-hint:hover{border-color:rgba(167,139,250,.85);background:rgba(30,27,75,.95)}
+#btn-hint .hl{font:12px 'Press Start 2P',monospace;color:#ddd6fe}
+#hint-label{display:flex;gap:8px}
+.bulb{width:24px;height:24px;display:block}
+.bulb .o{fill:#92400e}.bulb .f{fill:#fde047}.bulb .h{fill:#fff9c4}.bulb .b{fill:#d6d3d1}
+.bulb.lit{filter:drop-shadow(0 0 5px rgba(253,224,71,.85))}
+.bulb.used .o{fill:#8b7fc9}.bulb.used .f{fill:#1e1b3a}.bulb.used .h{fill:none}.bulb.used .b{fill:#475569}
 
-#inv{bottom:24px;right:24px;padding:10px 16px;border-radius:6px;display:flex;align-items:center;gap:12px;zoom:var(--ts)}
-#inv .lbl{font-size:10px;color:#a5b4fc;letter-spacing:.05em;margin-right:4px}
-.slot{width:44px;height:44px;background:rgba(2,6,23,.6);border:2px dashed rgba(51,65,85,.8);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:24px}
-.slot span{color:#475569;font-size:9px}
-.slot.filled{border-style:solid;border-color:#fbbf24}
+/* bottom-right: inventory (slate panel, empty slots are plain boxes, a collected item glows gold) */
+#inv{--ac:#94a3b8;bottom:24px;right:24px;padding:10px 16px;border-radius:6px;display:flex;align-items:center;gap:12px;zoom:var(--ts)}
+#inv .lbl{font-size:11px;color:#e2e8f0;letter-spacing:.05em;margin-right:4px}
+.slot{width:48px;height:48px;background:rgba(148,163,184,.16);border:2px solid #94a3b8;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:26px;transition:box-shadow .3s,border-color .3s}
+.slot span{display:none}
+.slot.filled{background:rgba(251,191,36,.16);border-color:#fbbf24;box-shadow:0 0 12px rgba(251,191,36,.85),inset 0 0 8px rgba(251,191,36,.35)}
 [data-tip]{position:relative}
 [data-tip]::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);right:0;white-space:nowrap;opacity:0;pointer-events:none;background:rgba(15,23,42,.95);border:1px solid #67e8f9;color:#a5f3fc;font:10px 'Press Start 2P',monospace;padding:5px 8px;border-radius:4px;transition:opacity .15s}
 [data-tip].tip-top::after{top:auto;bottom:calc(100% + 8px);right:auto;left:0}
@@ -143,6 +165,16 @@ button:focus-visible,input:focus-visible{outline:3px solid #22d3ee;outline-offse
 #da{display:flex;justify-content:flex-end;gap:12px;margin-top:20px}
 .code{margin:0 0 8px;padding:10px 14px;background:#020617;border:1px solid #334155;border-radius:4px;font:22px/1.2 'VT323',monospace;color:#a5f3fc;white-space:pre;overflow-x:auto;user-select:text}
 .err{color:#fca5a5}
+.st-desc{font:20px/1.2 'VT323',monospace;color:#94a3b8;margin:0 0 12px}
+.st-row{position:relative;display:grid;grid-template-columns:1fr 270px;align-items:center;padding:12px 0;border-top:1px solid rgba(148,163,184,.3)}
+.st-row::before{content:'';position:absolute;top:-1px;bottom:0;right:270px;width:1px;background:rgba(148,163,184,.3)}
+.st-row .nm{font:24px 'VT323',monospace;color:#e2e8f0;padding-right:12px}
+.st-ctl{display:flex;align-items:center;gap:10px;padding-left:16px}
+.dbody .st-ctl input[type=range]{flex:none;width:180px}
+.dbody .st-ctl input[type=checkbox]{width:24px;height:24px;margin:0}
+.st-sel{font:22px 'VT323',monospace;background:#0f172a;color:#e2e8f0;border:2px solid #64748b;border-radius:4px;padding:4px 10px;min-width:150px;cursor:pointer}
+.st-sel option{background:#0f172a;color:#e2e8f0}
+.st-sel:focus-visible{outline:3px solid #22d3ee;outline-offset:2px}
 .opt{display:block;width:100%;text-align:left;margin-top:6px;padding:6px 10px;background:#1e1b4b;border:2px solid #6366f1;border-radius:4px;color:#e2e8f0;font:22px 'VT323',monospace;cursor:pointer}
 .opt:hover:not(:disabled){border-color:#22d3ee}
 .opt.bad{border-color:#ef4444;color:#fca5a5;opacity:.7}
@@ -238,13 +270,7 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 <canvas id="starfield-canvas" aria-hidden="true"></canvas>
 <div id="stage">
 <img class="kitchen" alt="Cozy starlit room with a window, refrigerator, kettle on the dining table and exit door" src="room_door_closed_no_girl.png"/>
-<!-- living room: background + one transparent PNG per clickable object, stacked in the same 480x270 frame (data-k = puzzle spot) -->
-<img class="lr" alt="Living room with sofas, bookshelves, a rug, a plant and a window" src="media/living_room/bg.png"/>
-<img class="lr obj" data-k="door" alt="" src="media/living_room/door.png"/>
-<img class="lr obj" data-k="kettle" alt="" src="media/living_room/roomba.png"/>
-<img class="lr obj" data-k="clock" alt="" src="media/living_room/laptop.png"/>
-<img class="lr obj" data-k="window" alt="" src="media/living_room/tv.png"/>
-<img class="lr obj" data-k="fridge" alt="" src="media/living_room/greenbox.png"/>
+<!-- the room art (background + one transparent PNG per clickable object) is added here by applyRoomArt() in the script, one room per level -->
 
 <div id="hotspots">
 <button class="hs orange" data-hs="window" aria-label="Window puzzle" style="top:23%;left:49%"><div class="wrap"><span class="ping"></span><span class="core">✦</span></div><div id="tag-window" class="tag"></div></button>
@@ -258,11 +284,11 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 <!-- TOP LEFT: progress  (0/4) [ ][ ][ ][ ]   and, below it, integrity  (icon) [shield][shield][shield] -->
 <div id="hud-left" class="hud">
 <header id="progress" class="hud box" title="Room progress">
-<span id="prog-text" class="pix">0 / 4</span>
-<div id="nodes"><span class="node" title="Window"></span><span class="node" title="Kettle"></span><span class="node" title="Refrigerator"></span><span class="node" title="Wall Clock"></span></div>
+<div class="hrow"><span class="hlbl">PROGRESS</span><span id="prog-text" class="hcnt">0 / 4</span></div>
+<div id="nodes" class="gbar"><span class="node" title="Window"></span><span class="node" title="Kettle"></span><span class="node" title="Refrigerator"></span><span class="node" title="Wall Clock"></span></div>
 <div class="bar"><div id="prog-bar"></div></div>
 </header>
-<div id="integrity-hud" class="hud box" role="status" title="Integrity: 3 of 3 shields left"><span class="ic">👁️</span><span class="sh">🛡️</span><span class="sh">🛡️</span><span class="sh">🛡️</span></div>
+<div id="integrity-hud" class="hud box" role="status" title="Integrity: 3 of 3 left"></div>
 </div>
 
 <div id="timer-box" class="hud box" role="timer">
@@ -276,14 +302,14 @@ font-family:'Space Mono',monospace;color:var(--ink);user-select:text;position:re
 <div id="menu-wrap">
 <button id="btn-menu" class="hbtn box" aria-haspopup="true" aria-expanded="false">MENU ▾</button>
 <div id="menu-pop" class="box hidden" role="menu">
-<div class="mi who"><span>👤 <b id="menu-user">PLAYER</b></span><small>Participant</small></div>
-<button class="mi" id="mi-settings" role="menuitem" aria-expanded="false">⚙ Settings <span class="car" id="set-caret">▸</span></button>
+<div class="mi who"><span><b id="menu-user">PLAYER</b></span><small>Participant</small></div>
+<button class="mi" id="mi-settings" role="menuitem" aria-expanded="false">Settings<span class="car" id="set-caret">▸</span></button>
 <div class="subs hidden" id="set-subs">
-<button class="mi sub" data-set="audio" role="menuitem">🔊 Audio</button>
-<button class="mi sub" data-set="text" role="menuitem">🔠 Text</button>
-<button class="mi sub" data-set="controls" role="menuitem">🎮 Controls</button>
+<button class="mi sub" data-set="audio" role="menuitem">Audio</button>
+<button class="mi sub" data-set="text" role="menuitem">Text</button>
+<button class="mi sub" data-set="controls" role="menuitem">Controls</button>
 </div>
-<button class="mi danger" id="mi-leave" role="menuitem">🚪 Leave Room</button>
+<button class="mi danger" id="mi-leave" role="menuitem">Leave Room</button>
 </div>
 </div>
 </aside>
@@ -323,7 +349,7 @@ sessionStorage.removeItem('lastSessionId');
 const LS_KEY = 'remediate.settings.v1', TS_KEY = 'remediate.textScale', LB_KEY = 'remediate.labels';
 const readLS = () => { try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch (e) { return {}; } };
 const cur = () => Object.assign({ master:100, bgm:80, timer:true, hints:true, keys:{ hint:'KeyH', inventory:'KeyI' } }, RemediateSettings.get(), readLS());
-function applyTimerVis(){ $('timer-box').classList.toggle('hidden', !cur().timer); }
+function applyTimerVis(){ $('timer-box').classList.remove('hidden'); }
 function setS(patch){
   try { localStorage.setItem(LS_KEY, JSON.stringify(Object.assign({}, readLS(), patch))); } catch (e) {}
   if (typeof RemediateSettings.set === 'function') { try { RemediateSettings.set(patch); } catch (e) {} }
@@ -430,11 +456,12 @@ const guard = createIntegrityGuard({
     escFn = null;
   }
 });
-// top-left shields: one shield is lost per strike
+// top-left integrity bar: starts full (green); every strike drains one segment, the last one left turns amber
 function renderShields(){
   const n = INTEGRITY.maxStrikes, s = Math.min(n, guard.strikes), left = n - s;
-  $('integrity-hud').innerHTML = '<span class="ic">👁️</span>' + Array.from({ length:n }, (_, i) => `<span class="sh${i < left ? '' : ' lost'}">🛡️</span>`).join('');
-  $('integrity-hud').title = `Integrity: ${left} of ${n} shields left. Copy/paste and leaving this window cost a shield.`;
+  $('integrity-hud').innerHTML = `<div class="hrow"><span class="hlbl">INTEGRITY</span><span class="hcnt">${left} / ${n}</span></div><div class="gbar">` +
+    Array.from({ length:n }, (_, i) => `<span class="seg${i >= left ? ' lost' : (left === 1 ? ' warn' : '')}"></span>`).join('') + '</div>';
+  $('integrity-hud').title = `Integrity: ${left} of ${n} left. Copy/paste and leaving this window cost one.`;
 }
 renderShields();
 
@@ -484,45 +511,76 @@ roomPuzzleIds = PUZ.map(k => assigned[k].id);
 // Level + puzzles for this game: the level carries over from the last finished game (adaptive.js rules),
 // categories the player keeps missing come back. Control group (profiles.adaptive = false): fixed start level, no targeting.
 /* ---------- Room art per level ----------
-   LIVING.levels = which level(s) use the living room. Every other level keeps the kitchen.
-   (Only one living room exists so far, so it sits on the middle level; add 'BEGINNER' / 'ADVANCED' to reuse it.) */
-const LIVING = {
-  levels: ['INTERMEDIATE'],
-  stars: false,              // true = keep the twinkling starfield behind this room
-  dir: 'media/living_room/',
-  // puzzle spot -> the object that stands in for it (puzzle ids, categories and saved data are untouched)
-  spots: {
-    window: { img:'tv',       name:'TV',        icon:'📺' },
-    fridge: { img:'greenbox', name:'Green Box', icon:'📦' },
-    kettle: { img:'roomba',   name:'Roomba',    icon:'🤖' },
-    clock:  { img:'laptop',   name:'Laptop',    icon:'💻' },
-    door:   { img:'door' }
+   ROOMS[level] = the room drawn for that level: BEGINNER = bedroom, INTERMEDIATE = kitchen, ADVANCED = living room.
+   Each room is a 480x270 background plus one transparent PNG per clickable object, stacked in the same frame.
+   spots: puzzle spot -> the object that stands in for it (puzzle ids, categories and saved data are untouched).
+   stack: bottom to top, the same order the PNGs are drawn.  box: [x0,y0,x1,y1] in the 480x270 art (fallback hit area). */
+const ROOM_STARS = false;      // true = keep the twinkling starfield behind the rooms
+const ROOMS = {
+  BEGINNER: {
+    view: 'translateY(18%) scale(1.2)', dir: 'media/bedroom/', alt: 'Bedroom with a bed, desk and computer, wardrobe, air conditioner and a door',
+    spots: {
+      window: { img:'cactus',    name:'Cactus',          icon:'🌵' },
+      fridge: { img:'aircon',    name:'Air Conditioner', icon:'❄️' },
+      kettle: { img:'teddybear', name:'Teddy Bear',      icon:'🧸' },
+      clock:  { img:'computer',  name:'Computer',        icon:'💻' },
+      door:   { img:'door' }
+    },
+    stack: ['door', 'fridge', 'clock', 'kettle', 'window'],
+    box: { door:[147,64,177,142], aircon:[147,35,203,80], computer:[251,76,269,100], teddybear:[274,119,291,136], cactus:[222,38,238,60] }
   },
-  box: { tv:[138,59,198,141], greenbox:[165,138,190,159], roomba:[279,137,305,160], laptop:[184,175,212,202], door:[344,81,380,184] }  // [x0,y0,x1,y1] in the 480x270 art (fallback hit area)
+  INTERMEDIATE: {
+    dir: 'media/kitchen/', alt: 'Kitchen with a counter, dining table, cabinet, wall clock and a glass door',
+    spots: {
+      window: { img:'plant',   name:'Plant',      icon:'🪴' },
+      fridge: { img:'cabinet', name:'Cabinet',    icon:'🗄️' },
+      kettle: { img:'pan',     name:'Pan',        icon:'🍳' },
+      clock:  { img:'clock',   name:'Wall Clock', icon:'🕰️' },
+      door:   { img:'door' }
+    },
+    stack: ['kettle', 'clock', 'door', 'fridge', 'window'],
+    box: { pan:[269,78,280,92], clock:[337,105,362,132], door:[160,68,189,170], cabinet:[111,100,158,200], plant:[228,169,242,195] }
+  },
+  ADVANCED: {
+    dir: 'media/living_room/', alt: 'Living room with sofas, bookshelves, a rug, a plant and a window',
+    spots: {
+      window: { img:'tv',       name:'TV',        icon:'📺' },
+      fridge: { img:'greenbox', name:'Green Box', icon:'📦' },
+      kettle: { img:'roomba',   name:'Roomba',    icon:'🤖' },
+      clock:  { img:'laptop',   name:'Laptop',    icon:'💻' },
+      door:   { img:'door' }
+    },
+    stack: ['door', 'kettle', 'clock', 'window', 'fridge'],
+    box: { tv:[138,59,198,141], greenbox:[165,138,190,159], roomba:[279,137,305,160], laptop:[184,175,212,202], door:[344,81,380,184] }
+  }
 };
-const LIVING_STACK = ['door', 'kettle', 'clock', 'window', 'fridge'];   // bottom to top, same as the <img> order
-let roomMode = 'kitchen', hoverKey = null;
+let R = null, hoverKey = null;   // R = the room in use
 const masks = {};
 
 function applyRoomArt(level){
-  if (!LIVING.levels.includes(level)) return;
-  roomMode = 'living';
-  $('stage').dataset.room = 'living';
+  R = ROOMS[level];
+  if (!R) return;                                   // unknown level: the old kitchen picture stays
+  const st = $('stage'), hs = $('hotspots');
+  st.dataset.room = 'living';                       // 'living' is the CSS name for "layered pixel room" mode, used by all three rooms
   $('room').classList.add('living');
-  if (!LIVING.stars) $('starfield-canvas').style.display = 'none';
-  Object.entries(LIVING.spots).forEach(([k, o]) => {
-    if (SPOTS[k]) { SPOTS[k].name = o.name; SPOTS[k].icon = o.icon; }
-    const [x0, y0, x1, y1] = LIVING.box[o.img], b = document.querySelector(`[data-hs="${k}"]`);
+  if (R.view) $('stage').style.transform = R.view;
+  if (!ROOM_STARS) $('starfield-canvas').style.display = 'none';
+  // draw the room: background first, then the clickable objects bottom to top
+  const mk = (file, k) => { const im = document.createElement('img'); im.className = 'lr' + (k ? ' obj' : ''); if (k) im.dataset.k = k; im.alt = k ? '' : R.alt; im.src = R.dir + file + '.png'; st.insertBefore(im, hs); };
+  mk('bg');
+  R.stack.forEach(k => mk(R.spots[k].img, k));
+  Object.entries(R.spots).forEach(([k, o]) => {
+    if (SPOTS[k] && o.name) { SPOTS[k].name = o.name; SPOTS[k].icon = o.icon; }
+    const [x0, y0, x1, y1] = R.box[o.img], b = document.querySelector(`[data-hs="${k}"]`);
     Object.assign(b.style, { left:x0 / 4.8 + '%', top:y0 / 2.7 + '%', width:(x1 - x0) / 4.8 + '%', height:(y1 - y0) / 2.7 + '%' });
     b.classList.add('hit');
     // read the PNG's transparency so only the object's real pixels react (falls back to the box if the browser blocks it)
     const im = new Image();
     im.onload = () => { try { const c = document.createElement('canvas'); c.width = 480; c.height = 270; const g = c.getContext('2d'); g.drawImage(im, 0, 0); masks[o.img] = g.getImageData(0, 0, 480, 270).data; } catch (e) { console.warn('hover mask unavailable, using boxes', e); } };
-    im.src = LIVING.dir + o.img + '.png';
+    im.src = R.dir + o.img + '.png';
   });
-  const fit = () => $('stage').style.setProperty('--px', $('stage').clientWidth / 480 + 'px');   // one art pixel on screen = the glow's outline width
-  new ResizeObserver(fit).observe($('stage')); fit();
-  const hs = $('hotspots');
+  const fit = () => st.style.setProperty('--px', st.clientWidth / 480 + 'px');   // one art pixel on screen = the glow's outline width
+  new ResizeObserver(fit).observe(st); fit();
   hs.addEventListener('pointermove', e => setHover(keyAt(e.clientX, e.clientY)));
   hs.addEventListener('pointerleave', () => setHover(null));
   hs.addEventListener('focusin', e => { const b = e.target.closest('.hit'); if (b) setHover(b.dataset.hs); });
@@ -535,11 +593,12 @@ function applyRoomArt(level){
 }
 
 function keyAt(cx, cy){
+  if (!R) return null;
   const r = $('stage').getBoundingClientRect();
   const x = Math.floor((cx - r.left) / r.width * 480), y = Math.floor((cy - r.top) / r.height * 270);
   if (x < 0 || y < 0 || x >= 480 || y >= 270) return null;
-  for (let i = LIVING_STACK.length - 1; i >= 0; i--) {     // top-most object first
-    const k = LIVING_STACK[i], img = LIVING.spots[k].img, m = masks[img], b = LIVING.box[img];
+  for (let i = R.stack.length - 1; i >= 0; i--) {     // top-most object first
+    const k = R.stack[i], img = R.spots[k].img, m = masks[img], b = R.box[img];
     if (m ? m[(y * 480 + x) * 4 + 3] > 0 : (x >= b[0] && x < b[2] && y >= b[1] && y < b[3])) return k;
   }
   return null;
@@ -835,7 +894,7 @@ try { act(b.dataset.hs); } catch (err) { console.error(err); toast('Error: ' + e
 });
 
 /* ---------- Hints: one pool of 3 for the whole room; every puzzle has its own hint steps ---------- */
-const hintsOn = () => cur().hints !== false;
+const hintsOn = () => true;
 const hintsLeftFor = k => P[k].hint.length - (hintTier[k] || 0);   // steps this puzzle still has
 // the HUD button hints the puzzle the player opened last (if still unsolved), else the first unsolved one
 const hudTarget = () => lastOpen && !got.includes(lastOpen) ? lastOpen : PUZ.find(x => !got.includes(x));
@@ -845,7 +904,9 @@ renderHints(); queueSave();
 return P[k].hint[t];
 }
 // HINTS [bulb][bulb][bulb]: a used hint turns grey
-function renderHints(){ $('hint-label').innerHTML = [0,1,2].map(i => `<span class="bulb${i < hints ? '' : ' used'}">💡</span>`).join(''); $('btn-hint').dataset.tip = `Ask for a hint (${hints} of 3 left)`; $('btn-hint').style.opacity = hints && hintsOn() ? 1 : .6; }
+const BULB_ROWS = ['...ooooo...','..offfffo..','.offfffffo.','.ofhfffffo.','.offfffffo.','.offfffffo.','..offfffo..','...offfo...','...obbbo...','...obbbo...','....ooo....'];
+const bulbSvg = lit => { let r = ''; BULB_ROWS.forEach((row, y) => [...row].forEach((c, x) => { if (c !== '.') r += `<rect class="${c}" x="${x}" y="${y}" width="1" height="1"/>`; })); return `<svg class="bulb ${lit ? 'lit' : 'used'}" viewBox="0 0 11 11" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`; };
+function renderHints(){ $('hint-label').innerHTML = [0,1,2].map(i => bulbSvg(i < hints)).join(''); $('btn-hint').dataset.tip = `Ask for a hint (${hints} of 3 left)`; $('btn-hint').style.opacity = hints && hintsOn() ? 1 : .6; }
 $('btn-hint').onclick = () => {
 if (over) return toast('Hints are unavailable once the game has ended.');
 if (!hintsOn()) return toast('Hints are turned off in Settings.', true);
@@ -884,42 +945,31 @@ $('mi-leave').onclick = () => { setMenu(false); confirmLeave(); };
 // each settings group opens in a popup in the middle of the screen (the timer keeps running)
 function openAudio(){
   const s = cur();
-  dlg({ icon:'🔊', title:'Audio', actions:[{ l:'Done' }], body:
-    `<div class="rowv"><span class="nm">Master</span><input id="a-m" type="range" min="0" max="100" step="5" value="${s.master ?? 100}" aria-label="Master volume"><b id="a-mv"></b></div>
-     <div class="rowv"><span class="nm">Music</span><input id="a-b" type="range" min="0" max="100" step="5" value="${s.bgm ?? 80}" aria-label="Music volume"><b id="a-bv"></b></div>
-     <label><input id="a-mute" type="checkbox"> Mute music</label>` });
-  const sync = () => { $('a-mv').textContent = $('a-m').value + '%'; $('a-bv').textContent = $('a-b').value + '%'; };
+  dlg({ title:'AUDIO', actions:[{ l:'Done' }], body:
+    `<p class="st-desc">Sound settings for the game.</p>
+     <div class="st-row"><span class="nm">Music</span><div class="st-ctl"><input id="a-b" type="range" min="0" max="100" step="5" value="${s.bgm ?? 80}" aria-label="Music volume"><b id="a-bv"></b></div></div>` });
+  const sync = () => { $('a-bv').textContent = $('a-b').value + '%'; };
   sync();
-  $('a-m').oninput = () => { sync(); setS({ master:+$('a-m').value }); RemediateAmbient.ensureStarted(); };
   $('a-b').oninput = () => { sync(); setS({ bgm:+$('a-b').value }); RemediateAmbient.ensureStarted(); };
-  $('a-mute').checked = RemediateAmbient.getMuted();
-  $('a-mute').onchange = e => { RemediateAmbient.setMuted(e.target.checked); if (!e.target.checked) RemediateAmbient.ensureStarted(); muteIcon(); };
 }
 function openText(){
-  dlg({ icon:'🔠', title:'Text', actions:[{ l:'Done' }], body:
-    `<div class="rowv"><span class="nm">Size</span><button class="btn sec" id="t-dn" type="button" aria-label="Smaller text">A−</button><b id="t-v"></b><button class="btn sec" id="t-up" type="button" aria-label="Bigger text">A+</button></div>
-     <label><input id="t-lb" type="checkbox"> Show object labels</label>
-     <label><input id="t-tm" type="checkbox"> Show timer</label>` });
-  const sync = () => { $('t-v').textContent = Math.round(textScale * 100) + '%'; };
-  sync();
-  $('t-dn').onclick = () => { textScale -= .1; applyScale(); sync(); };
-  $('t-up').onclick = () => { textScale += .1; applyScale(); sync(); };
+  const SIZES = [['Small', .9], ['Medium', 1], ['Large', 1.2]];
+  const pick = SIZES.reduce((a, b) => Math.abs(b[1] - textScale) < Math.abs(a[1] - textScale) ? b : a)[1];
+  dlg({ title:'TEXT', actions:[{ l:'Done' }], body:
+    `<p class="st-desc">Text and display settings for the game.</p>
+     <div class="st-row"><span class="nm">Text Size</span><div class="st-ctl"><select id="t-sz" class="st-sel" aria-label="Text size">${SIZES.map(([n, v]) => `<option value="${v}"${v === pick ? ' selected' : ''}>${n}</option>`).join('')}</select></div></div>
+     <div class="st-row"><span class="nm">Show Labels</span><div class="st-ctl"><input id="t-lb" type="checkbox" aria-label="Show object labels"></div></div>` });
+  $('t-sz').onchange = e => { textScale = parseFloat(e.target.value); applyScale(); };
   $('t-lb').checked = labelsOn; $('t-lb').onchange = e => { labelsOn = e.target.checked; applyLabels(); };
-  $('t-tm').checked = cur().timer !== false; $('t-tm').onchange = e => setS({ timer:e.target.checked });
 }
 function openControls(){
   const keyName = c => String(c || '?').replace(/^Key/, '').replace(/^Digit/, '');
   const draw = () => {
     const k = cur().keys || {};
-    dlg({ icon:'🎮', title:'Controls', actions:[{ l:'Done' }], body:
-      `<div class="rowv"><span class="nm">Hint key</span><b id="k-h">${keyName(k.hint)}</b><button class="btn sec" id="k-hb" type="button">Change</button></div>
-       <div class="rowv"><span class="nm">Items key</span><b id="k-i">${keyName(k.inventory)}</b><button class="btn sec" id="k-ib" type="button">Change</button></div>
-       <label><input id="c-hints" type="checkbox"> Allow hints</label>
-       <p style="color:#94a3b8">Mouse: click glowing objects to open a puzzle. Esc closes windows.</p>` });
-    $('c-hints').checked = hintsOn(); $('c-hints').onchange = e => setS({ hints:e.target.checked });
-    [['hint','k-h','k-hb'], ['inventory','k-i','k-ib']].forEach(([key, lab, btn]) => {
-      $(btn).onclick = () => { $(lab).textContent = '...'; $(btn).textContent = 'Press a key'; rebind = { k:key, done:draw }; };
-    });
+    dlg({ title:'CONTROLS', actions:[{ l:'Done' }], body:
+      `<p class="st-desc">Change shortcut keys of your own choice.</p>
+       <div class="st-row"><span class="nm">Hint Key</span><div class="st-ctl"><button class="btn sec" id="k-hb" type="button">${keyName(k.hint)}</button></div></div>` });
+    $('k-hb').onclick = () => { $('k-hb').textContent = 'Press a key'; rebind = { k:'hint', done:draw }; };
   };
   draw();
 }
@@ -929,7 +979,7 @@ dlg({ title:"Are you sure you're leaving?", body:`If you leave now, your progres
 actions:[ { l:'Cancel', k:'sec' }, { l:'Leave', k:'dan', f:() => {
 over = 'left'; guard.stop();
 const savedLeave = queueSave('left'); // wait for the save so the dashboard shows this game
-dlg({ icon:'👋', title:'You left the room', body:'Saving your result and opening your dashboard...', actions:[{ l:'Enter Again', f:async () => { await savedLeave; location.reload(); } }] });
+dlg({ title:'You left the room', body:'Saving your result and opening your dashboard...', actions:[{ l:'Enter Again', f:async () => { await savedLeave; location.reload(); } }] });
 escFn = null;
 savedLeave.then(() => { location.href = 'dashboard.html'; });
 } } ] });
