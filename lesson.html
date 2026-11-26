@@ -72,7 +72,7 @@
   <div class="absolute bottom-10 -right-24 w-[30rem] h-[30rem] rounded-full bg-indigo-900/20 blur-3xl"></div>
 </div>
 
-<header id="siteHeader" data-title="Lesson Module" data-actions="skip,settings"></header>
+<header id="siteHeader"></header>
 <script src="js/site-header.js"></script>
 
 <!-- Lesson card -->
@@ -93,11 +93,13 @@
       <div id="lessonBody" class="px-4 sm:px-8 py-6 anim-pop" aria-live="polite"></div>
 
       <!-- nav -->
-      <div class="px-4 sm:px-8 py-4 border-t border-cyan-400/25 flex items-center justify-between gap-3">
+            <!-- nav -->
+      <div class="px-4 sm:px-8 py-4 border-t border-cyan-400/25 flex flex-wrap items-center gap-3">
         <button id="btnBack" class="btn btn-ghost pixel-btn-border" type="button">◀ BACK</button>
-        <span class="hidden sm:block font-pixel text-[7px] text-slate-500 tracking-widest uppercase">Use ← → keys</span>
         <button id="btnNext" class="btn btn-primary pixel-btn-border" type="button">NEXT ▶</button>
+        <button id="skipTop" class="btn btn-ghost pixel-btn-border ml-auto !text-[#ffd166] !border-[#ffd166]/60" type="button">SKIP TO GAME</button>
       </div>
+      <p class="hidden sm:block pb-3 text-center font-pixel text-[7px] text-slate-500 tracking-widest uppercase">Use ← → keys</p>
     </div>
     <p class="mt-4 text-center font-pixel text-[7px] text-slate-500 tracking-[0.25em] uppercase">Read the lessons, then fix the bugs in the room<span class="caret">_</span></p>
     <p class="mt-2 text-center text-[11px] text-slate-500">Examples run in your browser with <a class="underline" href="https://pyodide.org" target="_blank" rel="noopener noreferrer">Pyodide</a>. References are from the official <a class="underline" href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer">Python 3 documentation</a>.</p>

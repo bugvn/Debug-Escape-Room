@@ -363,6 +363,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #22d3ee;outline-offse
 <button id="btn-menu" class="hbtn box" aria-haspopup="true" aria-expanded="false">MENU ▾</button>
 <div id="menu-pop" class="box hidden" role="menu">
 <div class="mi who"><span><b id="menu-user">PLAYER</b></span><small>Participant</small></div>
+<button class="mi" id="mi-rules" role="menuitem">Rules</button>
 <button class="mi" id="mi-settings" role="menuitem" aria-expanded="false">Settings<span class="car" id="set-caret">▸</span></button>
 <div class="subs hidden" id="set-subs">
 <button class="mi sub" data-set="audio" role="menuitem">Audio</button>
@@ -1085,6 +1086,28 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(fals
 $('mi-settings').onclick = e => { e.stopPropagation(); setSubs($('set-subs').classList.contains('hidden')); };
 document.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { setMenu(false); ({ audio:openAudio, text:openText, controls:openControls })[b.dataset.set](); });
 $('mi-leave').onclick = () => { setMenu(false); confirmLeave(); };
+
+
+/* Rules: shows the same text as the index page's rules pop-up, without leaving the room */
+async function openRules(){
+  dlg({ set:true, wide:true, title:'RULES', actions:[{ l:'Done' }], body:
+    `<style>.rules-body h1,.rules-body h2,.rules-body h3,.rules-body h4{font:11px/1.7 'Press Start 2P',monospace;color:#7ae8ff;margin:14px 0 6px}.rules-body ul,.rules-body ol{margin:0 0 10px;padding-left:2.2em}.rules-body li{margin-bottom:6px}</style><div id="rules-body" class="rules-body">Loading rules...</div>` });
+  const box = $('rules-body');
+  try {
+    const res = await fetch('index.html');
+    if (!res.ok) throw new Error('index.html returned ' + res.status);
+    const src = new DOMParser().parseFromString(await res.text(), 'text/html').getElementById('rulesModal');
+    if (!src) throw new Error('rulesModal not found in index.html');
+    src.querySelectorAll('script,style,button,input,img,svg,iframe,[aria-hidden="true"]').forEach(el => el.remove());
+    src.querySelectorAll('*').forEach(el => [...el.attributes].forEach(a => el.removeAttribute(a.name)));
+    const head = src.querySelector('h1,h2,h3');
+    if (head && /rules/i.test(head.textContent)) head.remove();
+    if (!src.textContent.trim()) throw new Error('rulesModal is empty');
+    box.innerHTML = src.innerHTML;
+  } catch (e) { console.error(e); box.textContent = 'The rules could not be loaded. Close this and try again.'; }
+  const d = box.closest('.dialog'); if (d) d.scrollTop = 0;
+}
+$('mi-rules').onclick = () => { setMenu(false); openRules(); };
 
 // each settings group opens in a popup in the middle of the screen (the timer keeps running)
 function openAudio(){
