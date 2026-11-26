@@ -164,6 +164,34 @@ button:focus-visible,input:focus-visible{outline:3px solid #22d3ee;outline-offse
 .dialog.center .btn.sec:hover{background:rgba(148,163,184,.14)}
 .dlg-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border:0;border-radius:50%;background:rgba(148,163,184,.16);color:#cbd5e1;font:13px 'Press Start 2P',monospace;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .dlg-x:hover{background:rgba(148,163,184,.32);color:#fff}
+/* ---- settings pop-ups: same look as the dashboard's System Settings (dark teal panel, cyan frame, toggle switches, slightly rounded) ---- */
+#modal:has(.dialog.set){backdrop-filter:blur(4px)}
+.dialog.set{max-width:560px;padding:22px 24px 20px;background:#071b29;border:2px solid #38e1ff;border-radius:8px;box-shadow:0 0 22px rgba(56,225,255,.28),inset 0 0 0 1px rgba(56,225,255,.08)}
+.dialog.set h2{margin:0 0 6px;padding-bottom:16px;border-bottom:1px solid rgba(56,225,255,.22);color:#f1f5f9;font-size:14px;letter-spacing:.06em}
+.dialog.set .st-desc{display:none}
+.dialog.set .st-row{display:grid;grid-template-columns:1fr auto;grid-template-areas:"nm ctl" "sd ctl";column-gap:20px;row-gap:4px;align-items:center;padding:14px 0;border:0;border-bottom:1px solid rgba(56,225,255,.16)}
+.dialog.set .st-row::before{display:none}
+.dialog.set .st-row .nm{grid-area:nm;padding:0;font:700 16px 'Space Mono',monospace;color:#f1f5f9}
+.dialog.set .st-row .sd{grid-area:sd;font:8px/1.5 'Press Start 2P',monospace;color:#94a3b8}
+.dialog.set .st-ctl{grid-area:ctl;padding-left:0;justify-content:flex-end}
+.dialog.set .st-ctl b{min-width:52px;text-align:right;font:12px 'Press Start 2P',monospace;color:#7ae8ff}
+.dialog.set .dbody input[type=range]{-webkit-appearance:none;appearance:none;flex:none;width:190px;height:8px;border-radius:4px;background:linear-gradient(to right,#7ae8ff var(--v,100%),rgba(122,232,255,.18) var(--v,100%));cursor:pointer}
+.dialog.set .dbody input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border:0;border-radius:50%;background:#7ae8ff;box-shadow:0 0 8px rgba(122,232,255,.7)}
+.dialog.set .dbody input[type=range]::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:#7ae8ff}
+.dialog.set .tgl{position:relative;display:block;width:68px;height:32px;margin:0;cursor:pointer}
+.dialog.set .tgl input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.dialog.set .tgl-track{position:absolute;inset:0;border:1px solid #475569;border-radius:6px;background:#06141f;transition:border-color .2s}
+.dialog.set .tgl-knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:4px;background:#475569;transition:transform .2s,background .2s,box-shadow .2s}
+.dialog.set .tgl input:checked + .tgl-track{border-color:#7ae8ff}
+.dialog.set .tgl input:checked + .tgl-track .tgl-knob{transform:translateX(36px);background:#7ae8ff;box-shadow:0 0 8px rgba(122,232,255,.7)}
+.dialog.set .tgl input:focus-visible + .tgl-track{outline:3px solid #22d3ee;outline-offset:2px}
+.dialog.set .st-sel{min-width:150px;padding:8px 12px;font:700 14px 'Space Mono',monospace;background:#06141f;color:#f1f5f9;border:1px solid #7ae8ff;border-radius:6px}
+.dialog.set .btn{padding:12px 16px;font:10px 'Press Start 2P',monospace;letter-spacing:.04em;border:1px solid #7ae8ff;border-radius:6px;background:#7ae8ff;color:#061d29;box-shadow:none}
+.dialog.set .btn:hover{filter:brightness(1.08)}
+.dialog.set .btn.sec{background:transparent;color:#e2f7ff}
+.dialog.set .btn.sec:hover{background:rgba(122,232,255,.12)}
+.dialog.set .st-ctl .btn{padding:10px 14px;min-width:84px}
+.dialog.set #da{margin-top:20px;gap:10px}
 .dialog h2{font:14px/1.6 'Press Start 2P',monospace;color:#fcd34d;margin:0 0 16px}
 .dbody{font:24px/1.25 'VT323',monospace;color:#e2e8f0}
 .dbody p{margin:0 0 10px}
@@ -709,8 +737,8 @@ if (a.id) b.id = a.id;
 b.onclick = () => { if (!a.keep) closeDlg(); a.f && a.f(); };
 $('da').append(b); return b;
 }
-function dlg({ icon='', title, body, actions, wide, center, x }){
-$('modal').innerHTML = `<div class="box dialog${wide ? ' wide' : ''}${center ? ' center' : ''}" role="dialog" aria-modal="true" aria-labelledby="dt">
+function dlg({ icon='', title, body, actions, wide, center, x, set }){
+$('modal').innerHTML = `<div class="box dialog${wide ? ' wide' : ''}${center ? ' center' : ''}${set ? ' set' : ''}" role="dialog" aria-modal="true" aria-labelledby="dt">
 ${x ? '<button class="dlg-x" id="dlg-x" type="button" aria-label="Close" title="Close (Esc)">✕</button>' : ''}<h2 id="dt">${icon} ${title}</h2><div class="dbody">${body}</div><div id="da"></div></div>`;
 if (x) $('dlg-x').onclick = closeDlg;
 actions.forEach(addBtn);
@@ -1061,20 +1089,18 @@ $('mi-leave').onclick = () => { setMenu(false); confirmLeave(); };
 // each settings group opens in a popup in the middle of the screen (the timer keeps running)
 function openAudio(){
   const s = cur();
-  dlg({ title:'AUDIO', actions:[{ l:'Done' }], body:
-    `<p class="st-desc">Sound settings for the game.</p>
-     <div class="st-row"><span class="nm">Music</span><div class="st-ctl"><input id="a-b" type="range" min="0" max="100" step="5" value="${s.bgm ?? 80}" aria-label="Music volume"><b id="a-bv"></b></div></div>` });
-  const sync = () => { $('a-bv').textContent = $('a-b').value + '%'; };
+  dlg({ set:true, title:'AUDIO', actions:[{ l:'Done' }], body:
+    `<div class="st-row"><span class="nm">Music</span><small class="sd">Ambient cosmic soundtrack.</small><div class="st-ctl"><input id="a-b" type="range" min="0" max="100" step="5" value="${s.bgm ?? 80}" aria-label="Music volume"><b id="a-bv"></b></div></div>` });
+  const sync = () => { $('a-bv').textContent = $('a-b').value + '%'; $('a-b').style.setProperty('--v', $('a-b').value + '%'); };
   sync();
   $('a-b').oninput = () => { sync(); setS({ bgm:+$('a-b').value }); RemediateAmbient.ensureStarted(); };
 }
 function openText(){
   const SIZES = [['Small', .9], ['Medium', 1], ['Large', 1.2]];
   const pick = SIZES.reduce((a, b) => Math.abs(b[1] - textScale) < Math.abs(a[1] - textScale) ? b : a)[1];
-  dlg({ title:'TEXT', actions:[{ l:'Done' }], body:
-    `<p class="st-desc">Text and display settings for the game.</p>
-     <div class="st-row"><span class="nm">Text Size</span><div class="st-ctl"><select id="t-sz" class="st-sel" aria-label="Text size">${SIZES.map(([n, v]) => `<option value="${v}"${v === pick ? ' selected' : ''}>${n}</option>`).join('')}</select></div></div>
-     <div class="st-row"><span class="nm">Show Labels</span><div class="st-ctl"><input id="t-lb" type="checkbox" aria-label="Show object labels"></div></div>` });
+  dlg({ set:true, title:'TEXT', actions:[{ l:'Done' }], body:
+    `<div class="st-row"><span class="nm">Text Size</span><small class="sd">Labels, puzzle text and pop-ups.</small><div class="st-ctl"><select id="t-sz" class="st-sel" aria-label="Text size">${SIZES.map(([n, v]) => `<option value="${v}"${v === pick ? ' selected' : ''}>${n}</option>`).join('')}</select></div></div>
+     <div class="st-row"><span class="nm">Show Labels</span><small class="sd">Always show object names.</small><div class="st-ctl"><label class="tgl"><input id="t-lb" type="checkbox" aria-label="Show object labels"><span class="tgl-track"><span class="tgl-knob"></span></span></label></div></div>` });
   $('t-sz').onchange = e => { textScale = parseFloat(e.target.value); applyScale(); };
   $('t-lb').checked = labelsOn; $('t-lb').onchange = e => { labelsOn = e.target.checked; applyLabels(); };
 }
@@ -1082,9 +1108,8 @@ function openControls(){
   const keyName = c => String(c || '?').replace(/^Key/, '').replace(/^Digit/, '');
   const draw = () => {
     const k = cur().keys || {};
-    dlg({ title:'CONTROLS', actions:[{ l:'Done' }], body:
-      `<p class="st-desc">Change shortcut keys of your own choice.</p>
-       <div class="st-row"><span class="nm">Hint Key</span><div class="st-ctl"><button class="btn sec" id="k-hb" type="button">${keyName(k.hint)}</button></div></div>` });
+    dlg({ set:true, title:'CONTROLS', actions:[{ l:'Done' }], body:
+      `<div class="st-row"><span class="nm">Hint Key</span><small class="sd">Shortcut for asking a hint.</small><div class="st-ctl"><button class="btn sec" id="k-hb" type="button">${keyName(k.hint)}</button></div></div>` });
     $('k-hb').onclick = () => { $('k-hb').textContent = 'Press a key'; rebind = { k:'hint', done:draw }; };
   };
   draw();
