@@ -18,6 +18,13 @@ for _p in bank:                      # the game joins code lines with newlines, 
 # one correct fix per puzzle id: [old text, new text]. Kept OUT of the browser bank so players cannot read answers.
 FIX = json.loads((ROOT / 'tools' / 'fixes.json').read_text(encoding='utf8'))
 
+# lazy "fixes" that dodge the lesson (change the data, not the code). Each must be REJECTED.
+LAZY = {
+    'b-type-lock': ['digit = "7"', 'digit = 7'],
+    'b-type-magnets': ['magnets = "3"', 'magnets = 3'],
+    'i-type-thermo': ['reading = "4.5"', 'reading = 4.5'],
+}
+
 def run(code, timeout=5):
     """returns (stdout, error_name_or_None)"""
     try:
@@ -89,6 +96,10 @@ for p in bank:
     fixed = p['code'].replace(old, new, 1)
     t = grade(p, fixed)
     check(t is None, f'reference fix rejected: {t}')
+    if p['id'] in LAZY:
+        lo, ln = LAZY[p['id']]
+        check(lo in p['code'], 'lazy pattern not found in code')
+        check(grade(p, p['code'].replace(lo, ln, 1)) is not None, 'lazy fix (changing the data instead of converting the type) PASSES, should be rejected')
     cheat = f"print({json.dumps(p['expect'])})" if '\n' not in p['expect'] else '\n'.join(f'print({json.dumps(l)})' for l in p['expect'].split('\n'))
     check(grade(p, cheat) is not None, 'hardcoded print PASSES (should be rejected)')
 print('\ncoverage (category x level):')

@@ -25,10 +25,11 @@ test('tag -> category', () => {
   Object.values(TAG_CATEGORY).forEach((c) => assert.ok(MISTAKE_CATEGORIES.includes(c)));
 });
 
-test('applyVariant keeps quotes, pyLiteral makes valid python', () => {
+test('applyVariant forces text input for Type puzzles, pyLiteral makes valid python', () => {
+  // the hidden re-run keeps the value as TEXT, so removing the quotes (changing the data) cannot pass; int() can
   const v = PUZZLE_BANK.find((p) => p.id === 'b-type-lock').variant;
   assert.strictEqual(applyVariant('digit = "7"', v), 'digit = "4"');
-  assert.strictEqual(applyVariant('digit = 7', v), 'digit = 4');
+  assert.strictEqual(applyVariant('digit = 7', v), 'digit = "4"');
   assert.strictEqual(pyLiteral([true, null, { a: '2' }]), '[True, None, {"a": "2"}]');
 });
 
