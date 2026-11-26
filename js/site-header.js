@@ -129,25 +129,110 @@
   var um = document.getElementById('shUser'), pb = document.getElementById('shPlayer');
   function setOpen(o) { um.classList.toggle('sh-um--open', o); pb.setAttribute('aria-expanded', o ? 'true' : 'false'); }
 
-  /* Rules and Settings open on the current page when it can show them, otherwise on the index page */
-  function openPanel(name) {
-    if (name === 'rules' && typeof openModal === 'function' && document.getElementById('rulesModal')) return openModal('rulesModal');
-    if (name === 'settings') {
-      if (typeof openSettings === 'function') return openSettings();
-      if (typeof openRemediateSettings === 'function') return openRemediateSettings();
+  /* Rules pop-up for pages without their own: same text as the index page, shown on the current page */
+  var rulesCss = [
+    '.shr{position:fixed;top:0;right:0;bottom:0;left:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,.75);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}',
+    '.shr *{box-sizing:border-box}',
+    '.shr__box{position:relative;width:100%;max-width:522px;max-height:100%;overflow-y:auto;padding:38px 35px 36px;background:#071b29;border:2px solid #4cc3da;box-shadow:0 0 22px rgba(56,225,255,.2);text-align:left;scrollbar-width:thin;scrollbar-color:rgba(122,232,255,.4) transparent}',
+    '.shr h2{margin:0 0 20px;padding:0 40px 0 4px;font:14px/1.5 "Press Start 2P",monospace;color:#67e8f9}',
+    '.shr__body{font:400 14px/1.625 "Nunito",sans-serif;color:#cbd5e1}',
+    '.shr__body p{margin:0 0 16px}',
+    '.shr__body p:last-child{margin-bottom:0}',
+    '.shr__body b,.shr__body strong{font-weight:800;color:#fff}',
+    '.shr .shr__x{position:absolute;top:20px;right:20px;width:36px;height:36px;margin:0;padding:0;background:none;border:0;color:#22d3ee;font:20px/1 sans-serif;cursor:pointer}',
+    '.shr .shr__x:hover{color:#fff}',
+    '.shr__foot{display:flex;justify-content:flex-end;margin-top:24px;padding-top:20px;border-top:1px solid rgba(148,163,184,.2)}',
+    '.shr .shr__ok{min-width:94px;height:42px;margin:0;padding:0 17px;font:10px "Press Start 2P",monospace;text-transform:uppercase;background:#7ae8ff;color:#061d29;border:0;cursor:pointer;box-shadow:inset -3px -3px 0 rgba(0,0,0,.5),inset 3px 3px 0 rgba(255,255,255,.25)}',
+    '.shr .shr__ok:hover{filter:brightness(1.12)}'
+  ].join('');
+
+  function loadRules() {
+    return fetch('index.html').then(function (res) {
+      if (!res.ok) throw new Error('index.html returned ' + res.status);
+      return res.text();
+    }).then(function (text) {
+      var src = new DOMParser().parseFromString(text, 'text/html').getElementById('rulesModal');
+      if (!src) throw new Error('rulesModal not found in index.html');
+      /* only the rule paragraphs, stripped of the index page's classes and handlers */
+      var rules = Array.prototype.filter.call(src.querySelectorAll('p'), function (p) { return p.textContent.trim(); });
+      if (!rules.length) throw new Error('no rule paragraphs in rulesModal');
+      return rules.map(function (p) {
+        Array.prototype.forEach.call(p.querySelectorAll('script,style,button,input,img,svg,iframe'), function (el) { el.remove(); });
+        [p].concat(Array.prototype.slice.call(p.querySelectorAll('*'))).forEach(function (el) {
+          Array.prototype.slice.call(el.attributes).forEach(function (a) { el.removeAttribute(a.name); });
+        });
+        return p.outerHTML;
+      }).join('');
+    });
+  }
+
+  function showRules() {
+    if (document.getElementById('shRulesPop')) return;
+    if (!document.getElementById('shRulesCss')) {
+      var font = document.createElement('link');
+      font.rel = 'stylesheet';
+      font.href = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;800&display=swap';
+      var style = document.createElement('style');
+      style.id = 'shRulesCss';
+      style.textContent = rulesCss;
+      document.head.appendChild(font);
+      document.head.appendChild(style);
     }
-    if (!isIndex) location.href = 'index.html#' + name;
+    var pop = document.createElement('div');
+    pop.className = 'shr';
+    pop.id = 'shRulesPop';
+    pop.innerHTML =
+      '<div class="shr__box" role="dialog" aria-modal="true" aria-labelledby="shRulesTitle">' +
+        '<button class="shr__x" type="button" aria-label="Close">✕</button>' +
+        '<h2 id="shRulesTitle">📜 GAME RULES</h2>' +
+        '<div class="shr__body">Loading rules...</div>' +
+        '<div class="shr__foot"><button class="shr__ok" type="button">Got it</button></div>' +
+      '</div>';
+    document.body.appendChild(pop);
+    var box = pop.firstChild, x = pop.querySelector('.shr__x'), ok = pop.querySelector('.shr__ok'), body = pop.querySelector('.shr__body');
+    var back = document.activeElement, overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    function close() {
+      document.removeEventListener('keydown', keys, true);
+      document.body.style.overflow = overflow;
+      pop.remove();
+      if (back && back.focus) back.focus();
+    }
+    /* while open, keys stay in the pop-up (so the lesson page's arrow keys don't change lessons) */
+    function keys(e) {
+      e.stopPropagation();
+      if (e.key === 'Escape') { e.preventDefault(); close(); }
+      else if (e.key === 'Tab') { e.preventDefault(); (document.activeElement === ok ? x : ok).focus(); }
+    }
+    document.addEventListener('keydown', keys, true);
+    x.onclick = ok.onclick = close;
+    pop.addEventListener('click', function (e) { e.stopPropagation(); if (e.target === pop) close(); });
+    ok.focus({ preventScroll: true });
+    loadRules().then(function (html) { body.innerHTML = html; }).catch(function (e) {
+      console.error(e);
+      body.textContent = 'The rules could not be loaded. Close this and try again.';
+    }).then(function () { box.scrollTop = 0; });
+  }
+
+  /* Rules always opens on the current page. Settings uses the page's own pop-up, or the index page's */
+  function openPanel(name) {
+    if (name === 'rules') {
+      if (typeof openModal === 'function' && document.getElementById('rulesModal')) return openModal('rulesModal');
+      return showRules();
+    }
+    if (typeof openSettings === 'function') return openSettings();
+    if (typeof openRemediateSettings === 'function') return openRemediateSettings();
+    if (!isIndex) location.href = 'index.html#settings';
   }
   Array.prototype.forEach.call(host.querySelectorAll('[data-panel]'), function (b) {
     b.addEventListener('click', function () { setOpen(false); openPanel(b.getAttribute('data-panel')); });
   });
 
-  /* arriving from another page as index.html#rules or index.html#settings */
-  var wanted = location.hash.slice(1);
-  if (isIndex && (wanted === 'rules' || wanted === 'settings')) {
+  /* arriving from another page as index.html#settings */
+  if (isIndex && location.hash === '#settings') {
     window.addEventListener('load', function () {
       history.replaceState(null, '', location.pathname + location.search);
-      openPanel(wanted);
+      openPanel('settings');
     });
   }
 
