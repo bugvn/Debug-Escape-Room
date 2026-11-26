@@ -106,10 +106,15 @@ test('room: puzzles from the last room are not repeated', () => {
 });
 
 test('room: every object gets a puzzle that is themed on it', () => {
-  const WORD = { window: /window/i, fridge: /fridge/i, kettle: /kettle/i, clock: /clock/i };
+  // each level is its own room (bedroom / kitchen / living room), so a puzzle names the object of ITS room
+  const WORD = {
+    BEGINNER:     { window: /cactus/i, fridge: /air conditioner/i, kettle: /teddy bear/i, clock: /computer/i },
+    INTERMEDIATE: { window: /plant/i,  fridge: /cabinet/i,         kettle: /pan/i,        clock: /wall clock/i },
+    ADVANCED:     { window: /\btv\b/i,  fridge: /green box/i,       kettle: /roomba/i,     clock: /laptop/i }
+  };
   for (const [spot, cat] of Object.entries(SPOT_CATEGORY))
     PUZZLE_BANK.filter((p) => p.category === cat).forEach((p) =>
-      assert.ok(WORD[spot].test(p.story + ' ' + p.title), `${p.id} is a ${cat} puzzle but never mentions the ${spot}`));
+      assert.ok(WORD[p.level][spot].test(p.story + ' ' + p.title), `${p.id} is a ${p.level} ${cat} puzzle but never mentions its ${spot} object`));
   for (const level of LEVELS) for (let s = 1; s < 10; s++) {
     const room = pickRoom({ level, rnd: seeded(s) });
     assert.deepStrictEqual(room.map((p) => p.category), SPOT_CATS);

@@ -210,10 +210,9 @@ test('the 4 objects of a room are different things', () => {
   }
 });
 
-// KNOWN GAP (shown as "todo", does not fail the run): the room art uses cactus / air conditioner / teddy bear...
-// but the puzzle text still talks about the window / fridge / kettle / clock.
-// When every puzzle title or story names the object it is hidden behind, this turns into a normal passing test.
-test('puzzle text names the object it sits behind', { todo: 'retheme the 24 puzzles to the room objects' }, () => {
+// Each puzzle sits behind one room object (cactus, air conditioner, pan, roomba...). Its title or story must name
+// that object, so what the player clicks is what they get. Add a puzzle without the object name and this fails.
+test('puzzle text names the object it sits behind', () => {
   const rooms = parseRooms();
   const bad = [];
   for (const p of PUZZLE_BANK) {
