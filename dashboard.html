@@ -7,8 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="test-summary.css">
-<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="css/test-summary.css">
+<link rel="stylesheet" href="css/dashboard.css">
 <style>
 /* Long lists scroll inside their card, so the neighbouring card does not stretch and leave a blank gap */
 #puzzleBars, #mistakeBars { max-height: 250px; overflow-y: auto; padding-right: .5rem; scrollbar-width: thin; scrollbar-color: #3a4573 transparent; }
@@ -21,7 +21,7 @@
 <div class="glow glow--violet"></div>
 
 <header id="siteHeader" data-title="Dashboard" data-actions="settings"></header>
-<script src="site-header.js"></script>
+<script src="js/site-header.js"></script>
 
 <div class="page">
 
@@ -91,10 +91,10 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="supabase-config.js"></script>
-<script src="score.js"></script>
-<script src="ambient-music.js"></script>
-<script src="shared-settings.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/score.js"></script>
+<script src="js/ambient-music.js"></script>
+<script src="js/shared-settings.js"></script>
 <script>
 (async function () {
   const $ = id => document.getElementById(id);

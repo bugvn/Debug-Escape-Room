@@ -1,6 +1,6 @@
 /* One header for every page.
    Usage:  <header id="siteHeader" data-title="Dashboard" data-actions="rules,settings"></header>
-           <script src="site-header.js"></script>
+           <script src="js/site-header.js"></script>
    data-title    text after "REMEDIATE /"
    data-actions  optional page buttons: rules, settings, skip
    Keeps the ids older page scripts rely on: navAnalytics, playerName, logoutBtn, skipTop. */
@@ -89,7 +89,7 @@
       '</nav>' +
     '</div>';
 
-  /* signed-in state: runs once the page's own scripts (supabase-config.js) have loaded */
+  /* signed-in state: runs once the page's own scripts (js/supabase-config.js) have loaded */
   function hydrate() {
     if (typeof db === 'undefined' || typeof getUser !== 'function') return;
     var out = document.getElementById('logoutBtn');

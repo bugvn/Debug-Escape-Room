@@ -15,7 +15,7 @@ This is a static HTML/CSS/JavaScript escape-room application with Supabase authe
 ## Validation rules
 
 - Run `npm run check` after JavaScript, puzzle, auth, or adaptive-logic changes.
-- Keep all puzzle IDs unique and preserve category-level coverage in `puzzles.js`.
+- Keep all puzzle IDs unique and preserve category-level coverage in `js/puzzles.js`.
 - Do not weaken copy/paste or integrity logging checks when changing `game-room.html`.
 - Treat local Supabase failures as safe failures: redirect unauthenticated users and restore page visibility.
 - Do not expose Supabase service-role secrets in browser code.

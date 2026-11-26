@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "test": "node --test",
-    "check": "node --check puzzles.js && node --check adaptive.js && node --check integrity.js && node --check analytics.js && node --check score.js && node --check pyrunner.js && node --check settings.js && node --check site-header.js && node --check starfield.js && node --check login.js && node --check supabase-config.js && node --test && python tools/verify_bank.py",
+    "check": "node --check js/puzzles.js && node --check js/adaptive.js && node --check js/integrity.js && node --check js/analytics.js && node --check js/score.js && node --check js/pyrunner.js && node --check js/settings.js && node --check js/site-header.js && node --check js/starfield.js && node --check js/login.js && node --check js/supabase-config.js && node --test && python tools/verify_bank.py",
     "serve": "python -m http.server 4173"
   }
 }

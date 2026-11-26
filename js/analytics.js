@@ -9,9 +9,9 @@
 //   reportCSV(result)                       flat summary file for the paper / slides
 //   sampleData(seed)                        SIMULATED players, for demos only (never mix with real data)
 //
-// Data sources are the researcher views: research_sessions, research_attempts (schema.sql) and research_integrity (migration-03.sql, anti-cheat log).
+// Data sources are the researcher views: research_sessions, research_attempts (sql/schema.sql) and research_integrity (sql/migration-03.sql, anti-cheat log).
 // A "room" = one game. Room 1, Room 2, ... = the player's 1st, 2nd, ... game (session_no).
-// In the browser, puzzles.js and adaptive.js must be loaded first (same rule as adaptive.js).
+// In the browser, js/puzzles.js and js/adaptive.js must be loaded first (same rule as js/adaptive.js).
 
 const _P = (typeof PUZZLE_BANK !== 'undefined') ? { PUZZLE_BANK, LEVELS } : require('./puzzles.js');
 const _A = (typeof pickRoom !== 'undefined') ? { pickRoom, nextLevel, weakCategories } : require('./adaptive.js');
@@ -371,7 +371,7 @@ function parseCSV(text) {
 }
 
 /* ---------------- SIMULATED players (demo only) ---------------- */
-// 30 players x 3 rooms, the study's planned sample. Uses the real room picker and level rules from adaptive.js.
+// 30 players x 3 rooms, the study's planned sample. Uses the real room picker and level rules from js/adaptive.js.
 // The learning rate is an ASSUMPTION of the simulation, not a result.
 function sampleData(seed = 7) {
   let s = seed; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;

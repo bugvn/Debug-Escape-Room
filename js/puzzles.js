@@ -4,7 +4,7 @@
 // Every object in the room owns one category (SPOT_CATEGORY), and every puzzle's title + story is
 // themed on that object, so the window always shows a window puzzle, the clock a clock puzzle, etc.
 // Keep 2+ puzzles per (category x level) cell so rooms can rotate. The game picks 4 per room
-// (see adaptive.js). Existing ids are kept even when a puzzle is reskinned, so saved data still matches.
+// (see js/adaptive.js). Existing ids are kept even when a puzzle is reskinned, so saved data still matches.
 //
 // Fields
 //   id, category, level   what it trains and how hard it is
@@ -26,7 +26,7 @@ const CATEGORIES = ['Index', 'Type', 'Recursion', 'Scope'];           // what a 
 const MISTAKE_CATEGORIES = [...CATEGORIES, 'Syntax', 'Logic', 'Other']; // what a player's wrong answer can be tagged as
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'];
 
-// One object per category. Single source of truth: game-room.html, adaptive.js and the tests all read it.
+// One object per category. Single source of truth: game-room.html, js/adaptive.js and the tests all read it.
 const SPOT_CATEGORY = { window: 'Index', fridge: 'Type', kettle: 'Recursion', clock: 'Scope' };
 
 // Mistake tag (what the player's code actually did) -> category. One lookup for the whole app.

@@ -1,7 +1,7 @@
 // Run with:  node --test
 const test = require('node:test');
 const assert = require('node:assert');
-const { mean, sd, median, desc, normalizeSessions, normalizeAttempts, normalizeIntegrity, analyze, insights, reportCSV, parseCSV, sampleData } = require('./analytics.js');
+const { mean, sd, median, desc, normalizeSessions, normalizeAttempts, normalizeIntegrity, analyze, insights, reportCSV, parseCSV, sampleData } = require('../js/analytics.js');
 
 const sess = (participant, sessionNo, o = {}) => ({ participant, sessionNo, startLevel: 'BEGINNER', level: 'BEGINNER', nextLevel: 'BEGINNER', result: 'won', solved: 4, hints: 0, elapsed: 100, submits: 4, correct: 4, accuracy: 1, ...o });
 const att = (participant, sessionNo, puzzleId, category, attemptNo, ok) => ({ participant, sessionNo, puzzleId, category, kind: 'submit', attemptNo, ok, tag: ok ? null : 'IndexError' });
@@ -83,7 +83,7 @@ test('weakest topic per player needs 2+ submits in a topic', () => {
   assert.strictEqual(p1.weakest, 'Index');
 });
 
-test('rule check re-runs adaptive.js on the logged submits and finds a wrong next level', () => {
+test('rule check re-runs js/adaptive.js on the logged submits and finds a wrong next level', () => {
   const ok = sess('p1', 1, { nextLevel: 'INTERMEDIATE', elapsed: 100, hints: 0 });    // 4/4 correct, fast: should go up
   const bad = sess('p2', 1, { nextLevel: 'ADVANCED' });                                // same data but jumped two levels
   const a = ['p1', 'p2'].flatMap((p) => [1, 2, 3, 4].map((i) => att(p, 1, 'P' + i, 'Index', 1, true)));

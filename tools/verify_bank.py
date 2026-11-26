@@ -1,4 +1,4 @@
-"""Checks every puzzle in puzzles.js with real Python, the same way game-room.html grades it.
+"""Checks every puzzle in js/puzzles.js with real Python, the same way game-room.html grades it.
 
     python3 tools/verify_bank.py
 
@@ -12,7 +12,7 @@ import ast, json, re, subprocess, sys, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 bank = json.loads(subprocess.check_output(
-    ['node', '-e', "console.log(JSON.stringify(require('./puzzles.js').PUZZLE_BANK))"], cwd=ROOT))
+    ['node', '-e', "console.log(JSON.stringify(require('./js/puzzles.js').PUZZLE_BANK))"], cwd=ROOT))
 
 # one correct fix per puzzle id (not shipped to the browser)
 FIX = {

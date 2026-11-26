@@ -73,7 +73,7 @@
 </div>
 
 <header id="siteHeader" data-title="Lesson Module" data-actions="skip,settings"></header>
-<script src="site-header.js"></script>
+<script src="js/site-header.js"></script>
 
 <!-- Lesson card -->
 <main class="relative z-10 flex-1 flex items-start justify-center px-4 py-8 sm:px-6 md:px-8">
@@ -105,13 +105,13 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="supabase-config.js"></script>
-<script src="starfield.js"></script>
-<script src="ambient-music.js"></script>
-<script src="shared-settings.js"></script>
-<script src="pyrunner.js"></script>
-<script src="puzzles.js"></script>
-<script src="adaptive.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/starfield.js"></script>
+<script src="js/ambient-music.js"></script>
+<script src="js/shared-settings.js"></script>
+<script src="js/pyrunner.js"></script>
+<script src="js/puzzles.js"></script>
+<script src="js/adaptive.js"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
@@ -373,7 +373,7 @@ print(add(2))    <span class="cm"># [1, 2]  the old list is remembered</span>`],
 }
 ];
 
-/* ---------- Python (Pyodide) in a Web Worker: see pyrunner.js ---------- */
+/* ---------- Python (Pyodide) in a Web Worker: see js/pyrunner.js ---------- */
 const py = createPyRunner({ onChange: () => refreshRun() });
 const runPy = code => py.run(code);
 function refreshRun(){

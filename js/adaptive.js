@@ -5,7 +5,7 @@
 // 2) weakCategories()  which categories the player keeps missing
 // 3) pickRoom()    choose the 4 puzzles (one per object in the room) for the next room from the bank
 //
-// Needs puzzles.js (LEVELS, PUZZLE_BANK) loaded first in the browser.
+// Needs js/puzzles.js (LEVELS, PUZZLE_BANK) loaded first in the browser.
 
 const RULES = {
   promoteAccuracy: 0.75,   // submit accuracy needed to move up
@@ -61,7 +61,7 @@ function shuffle(a, rnd) {
 }
 
 // Choose the room's puzzles: exactly one per object in the room.
-//   Each object owns one category (SPOT_CATEGORY in puzzles.js) and every puzzle of that category is themed
+//   Each object owns one category (SPOT_CATEGORY in js/puzzles.js) and every puzzle of that category is themed
 //   on that object, so what you click is what you get.
 //   level     where the player is now
 //   weak      output of weakCategories() ([] for the non-adaptive group)

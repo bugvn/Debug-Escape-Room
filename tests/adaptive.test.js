@@ -1,8 +1,8 @@
 // Run with:  node --test
 const test = require('node:test');
 const assert = require('node:assert');
-const { PUZZLE_BANK, LEVELS, CATEGORIES, MISTAKE_CATEGORIES, SPOT_CATEGORY, categoryOfTag, TAG_CATEGORY, applyVariant, pyLiteral } = require('./puzzles.js');
-const { RULES, SPOT_CATS, accuracyOf, nextLevel, weakCategories, pickRoom } = require('./adaptive.js');
+const { PUZZLE_BANK, LEVELS, CATEGORIES, MISTAKE_CATEGORIES, SPOT_CATEGORY, categoryOfTag, TAG_CATEGORY, applyVariant, pyLiteral } = require('../js/puzzles.js');
+const { RULES, SPOT_CATS, accuracyOf, nextLevel, weakCategories, pickRoom } = require('../js/adaptive.js');
 
 const good = (n) => Array.from({ length: n }, () => ({ kind: 'submit', is_correct: true }));
 const bad = (n, kind = 'submit') => Array.from({ length: n }, () => ({ kind, is_correct: false }));

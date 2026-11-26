@@ -7,9 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="test-summary.css">
-<link rel="stylesheet" href="dashboard.css">
-<link rel="stylesheet" href="analytics.css">
+<link rel="stylesheet" href="css/test-summary.css">
+<link rel="stylesheet" href="css/dashboard.css">
+<link rel="stylesheet" href="css/analytics.css">
 </head>
 <body>
 
@@ -18,7 +18,7 @@
 <div class="glow glow--violet"></div>
 
 <header id="siteHeader" data-title="Analytics" data-actions="settings"></header>
-<script src="site-header.js"></script>
+<script src="js/site-header.js"></script>
 
 <div class="page">
 <main class="an">
@@ -69,7 +69,6 @@
       <button class="srcc" type="button" data-go="btnDb">
         <span class="srcc__t">Database</span>
         <span class="srcc__d">Live games from Supabase. Admins see every player, other accounts only see their own games.</span>
-        <span class="srcc__n">Needs migration-03.sql run once, and is_admin set on your profile.</span>
       </button>
       <button class="srcc srcc--lav" type="button" data-go="btnCsv">
         <span class="srcc__t">Upload CSV</span>
@@ -228,7 +227,7 @@
       <section class="tabpanel" role="tabpanel" id="p-integrity" aria-labelledby="t-integrity" hidden>
         <div class="stack">
           <div class="ikp" id="ikp"></div>
-          <div id="integrityEmpty" class="card pixel-box hidden"><p class="zero">No anti-cheat events recorded yet.<br>Events appear after players use the updated game room. Run migration-03.sql first, or load the sample data to preview this page.</p></div>
+          <div id="integrityEmpty" class="card pixel-box hidden"><p class="zero">No anti-cheat events recorded yet.<br>Events appear after players use the updated game room. Run sql/migration-03.sql first, or load the sample data to preview this page.</p></div>
           <div class="grid2" id="integrityCharts">
             <section class="card card--pink pixel-box">
               <h2 class="card__title">What was caught</h2>
@@ -274,12 +273,12 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="supabase-config.js"></script>
-<script src="puzzles.js"></script>
-<script src="adaptive.js"></script>
-<script src="analytics.js"></script>
-<script src="ambient-music.js"></script>
-<script src="shared-settings.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/puzzles.js"></script>
+<script src="js/adaptive.js"></script>
+<script src="js/analytics.js"></script>
+<script src="js/ambient-music.js"></script>
+<script src="js/shared-settings.js"></script>
 <script>
 (async function () {
   const $ = id => document.getElementById(id);
@@ -287,7 +286,7 @@
   const u = await requireLogin(); if (!u) return;
 
   // Admin only. This hides the page for players. The real lock is the database: without profiles.is_admin
-  // (migration-03.sql) Row Level Security returns only the player's own rows, so nobody gains data by skipping this check.
+  // (sql/migration-03.sql) Row Level Security returns only the player's own rows, so nobody gains data by skipping this check.
   let isAdmin = false;
   try { const prof = await getProfile(u.id); isAdmin = !!(prof && prof.is_admin); } catch (e) { console.error(e); }
   if (isAdmin) { const w = $('whoChip'); w.textContent = 'Admin · Cohort view'; w.hidden = false; }
@@ -312,7 +311,7 @@
     const m = String(e && e.message || e);
     if (/permission denied/i.test(m) || /does not exist/i.test(m) || /relation .* not/i.test(m))
       return '<b>The database refused the request</b> (' + plain(m) + ').<ol>' +
-        '<li>In Supabase, open <b>SQL Editor</b> and run <code>migration-03.sql</code> once.</li>' +
+        '<li>In Supabase, open <b>SQL Editor</b> and run <code>sql/migration-03.sql</code> once.</li>' +
         '<li>Make your account an admin: <code>update public.profiles set is_admin = true where id = (select id from auth.users where email = \'you@example.com\');</code></li>' +
         '<li>Reload this page and press <b>Database</b> again. Or use <b>Upload CSV</b> / <b>Sample data</b> in the meantime.</li></ol>';
     return '<b>Could not read the research views:</b> ' + plain(m) + '. Try again, or use Upload CSV / Sample data.';
@@ -339,7 +338,7 @@
       ]);
       let ig = [], igNote = '';
       try { ig = await fetchAll(() => db.from('research_integrity').select('*').order('created_at', { ascending: true })); }
-      catch (e) { igNote = ' Anti-cheat log not available (run migration-03.sql).'; }
+      catch (e) { igNote = ' Anti-cheat log not available (run sql/migration-03.sql).'; }
       if (load(normalizeSessions(s), normalizeAttempts(a), normalizeIntegrity(ig), false, 'Database')) { pressed('btnDb'); if (igNote) say($('banner').innerHTML + igNote); }
     } catch (e) { console.error(e); say(dbHelp(e), 'err'); }
   }

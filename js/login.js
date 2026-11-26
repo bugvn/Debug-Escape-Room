@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     } catch (err) {
       restore();
-      showErr('Cannot reach server. Check your internet connection and the keys in supabase-config.js.');
+      showErr('Cannot reach server. Check your internet connection and the keys in js/supabase-config.js.');
     }
   });
 

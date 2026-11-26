@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="test-summary.css">
+<link rel="stylesheet" href="css/test-summary.css">
 </head>
 <body>
 
@@ -16,7 +16,7 @@
 <div class="glow glow--violet"></div>
 
 <header id="siteHeader" data-title="Debug Report" data-actions="settings"></header>
-<script src="site-header.js"></script>
+<script src="js/site-header.js"></script>
 
 <div class="page">
 
@@ -115,10 +115,10 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="supabase-config.js"></script>
-<script src="score.js"></script>
-<script src="ambient-music.js"></script>
-<script src="shared-settings.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/score.js"></script>
+<script src="js/ambient-music.js"></script>
+<script src="js/shared-settings.js"></script>
 <script>
 (async function(){
   const $ = id => document.getElementById(id);
@@ -191,7 +191,7 @@
       <div class="pattern__track"><div class="pattern__fill" style="width:${Math.round(100 * tags[k] / max)}%"></div></div>
     </div>`).join('') : '<p class="empty-note">No mistakes logged. Clean run.</p>';
 
-  // ACCURACY BY CATEGORY: from the category saved with every attempt (puzzles.js). Old games without it skip this.
+  // ACCURACY BY CATEGORY: from the category saved with every attempt (js/puzzles.js). Old games without it skip this.
   const byCat = {};
   subm.filter(x => x.category).forEach(x => { const c = byCat[x.category] = byCat[x.category] || { n: 0, ok: 0 }; c.n++; if (x.is_correct) c.ok++; });
   const cats = Object.keys(byCat);

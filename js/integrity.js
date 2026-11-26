@@ -13,7 +13,7 @@
 // Someone with a phone or a second computer can still look things up. That is why every event is logged:
 // the analytics page can show and filter flagged games instead of pretending cheating is impossible.
 //
-// The pure helpers at the bottom are tested by integrity.test.js (node --test).
+// The pure helpers at the bottom are tested by tests/integrity.test.js (node --test).
 
 const INTEGRITY = {
   maxStrikes: 3,        // strikes before the room is closed

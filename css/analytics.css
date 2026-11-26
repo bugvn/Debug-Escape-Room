@@ -1,4 +1,4 @@
-/* Analytics page. Builds on test-summary.css (tokens, starfield, topbar) and dashboard.css (nav, card, kpi).
+/* Analytics page. Builds on css/test-summary.css (tokens, starfield, topbar) and css/dashboard.css (nav, card, kpi).
    Rules of this page: one 8px spacing rhythm, every control is 44px tall, main = cyan, second series = lavender, bad = pink, warn = gold. */
 :root {
   --ad: var(--cyan);

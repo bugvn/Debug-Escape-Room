@@ -146,7 +146,7 @@ const RemediateAmbient = (() => {
   }
 
   function wireButton(button) {
-    // This button is owned by its page script (for example, login.js).
+    // This button is owned by its page script (for example, js/login.js).
     button.dataset.remediateMusic = 'true';
   }
 

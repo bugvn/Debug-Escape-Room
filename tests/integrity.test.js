@@ -1,7 +1,7 @@
 // Run with:  node --test
 const test = require('node:test');
 const assert = require('node:assert');
-const { INTEGRITY, countsAsStrike, isDevtoolsKey, isBigInsert } = require('./integrity.js');
+const { INTEGRITY, countsAsStrike, isDevtoolsKey, isBigInsert } = require('../js/integrity.js');
 
 test('copy, paste, cut, drop and big inserts are strikes', () => {
   ['paste', 'copy', 'cut', 'drop', 'big_jump'].forEach((t) => assert.strictEqual(countsAsStrike(t), true, t));

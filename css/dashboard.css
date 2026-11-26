@@ -1,4 +1,4 @@
-/* Dashboard page. Builds on test-summary.css (base, glow, scanlines, pixel-box, .act buttons) */
+/* Dashboard page. Builds on css/test-summary.css (base, glow, scanlines, pixel-box, .act buttons) */
 .nav { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
 .nav__link {
   padding: .5rem .75rem; font-size: 1rem; line-height: 1.5rem; color: #cbd5e1;

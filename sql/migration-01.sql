@@ -1,5 +1,5 @@
 -- Run once in Supabase -> SQL Editor if your tables already exist.
--- (New projects: run schema.sql instead.)
+-- (New projects: run sql/schema.sql instead.)
 
 alter table public.profiles add column if not exists consented_at timestamptz;
 
@@ -27,7 +27,7 @@ begin
 end $$;
 
 -- Run once in Supabase -> SQL Editor if your tables already exist.
--- RUN THIS BEFORE you publish the new game-room.html / score.js / dashboard.html:
+-- RUN THIS BEFORE you publish the new game-room.html / js/score.js / dashboard.html:
 -- the new code saves elapsed_sec and no longer writes time_total_sec / time_left_sec.
 --
 -- 1) The timer counts up, so keep one number: elapsed_sec.
