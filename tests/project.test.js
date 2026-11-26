@@ -15,7 +15,7 @@ const ls = (d, ext) => fs.readdirSync(path.join(ROOT, d)).filter((f) => f.endsWi
 const PAGES = ls('.', '.html');
 const JS_FILES = ls('js', '.js');
 
-const { PUZZLE_BANK, LEVELS, CATEGORIES, SPOT_CATEGORY } = require('../js/puzzles.js');
+const { PUZZLE_BANK, LEVELS, CATEGORIES, SPOT_CATEGORY, themePuzzle } = require('../js/puzzles.js');
 const { RULES } = require('../js/adaptive.js');
 const { INTEGRITY } = require('../js/integrity.js');
 const { PAR_SEC } = require('../js/score.js');
@@ -210,17 +210,50 @@ test('the 4 objects of a room are different things', () => {
   }
 });
 
-// Each puzzle sits behind one room object (cactus, air conditioner, pan, roomba...). Its title or story must name
-// that object, so what the player clicks is what they get. Add a puzzle without the object name and this fails.
-test('puzzle text names the object it sits behind', () => {
-  const rooms = parseRooms();
+// Puzzles are object-neutral: title and story use {obj}, file uses {objfile}. The room fills in the object it shows,
+// so every puzzle works in every room (the easier puzzle a weak category pulls down from a lower level included).
+test('every puzzle uses the {obj} / {objfile} tokens', () => {
   const bad = [];
   for (const p of PUZZLE_BANK) {
-    const spot = Object.keys(SPOT_CATEGORY).find((k) => SPOT_CATEGORY[k] === p.category);
-    const obj = rooms[p.level].spots[spot].name;
-    if (!(`${p.title} ${p.story}`).toLowerCase().includes(obj.toLowerCase())) bad.push(`${p.id} (${p.level}): should mention "${obj}"`);
+    if (!p.title.includes('{obj}')) bad.push(`${p.id}: title needs {obj}`);
+    if (!p.story.includes('{obj}')) bad.push(`${p.id}: story needs {obj}`);
+    if (!p.file.includes('{objfile}')) bad.push(`${p.id}: file needs {objfile}`);
   }
   assert.deepStrictEqual(bad, []);
+});
+
+test('every puzzle reads right in every room object (no loose tokens, no other room\'s object)', () => {
+  const rooms = parseRooms();
+  const allNames = [...new Set(LEVELS.flatMap((l) => Object.values(rooms[l].spots).map((s) => s.name).filter(Boolean)))];
+  const bad = [];
+  for (const lvl of LEVELS) for (const spot of Object.keys(SPOT_CATEGORY)) {
+    const obj = rooms[lvl].spots[spot].name;
+    for (const p of PUZZLE_BANK.filter((x) => x.category === SPOT_CATEGORY[spot])) {
+      const t = themePuzzle(p, obj);
+      const text = `${t.title} ${t.story} ${t.file}`;
+      if (!t.title.includes(obj) || !t.story.includes(obj)) bad.push(`${p.id} in ${lvl}: should name "${obj}"`);
+      if (/[{}]/.test(text)) bad.push(`${p.id} in ${lvl}: unfilled token`);
+      for (const other of allNames.filter((n) => n !== obj && !obj.includes(n)))
+        if (new RegExp(`\\b${other}\\b`, 'i').test(`${p.title} ${p.story}`)) bad.push(`${p.id}: text hard-codes "${other}"`);
+    }
+  }
+  assert.deepStrictEqual(bad, []);
+});
+
+test('js/puzzles.json is valid and is what the game loads', () => {
+  const raw = JSON.parse(read('js/puzzles.json'));
+  assert.ok(Array.isArray(raw) && raw.length === PUZZLE_BANK.length, 'puzzles.json and PUZZLE_BANK disagree');
+  raw.forEach((p, i) => {
+    assert.ok(Array.isArray(p.code) && p.code.every((l) => typeof l === 'string'), `${p.id}: code must be an array of lines`);
+    assert.strictEqual(PUZZLE_BANK[i].code, p.code.join('\n'));
+  });
+});
+
+test('tools/fixes.json has one fix per puzzle and never ships to the browser', () => {
+  const fixes = JSON.parse(read('tools/fixes.json'));
+  assert.deepStrictEqual(Object.keys(fixes).sort(), PUZZLE_BANK.map((p) => p.id).sort());
+  for (const p of PUZZLE_BANK) assert.ok(p.code.includes(fixes[p.id][0]), `${p.id}: fix pattern not found in code`);
+  assert.ok(!/fixes\.json/.test(PAGES.map((f) => read(f)).join('\n')), 'a page loads fixes.json');
 });
 
 /* ---------------------------------------------------------------- 7. rules and wiring across files */

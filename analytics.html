@@ -283,6 +283,7 @@
 (async function () {
   const $ = id => document.getElementById(id);
   $('logoutBtn').onclick = logout;
+  try { await loadPuzzleBank(); } catch (e) { console.error(e); }   // puzzle titles come from js/puzzles.json
   const u = await requireLogin(); if (!u) return;
 
   // Admin only. This hides the page for players. The real lock is the database: without profiles.is_admin

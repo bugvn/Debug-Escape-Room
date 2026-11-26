@@ -11,9 +11,9 @@
 //
 // Data sources are the researcher views: research_sessions, research_attempts (sql/schema.sql) and research_integrity (sql/migration-03.sql, anti-cheat log).
 // A "room" = one game. Room 1, Room 2, ... = the player's 1st, 2nd, ... game (session_no).
-// In the browser, js/puzzles.js and js/adaptive.js must be loaded first (same rule as js/adaptive.js).
+// In the browser, js/puzzles.js and js/adaptive.js must be loaded first, and await loadPuzzleBank() must have finished (same rule as js/adaptive.js).
 
-const _P = (typeof PUZZLE_BANK !== 'undefined') ? { PUZZLE_BANK, LEVELS } : require('./puzzles.js');
+const _P = (typeof PUZZLE_BANK !== 'undefined') ? { PUZZLE_BANK, LEVELS, plainTitle } : require('./puzzles.js');
 const _A = (typeof pickRoom !== 'undefined') ? { pickRoom, nextLevel, weakCategories } : require('./adaptive.js');
 const A_LEVELS = _P.LEVELS;
 const A_CATS = ['Index', 'Type', 'Recursion', 'Scope'];
@@ -174,7 +174,7 @@ function analyze(sessionsIn, attemptsIn, opts = {}, integrityIn = []) {
   const mistakes = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).map(([tag, n]) => ({ tag, n }));
 
   // puzzle difficulty: success rate of submits per puzzle (use it to retune the bank)
-  const titles = Object.fromEntries(_P.PUZZLE_BANK.map((p) => [p.id, p.title]));
+  const titles = Object.fromEntries(_P.PUZZLE_BANK.map((p) => [p.id, _P.plainTitle(p)]));
   const pz = {};
   attempts.forEach((a) => {
     const o = pz[a.puzzleId] || (pz[a.puzzleId] = { id: a.puzzleId, title: titles[a.puzzleId] || a.puzzleId, n: 0, ok: 0, category: a.category });

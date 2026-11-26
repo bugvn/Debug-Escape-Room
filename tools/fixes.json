@@ -1,0 +1,98 @@
+{
+  "b-index-stars": [
+    "range(len(stars) + 1)",
+    "range(len(stars))"
+  ],
+  "b-index-last": [
+    "sky[len(sky)]",
+    "sky[len(sky) - 1]"
+  ],
+  "b-type-lock": [
+    "code = digit + 1",
+    "code = int(digit) + 1"
+  ],
+  "b-type-magnets": [
+    "total = magnets + extra",
+    "total = int(magnets) + extra"
+  ],
+  "b-recursion-kettle": [
+    "return heat_water(current_temp, target_temp, cycle + 1)",
+    "return heat_water(current_temp + 10, target_temp, cycle + 1)"
+  ],
+  "b-recursion-steep": [
+    "steep(minutes + 1)",
+    "steep(minutes - 1)"
+  ],
+  "b-scope-clock": [
+    "ring_hours(15)\nprint",
+    "chimes = ring_hours(15)\nprint"
+  ],
+  "b-scope-alarm": [
+    "    time = \"07:00\"\n\nset_alarm()",
+    "    time = \"07:00\"\n    return time\n\ntime = set_alarm()"
+  ],
+  "i-index-shelf": [
+    "i <= len(jars)",
+    "i < len(jars)"
+  ],
+  "i-index-rings": [
+    "range(1, len(rings) + 1)",
+    "range(len(rings))"
+  ],
+  "i-type-label": [
+    "+ count",
+    "+ str(count)"
+  ],
+  "i-type-thermo": [
+    "if reading < limit",
+    "if float(reading) < limit"
+  ],
+  "i-recursion-factorial": [
+    "    return n * factorial",
+    "    if n <= 1:\n        return 1\n    return n * factorial"
+  ],
+  "i-recursion-cups": [
+    "    n + sum_cups",
+    "    return n + sum_cups"
+  ],
+  "i-scope-total": [
+    "def add_ticks(n):\n",
+    "def add_ticks(n):\n    global total\n"
+  ],
+  "i-scope-chimes": [
+    "    return chimes",
+    "    else:\n        chimes = hour\n    return chimes"
+  ],
+  "a-index-pairs": [
+    "range(len(nums))",
+    "range(len(nums) - 1)"
+  ],
+  "a-index-panes": [
+    "    last_row = len(grid)\n    last_col = len(grid[0])\n",
+    "    last_row = len(grid) - 1\n    last_col = len(grid[0]) - 1\n"
+  ],
+  "a-type-ledger": [
+    "total += price",
+    "total += int(price)"
+  ],
+  "a-type-stock": [
+    "total += counts[item]",
+    "total += int(counts[item])"
+  ],
+  "a-recursion-vault": [
+    "find(items, target, mid, high)",
+    "find(items, target, mid + 1, high)"
+  ],
+  "a-recursion-leaves": [
+    "        total += total_leaves(item)\n",
+    "        if isinstance(item, list):\n            total += total_leaves(item)\n        else:\n            total += item\n"
+  ],
+  "a-scope-jar": [
+    "alarms=[]):\n    alarms.append",
+    "alarms=None):\n    if alarms is None:\n        alarms = []\n    alarms.append"
+  ],
+  "a-scope-hands": [
+    "lambda: h",
+    "lambda h=h: h"
+  ]
+}

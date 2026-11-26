@@ -1,4 +1,4 @@
-"""Checks every puzzle in js/puzzles.js with real Python, the same way game-room.html grades it.
+"""Checks every puzzle in js/puzzles.json with real Python, the same way game-room.html grades it.
 
     python3 tools/verify_bank.py
 
@@ -11,36 +11,12 @@ Run it after adding or editing a puzzle. Needs node and python3.
 import ast, json, re, subprocess, sys, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-bank = json.loads(subprocess.check_output(
-    ['node', '-e', "console.log(JSON.stringify(require('./js/puzzles.js').PUZZLE_BANK))"], cwd=ROOT))
+bank = json.loads((ROOT / 'js' / 'puzzles.json').read_text(encoding='utf8'))
+for _p in bank:                      # the game joins code lines with newlines, so do the same here
+    if isinstance(_p['code'], list): _p['code'] = '\n'.join(_p['code'])
 
-# one correct fix per puzzle id (not shipped to the browser)
-FIX = {
-'b-index-stars': ('range(len(stars) + 1)', 'range(len(stars))'),
-'b-index-last': ('sky[len(sky)]', 'sky[len(sky) - 1]'),
-'b-type-lock': ('code = digit + 1', 'code = int(digit) + 1'),
-'b-type-magnets': ('total = magnets + extra', 'total = int(magnets) + extra'),
-'b-recursion-kettle': ('return heat_water(current_temp, target_temp, cycle + 1)', 'return heat_water(current_temp + 10, target_temp, cycle + 1)'),
-'b-recursion-steep': ('steep(minutes + 1)', 'steep(minutes - 1)'),
-'b-scope-clock': ('ring_hours(15)\nprint', 'chimes = ring_hours(15)\nprint'),
-'b-scope-alarm': ('    time = "07:00"\n\nset_alarm()', '    time = "07:00"\n    return time\n\ntime = set_alarm()'),
-'i-index-shelf': ('i <= len(jars)', 'i < len(jars)'),
-'i-index-rings': ('range(1, len(rings) + 1)', 'range(len(rings))'),
-'i-type-label': ('+ count', '+ str(count)'),
-'i-type-thermo': ('if reading < limit', 'if float(reading) < limit'),
-'i-recursion-factorial': ('    return n * factorial', '    if n <= 1:\n        return 1\n    return n * factorial'),
-'i-recursion-cups': ('    n + sum_cups', '    return n + sum_cups'),
-'i-scope-total': ('def add_ticks(n):\n', 'def add_ticks(n):\n    global total\n'),
-'i-scope-chimes': ('    return chimes', '    else:\n        chimes = hour\n    return chimes'),
-'a-index-pairs': ('range(len(nums))', 'range(len(nums) - 1)'),
-'a-index-panes': ('    last_row = len(grid)\n    last_col = len(grid[0])\n', '    last_row = len(grid) - 1\n    last_col = len(grid[0]) - 1\n'),
-'a-type-ledger': ('total += price', 'total += int(price)'),
-'a-type-stock': ('total += counts[item]', 'total += int(counts[item])'),
-'a-recursion-vault': ('find(items, target, mid, high)', 'find(items, target, mid + 1, high)'),
-'a-recursion-leaves': ('        total += total_leaves(item)\n', '        if isinstance(item, list):\n            total += total_leaves(item)\n        else:\n            total += item\n'),
-'a-scope-jar': ('alarms=[]):\n    alarms.append', 'alarms=None):\n    if alarms is None:\n        alarms = []\n    alarms.append'),
-'a-scope-hands': ('lambda: h', 'lambda h=h: h'),
-}
+# one correct fix per puzzle id: [old text, new text]. Kept OUT of the browser bank so players cannot read answers.
+FIX = json.loads((ROOT / 'tools' / 'fixes.json').read_text(encoding='utf8'))
 
 def run(code, timeout=5):
     """returns (stdout, error_name_or_None)"""
@@ -102,6 +78,8 @@ for p in bank:
         check(k in p, f'missing field {k}')
     check(len(p['hint']) == 2, 'needs exactly 2 hints')
     check(p['story'].endswith('Fix the code and run it.'), 'story must end with "Fix the code and run it."')
+    check('{obj}' in p['story'] and '{obj}' in p['title'], 'title and story must use the {obj} token (puzzles are themed on the room object)')
+    check('{objfile}' in p['file'], 'file must use the {objfile} token')
     check(len(p['code']) <= 500, 'code longer than game MAX_CHARS (500)')
     check(any([p.get('variant'), p.get('probes'), p.get('needCall')]), 'no hidden check, answer could be hardcoded')
     cats.setdefault((p['category'], p['level']), []).append(p['id'])

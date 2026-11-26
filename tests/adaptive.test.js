@@ -1,7 +1,7 @@
 // Run with:  node --test
 const test = require('node:test');
 const assert = require('node:assert');
-const { PUZZLE_BANK, LEVELS, CATEGORIES, MISTAKE_CATEGORIES, SPOT_CATEGORY, categoryOfTag, TAG_CATEGORY, applyVariant, pyLiteral } = require('../js/puzzles.js');
+const { PUZZLE_BANK, LEVELS, CATEGORIES, MISTAKE_CATEGORIES, SPOT_CATEGORY, categoryOfTag, TAG_CATEGORY, applyVariant, pyLiteral, themePuzzle, plainTitle } = require('../js/puzzles.js');
 const { RULES, SPOT_CATS, accuracyOf, nextLevel, weakCategories, pickRoom } = require('../js/adaptive.js');
 
 const good = (n) => Array.from({ length: n }, () => ({ kind: 'submit', is_correct: true }));
@@ -105,20 +105,32 @@ test('room: puzzles from the last room are not repeated', () => {
   }
 });
 
-test('room: every object gets a puzzle that is themed on it', () => {
-  // each level is its own room (bedroom / kitchen / living room), so a puzzle names the object of ITS room
-  const WORD = {
-    BEGINNER:     { window: /cactus/i, fridge: /air conditioner/i, kettle: /teddy bear/i, clock: /computer/i },
-    INTERMEDIATE: { window: /plant/i,  fridge: /cabinet/i,         kettle: /pan/i,        clock: /wall clock/i },
-    ADVANCED:     { window: /\btv\b/i,  fridge: /green box/i,       kettle: /roomba/i,     clock: /laptop/i }
+test('room: every object gets a puzzle, themed on the object that was clicked', () => {
+  // each level is its own room (bedroom / kitchen / living room). Puzzles carry {obj}, and the room fills it in,
+  // so a puzzle shows the object of the room being played, even when it was pulled down from an easier level.
+  const OBJ = {
+    BEGINNER:     { window: 'Cactus', fridge: 'Air Conditioner', kettle: 'Teddy Bear', clock: 'Computer' },
+    INTERMEDIATE: { window: 'Plant',  fridge: 'Cabinet',         kettle: 'Pan',        clock: 'Wall Clock' },
+    ADVANCED:     { window: 'TV',     fridge: 'Green Box',       kettle: 'Roomba',     clock: 'Laptop' }
   };
-  for (const [spot, cat] of Object.entries(SPOT_CATEGORY))
-    PUZZLE_BANK.filter((p) => p.category === cat).forEach((p) =>
-      assert.ok(WORD[p.level][spot].test(p.story + ' ' + p.title), `${p.id} is a ${p.level} ${cat} puzzle but never mentions its ${spot} object`));
-  for (const level of LEVELS) for (let s = 1; s < 10; s++) {
-    const room = pickRoom({ level, rnd: seeded(s) });
+  const spots = Object.keys(SPOT_CATEGORY);
+  const weakAll = Object.values(SPOT_CATEGORY).map((c) => [c, 2]);
+  for (const level of LEVELS) for (let s = 1; s < 15; s++) for (const weak of [[], weakAll]) {
+    const room = pickRoom({ level, weak, rnd: seeded(s) });
     assert.deepStrictEqual(room.map((p) => p.category), SPOT_CATS);
+    room.forEach((p, i) => {
+      const obj = OBJ[level][spots[i]];
+      const t = themePuzzle(p, obj);
+      assert.ok(t.title.includes(obj) && t.story.includes(obj), `${p.id} in the ${level} room does not name "${obj}"`);
+      assert.ok(!/[{}]/.test(t.title + t.story + t.file), `${p.id} still has an unfilled token`);
+    });
   }
+});
+
+test('theming: {obj} and {objfile} are filled in, plainTitle drops the token', () => {
+  const p = { title: '{obj} Star Tags', story: 'The {obj} has tags.', file: '{objfile}_stars.py' };
+  assert.deepStrictEqual(themePuzzle(p, 'Air Conditioner'), { title: 'Air Conditioner Star Tags', story: 'The Air Conditioner has tags.', file: 'air_conditioner_stars.py' });
+  assert.strictEqual(plainTitle(p), 'Star Tags');
 });
 
 test('room: a weak category gets a puzzle one level easier', () => {

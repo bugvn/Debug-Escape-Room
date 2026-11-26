@@ -1,0 +1,843 @@
+[
+  {
+    "id": "b-index-stars",
+    "category": "Index",
+    "level": "BEGINNER",
+    "title": "{obj} Star Tags",
+    "story": "The {obj} has five glowing star tags stuck to it. The program should add up their brightness, but it crashes. Fix the code and run it.",
+    "file": "{objfile}_stars.py",
+    "status": "index_out_of_range",
+    "badge": "INDEX FAULT",
+    "bug": [2],
+    "expect": "14",
+    "code": [
+      "stars = [3, 1, 4, 1, 5]",
+      "total = 0",
+      "for i in range(len(stars) + 1):",
+      "    total += stars[i]",
+      "print(total)"
+    ],
+    "variant": {
+      "re": "\\[3,\\s*1,\\s*4,\\s*1,\\s*5\\]",
+      "to": "[2, 7, 1, 8]",
+      "expect": "18"
+    },
+    "why": "The loop went one index too far. A list of 5 items has valid indexes 0 to 4.",
+    "hint": [
+      "Count the stars: 5. Now count how many times the loop runs. Do they match?",
+      "range(len(stars) + 1) runs 6 times. Drop the + 1, or loop with for s in stars."
+    ]
+  },
+  {
+    "id": "b-index-last",
+    "category": "Index",
+    "level": "BEGINNER",
+    "title": "{obj} Sky Chart",
+    "story": "A night sky chart is taped to the {obj}. It lists moon, comet and nova, and the program should show the last one, \"nova\", but it crashes. Fix the code and run it.",
+    "file": "{objfile}_sky.py",
+    "status": "index_out_of_range",
+    "badge": "INDEX FAULT",
+    "bug": [1],
+    "expect": "nova",
+    "code": [
+      "sky = [\"moon\", \"comet\", \"nova\"]",
+      "last = sky[len(sky)]",
+      "print(last)"
+    ],
+    "variant": {
+      "re": "sky\\s*=\\s*\\[\"moon\",\\s*\"comet\",\\s*\"nova\"\\]",
+      "to": "sky = [\"sun\", \"mars\"]",
+      "expect": "mars"
+    },
+    "why": "A list of 3 items has indexes 0, 1, 2. The last valid index is len(sky) - 1 (or -1).",
+    "hint": [
+      "How many items does sky have? What is the highest index a list that long allows?",
+      "The last index is one less than the length: sky[len(sky) - 1], or sky[-1]."
+    ]
+  },
+  {
+    "id": "b-type-lock",
+    "category": "Type",
+    "level": "BEGINNER",
+    "title": "{obj} Remote Lock",
+    "story": "The {obj} has a keypad lock that needs the digit that comes after 7. Fix the code and run it.",
+    "file": "{objfile}_lock.py",
+    "status": "type_mismatch",
+    "badge": "TYPE FAULT",
+    "bug": [1],
+    "expect": "Lock code: 8",
+    "code": [
+      "digit = \"7\"",
+      "code = digit + 1",
+      "print(\"Lock code:\", code)"
+    ],
+    "variant": {
+      "re": "(digit\\s*=\\s*[\"']?)7([\"']?)",
+      "to": "{1}4{2}",
+      "expect": "Lock code: 5"
+    },
+    "why": "\"7\" is a string. It must be converted with int() before a number can be added to it.",
+    "hint": [
+      "Look at the quotes around 7. What type does that make it?",
+      "Convert it first: int(digit) + 1. Or remove the quotes around 7."
+    ]
+  },
+  {
+    "id": "b-type-magnets",
+    "category": "Type",
+    "level": "BEGINNER",
+    "title": "{obj} Magnets",
+    "story": "The {obj} has \"3\" magnets holding its manual and 4 more arrive. The counter should print the total, but it crashes. Fix the code and run it.",
+    "file": "{objfile}_magnets.py",
+    "status": "type_mismatch",
+    "badge": "TYPE FAULT",
+    "bug": [2],
+    "expect": "Magnets: 7",
+    "code": [
+      "magnets = \"3\"",
+      "extra = 4",
+      "total = magnets + extra",
+      "print(\"Magnets:\", total)"
+    ],
+    "variant": {
+      "re": "(magnets\\s*=\\s*[\"']?)3([\"']?)",
+      "to": "{1}5{2}",
+      "expect": "Magnets: 9"
+    },
+    "why": "magnets is text because of the quotes. Text and numbers cannot be added until the text is converted with int().",
+    "hint": [
+      "Read the error: which two types is Python trying to add?",
+      "Convert the text first: int(magnets) + extra."
+    ]
+  },
+  {
+    "id": "b-recursion-kettle",
+    "category": "Recursion",
+    "level": "BEGINNER",
+    "title": "{obj} Warmer",
+    "story": "The {obj} has a built-in warmer. The heating routine should stop once the target is reached, but it never stops. Fix the code and run it.",
+    "file": "{objfile}_warmer.py",
+    "status": "stack_overflow_risk",
+    "badge": "RECURSION FAULT",
+    "bug": [3],
+    "expect": "kettle_ready: safe_to_pour",
+    "code": [
+      "def heat_water(current_temp, target_temp, cycle):",
+      "    if current_temp >= target_temp:",
+      "        return \"kettle_ready: safe_to_pour\"",
+      "    return heat_water(current_temp, target_temp, cycle + 1)",
+      "",
+      "print(heat_water(20, 100, 0))"
+    ],
+    "needDef": "heat_water",
+    "probes": [
+      {
+        "fn": "heat_water",
+        "args": [55, 100, 0],
+        "expect": "kettle_ready: safe_to_pour"
+      }
+    ],
+    "why": "current_temp never changes, so it never reaches target_temp and the recursion never stops. Each call must move the temperature forward.",
+    "hint": [
+      "Does current_temp ever get bigger from one call to the next?",
+      "Heat it up on every call: heat_water(current_temp + 10, target_temp, cycle + 1)."
+    ]
+  },
+  {
+    "id": "b-recursion-steep",
+    "category": "Recursion",
+    "level": "BEGINNER",
+    "title": "{obj} Tea Party",
+    "story": "The {obj} is hosting a tea party. Its tea timer should count its minutes down to 0 and then say tea_ready, but it never stops. Fix the code and run it.",
+    "file": "{objfile}_tea_party.py",
+    "status": "stack_overflow_risk",
+    "badge": "RECURSION FAULT",
+    "bug": [3],
+    "expect": "tea_ready",
+    "code": [
+      "def steep(minutes):",
+      "    if minutes == 0:",
+      "        return \"tea_ready\"",
+      "    return steep(minutes + 1)",
+      "",
+      "print(steep(3))"
+    ],
+    "needDef": "steep",
+    "probes": [
+      {
+        "fn": "steep",
+        "args": [2],
+        "expect": "tea_ready"
+      }
+    ],
+    "why": "The timer moved away from 0 instead of toward it, so the base case was never reached.",
+    "hint": [
+      "Start at 3. After one call, is the next value closer to 0 or further away?",
+      "Count down: steep(minutes - 1)."
+    ]
+  },
+  {
+    "id": "b-scope-clock",
+    "category": "Scope",
+    "level": "BEGINNER",
+    "title": "{obj} Chime Counter",
+    "story": "At 15:00 the clock app on the {obj} should chime 3 times, but the program crashes. Fix the code and run it.",
+    "file": "{objfile}_chimes.py",
+    "status": "scope_error",
+    "badge": "SCOPE FAULT",
+    "bug": [4, 5],
+    "expect": "Chimes: 3",
+    "code": [
+      "def ring_hours(hour):",
+      "    chimes = hour % 12",
+      "    return chimes",
+      "",
+      "ring_hours(15)",
+      "print(\"Chimes:\", chimes)"
+    ],
+    "needDef": "ring_hours",
+    "needCall": "ring_hours",
+    "probes": [
+      {
+        "fn": "ring_hours",
+        "args": [9],
+        "expect": "9"
+      }
+    ],
+    "why": "chimes only exists inside the function. Store the returned value in a variable outside it.",
+    "hint": [
+      "Where does chimes live? Can code outside the function see it?",
+      "ring_hours(15) returns a value but nothing catches it. Store it: chimes = ring_hours(15)."
+    ]
+  },
+  {
+    "id": "b-scope-alarm",
+    "category": "Scope",
+    "level": "BEGINNER",
+    "title": "{obj} Alarm Time",
+    "story": "The alarm app on the {obj} sets its time inside a function and should print \"Alarm: 07:00\", but the program crashes. Fix the code and run it.",
+    "file": "{objfile}_alarm.py",
+    "status": "scope_error",
+    "badge": "SCOPE FAULT",
+    "bug": [3, 4],
+    "expect": "Alarm: 07:00",
+    "code": [
+      "def set_alarm():",
+      "    time = \"07:00\"",
+      "",
+      "set_alarm()",
+      "print(\"Alarm:\", time)"
+    ],
+    "needDef": "set_alarm",
+    "needCall": "set_alarm",
+    "probes": [
+      {
+        "fn": "set_alarm",
+        "args": [],
+        "expect": "07:00"
+      }
+    ],
+    "why": "time is created inside the function, so the outside code cannot see it. Return it and store the result.",
+    "hint": [
+      "Which line creates time, and which line tries to use it?",
+      "Add return time inside the function, then store it outside: time = set_alarm()."
+    ]
+  },
+  {
+    "id": "i-index-shelf",
+    "category": "Index",
+    "level": "INTERMEDIATE",
+    "title": "{obj} Seed Jars",
+    "story": "Seed jars sit in a row around the {obj}. The jar counter should add up every jar, but the while loop crashes. Fix the code and run it.",
+    "file": "{objfile}_jars.py",
+    "status": "index_out_of_range",
+    "badge": "INDEX FAULT",
+    "bug": [3],
+    "expect": "30",
+    "code": [
+      "jars = [3, 6, 9, 12]",
+      "i = 0",
+      "total = 0",
+      "while i <= len(jars):",
+      "    total += jars[i]",
+      "    i += 1",
+      "print(total)"
+    ],
+    "variant": {
+      "re": "jars\\s*=\\s*\\[3,\\s*6,\\s*9,\\s*12\\]",
+      "to": "jars = [1, 2, 3]",
+      "expect": "6"
+    },
+    "why": "The last valid index is len(jars) - 1. Using <= lets i reach len(jars), which does not exist.",
+    "hint": [
+      "The loop runs while i <= 4. How many jars does the list have?",
+      "Change <= to <, so i stops at the last index."
+    ]
+  },
+  {
+    "id": "i-index-rings",
+    "category": "Index",
+    "level": "INTERMEDIATE",
+    "title": "{obj} Hanger Rings",
+    "story": "A rack of rings sits next to the {obj}, with their sizes in a list. The program should add up every ring, but it crashes. Fix the code and run it.",
+    "file": "{objfile}_rings.py",
+    "status": "index_out_of_range",
+    "badge": "INDEX FAULT",
+    "bug": [2],
+    "expect": "43",
+    "code": [
+      "rings = [4, 8, 15, 16]",
+      "total = 0",
+      "for i in range(1, len(rings) + 1):",
+      "    total += rings[i]",
+      "print(total)"
+    ],
+    "variant": {
+      "re": "rings\\s*=\\s*\\[4,\\s*8,\\s*15,\\s*16\\]",
+      "to": "rings = [1, 2, 3]",
+      "expect": "6"
+    },
+    "why": "range(1, len + 1) starts at the second ring and runs past the end. To visit every index, use range(len(rings)).",
+    "hint": [
+      "Which index does the loop start at, and which does it end at? Compare with 0 and len - 1.",
+      "Use range(len(rings)), which gives 0 up to the last index."
+    ]
+  },
+  {
+    "id": "i-type-label",
+    "category": "Type",
+    "level": "INTERMEDIATE",
+    "title": "{obj} Label Printer",
+    "story": "The {obj} has a label printer. It should print \"Stars: 7\", but it crashes. Fix the code and run it.",
+    "file": "{objfile}_labels.py",
+    "status": "type_mismatch",
+    "badge": "TYPE FAULT",
+    "bug": [1],
+    "expect": "Stars: 7",
+    "code": [
+      "def make_label(name, count):",
+      "    return name + \": \" + count",
+      "",
+      "print(make_label(\"Stars\", 7))"
+    ],
+    "needDef": "make_label",
+    "probes": [
+      {
+        "fn": "make_label",
+        "args": [
+          "Moons",
+          3
+        ],
+        "expect": "Moons: 3"
+      }
+    ],
+    "why": "A string and an int cannot be joined with +. Convert the number with str(), or use an f-string.",
+    "hint": [
+      "Read the error: which two types is Python trying to join?",
+      "Convert the number first: str(count)."
+    ]
+  },
+  {
+    "id": "i-type-thermo",
+    "category": "Type",
+    "level": "INTERMEDIATE",
+    "title": "{obj} Thermometer",
+    "story": "The thermometer on the {obj} sends its reading as text, \"4.5\". The {obj} should say \"cold enough\" below 5 degrees, but it crashes. Fix the code and run it.",
+    "file": "{objfile}_thermo.py",
+    "status": "type_mismatch",
+    "badge": "TYPE FAULT",
+    "bug": [2],
+    "expect": "cold enough",
+    "code": [
+      "reading = \"4.5\"",
+      "limit = 5",
+      "if reading < limit:",
+      "    print(\"cold enough\")",
+      "else:",
+      "    print(\"too warm\")"
+    ],
+    "variant": {
+      "re": "(reading\\s*=\\s*[\"']?)4\\.5([\"']?)",
+      "to": "{1}7.5{2}",
+      "expect": "too warm"
+    },
+    "why": "A string cannot be compared with a number using <. Convert it first with float(), because it has a decimal point.",
+    "hint": [
+      "Which two types is the < comparing?",
+      "Use float(reading) < limit. int() would fail on \"4.5\"."
+    ]
+  },
+  {
+    "id": "i-recursion-factorial",
+    "category": "Recursion",
+    "level": "INTERMEDIATE",
+    "title": "{obj} Recipe Cipher",
+    "story": "A recipe card next to the {obj} hides a number: 5 factorial (120), but the calculation never stops. Fix the code and run it.",
+    "file": "{objfile}_cipher.py",
+    "status": "stack_overflow_risk",
+    "badge": "RECURSION FAULT",
+    "bug": [1],
+    "expect": "120",
+    "code": [
+      "def factorial(n):",
+      "    return n * factorial(n - 1)",
+      "",
+      "print(factorial(5))"
+    ],
+    "needDef": "factorial",
+    "probes": [
+      {
+        "fn": "factorial",
+        "args": [4],
+        "expect": "24"
+      },
+      {
+        "fn": "factorial",
+        "args": [1],
+        "expect": "1"
+      }
+    ],
+    "why": "There was no base case. The function must stop and return 1 when n reaches 1.",
+    "hint": [
+      "What should factorial(1) return? Does the code ever say so?",
+      "Add before the return: if n <= 1: return 1"
+    ]
+  },
+  {
+    "id": "i-recursion-cups",
+    "category": "Recursion",
+    "level": "INTERMEDIATE",
+    "title": "{obj} Cup Stack",
+    "story": "Stacked cups sit next to the {obj}. Adding 4 + 3 + 2 + 1 should print 10, but it prints something else. Fix the code and run it.",
+    "file": "{objfile}_cup_stack.py",
+    "status": "wrong_output",
+    "badge": "RECURSION FAULT",
+    "bug": [3],
+    "expect": "10",
+    "code": [
+      "def sum_cups(n):",
+      "    if n == 0:",
+      "        return 0",
+      "    n + sum_cups(n - 1)",
+      "",
+      "print(sum_cups(4))"
+    ],
+    "needDef": "sum_cups",
+    "probes": [
+      {
+        "fn": "sum_cups",
+        "args": [3],
+        "expect": "6"
+      }
+    ],
+    "why": "The recursive call computed the sum but never returned it, so the function gave back None. Keep the return in front of the call.",
+    "hint": [
+      "What does a function give back when it reaches the end without a return?",
+      "Put return in front: return n + sum_cups(n - 1)."
+    ]
+  },
+  {
+    "id": "i-scope-total",
+    "category": "Scope",
+    "level": "INTERMEDIATE",
+    "title": "{obj} Ticks",
+    "story": "The {obj} tick counter adds 3 and then 4 to a running total, but the function crashes. Fix the code and run it.",
+    "file": "{objfile}_ticks.py",
+    "status": "scope_error",
+    "badge": "SCOPE FAULT",
+    "bug": [3],
+    "expect": "Total: 7",
+    "code": [
+      "total = 0",
+      "",
+      "def add_ticks(n):",
+      "    total = total + n",
+      "",
+      "add_ticks(3)",
+      "add_ticks(4)",
+      "print(\"Total:\", total)"
+    ],
+    "variant": {
+      "re": "add_ticks\\(3\\)",
+      "to": "add_ticks(5)",
+      "expect": "Total: 9"
+    },
+    "why": "Assigning to total inside the function makes it a new local variable. Declare global total, or return the new value.",
+    "hint": [
+      "Python treats a name you assign inside a function as local to it. Which name is that here?",
+      "Add global total as the first line of the function, or return the sum and store it outside."
+    ]
+  },
+  {
+    "id": "i-scope-chimes",
+    "category": "Scope",
+    "level": "INTERMEDIATE",
+    "title": "{obj} Half-Day Chimes",
+    "story": "After noon the {obj} should chime hour minus 12 times, and before noon the hour itself. At 9 it should print 9, but the function crashes. Fix the code and run it.",
+    "file": "{objfile}_half_day_chimes.py",
+    "status": "scope_error",
+    "badge": "SCOPE FAULT",
+    "bug": [3],
+    "expect": "9",
+    "code": [
+      "def ring(hour):",
+      "    if hour > 12:",
+      "        chimes = hour - 12",
+      "    return chimes",
+      "",
+      "print(ring(9))"
+    ],
+    "needDef": "ring",
+    "probes": [
+      {
+        "fn": "ring",
+        "args": [15],
+        "expect": "3"
+      },
+      {
+        "fn": "ring",
+        "args": [9],
+        "expect": "9"
+      }
+    ],
+    "why": "chimes is only created when hour is above 12. For 9 the branch is skipped, so the name does not exist yet when it is returned.",
+    "hint": [
+      "Which hours create chimes? What happens for the others?",
+      "Give chimes a value on every path: add else: chimes = hour."
+    ]
+  },
+  {
+    "id": "a-index-pairs",
+    "category": "Index",
+    "level": "ADVANCED",
+    "title": "{obj} Signal Neighbors",
+    "story": "The {obj} signal scanner adds each reading to its neighbour. For [1, 2, 3, 4] it should give [3, 5, 7], but it crashes. Fix the code and run it.",
+    "file": "{objfile}_neighbors.py",
+    "status": "index_out_of_range",
+    "badge": "INDEX FAULT",
+    "bug": [3],
+    "expect": "[3, 5, 7]",
+    "code": [
+      "def pair_sums(nums):",
+      "    sums = []",
+      "    for i in range(len(nums)):",
+      "        sums.append(nums[i] + nums[i + 1])",
+      "    return sums",
+      "",
+      "print(pair_sums([1, 2, 3, 4]))"
+    ],
+    "needDef": "pair_sums",
+    "probes": [
+      {
+        "fn": "pair_sums",
+        "args": [
+          [10, 20]
+        ],
+        "expect": "[30]"
+      },
+      {
+        "fn": "pair_sums",
+        "args": [
+          [5, 5, 5]
+        ],
+        "expect": "[10, 10]"
+      }
+    ],
+    "why": "nums[i + 1] does not exist for the last i. There are only len(nums) - 1 pairs.",
+    "hint": [
+      "Which value of i makes nums[i + 1] fall off the end?",
+      "Loop one time fewer: range(len(nums) - 1)."
+    ]
+  },
+  {
+    "id": "a-index-panes",
+    "category": "Index",
+    "level": "ADVANCED",
+    "title": "{obj} Screen Corners",
+    "story": "The {obj} shows a grid of tiles. The corner sum adds the four corner tiles. For a 3 by 3 grid of numbers it should give 20, but it crashes. Fix the code and run it.",
+    "file": "{objfile}_corners.py",
+    "status": "index_out_of_range",
+    "badge": "INDEX FAULT",
+    "bug": [1, 2],
+    "expect": "20",
+    "code": [
+      "def corner_sum(grid):",
+      "    last_row = len(grid)",
+      "    last_col = len(grid[0])",
+      "    return grid[0][0] + grid[0][last_col] + grid[last_row][0] + grid[last_row][last_col]",
+      "",
+      "print(corner_sum([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))"
+    ],
+    "needDef": "corner_sum",
+    "probes": [
+      {
+        "fn": "corner_sum",
+        "args": [
+          [
+            [1, 2],
+            [3, 4]
+          ]
+        ],
+        "expect": "10"
+      },
+      {
+        "fn": "corner_sum",
+        "args": [
+          [
+            [5]
+          ]
+        ],
+        "expect": "20"
+      }
+    ],
+    "why": "len() gives the count, but the last index is one less, for rows and for columns.",
+    "hint": [
+      "A grid with 3 rows has row indexes 0, 1, 2. What is last_row set to?",
+      "Subtract 1 from both: len(grid) - 1 and len(grid[0]) - 1."
+    ]
+  },
+  {
+    "id": "a-type-ledger",
+    "category": "Type",
+    "level": "ADVANCED",
+    "title": "{obj} Receipt",
+    "story": "Prices on the {obj} delivery receipt arrive as text, like \"4\". The ledger should still add them up to 10, but it crashes. Fix the code and run it.",
+    "file": "{objfile}_receipt.py",
+    "status": "type_mismatch",
+    "badge": "TYPE FAULT",
+    "bug": [3],
+    "expect": "10",
+    "code": [
+      "def total_price(items):",
+      "    total = 0",
+      "    for name, price in items.items():",
+      "        total += price",
+      "    return total",
+      "",
+      "prices = {\"tea\": \"4\", \"jam\": \"6\"}",
+      "print(total_price(prices))"
+    ],
+    "needDef": "total_price",
+    "probes": [
+      {
+        "fn": "total_price",
+        "args": [
+          {
+            "a": "2",
+            "b": "3"
+          }
+        ],
+        "expect": "5"
+      }
+    ],
+    "why": "The prices are strings. Convert each one with int() before adding it to a number.",
+    "hint": [
+      "Look at the values inside prices. What type are they?",
+      "Add int(price) instead of price."
+    ]
+  },
+  {
+    "id": "a-type-stock",
+    "category": "Type",
+    "level": "ADVANCED",
+    "title": "{obj} Inventory",
+    "story": "The {obj} inventory counts come from two sources, so some are numbers and some are text. The total should be 15, but it crashes. Fix the code and run it.",
+    "file": "{objfile}_inventory.py",
+    "status": "type_mismatch",
+    "badge": "TYPE FAULT",
+    "bug": [3],
+    "expect": "15",
+    "code": [
+      "def total_items(counts):",
+      "    total = 0",
+      "    for item in counts:",
+      "        total += counts[item]",
+      "    return total",
+      "",
+      "print(total_items({\"milk\": 2, \"eggs\": \"12\", \"jam\": 1}))"
+    ],
+    "needDef": "total_items",
+    "probes": [
+      {
+        "fn": "total_items",
+        "args": [
+          {
+            "a": "2",
+            "b": 3
+          }
+        ],
+        "expect": "5"
+      }
+    ],
+    "why": "One value is text, so adding it to a number fails. Converting every value with int() works for both kinds.",
+    "hint": [
+      "Look at each value in the dictionary. Are they all the same type?",
+      "Convert while adding: total += int(counts[item])."
+    ]
+  },
+  {
+    "id": "a-recursion-vault",
+    "category": "Recursion",
+    "level": "ADVANCED",
+    "title": "{obj} Route Search",
+    "story": "The {obj} keeps a sorted list of routes and searches it by halving. Looking for 10 should give position 4, but the search never ends. Fix the code and run it.",
+    "file": "{objfile}_route_search.py",
+    "status": "stack_overflow_risk",
+    "badge": "RECURSION FAULT",
+    "bug": [7],
+    "expect": "4",
+    "code": [
+      "def find(items, target, low, high):",
+      "    if low > high:",
+      "        return -1",
+      "    mid = (low + high) // 2",
+      "    if items[mid] == target:",
+      "        return mid",
+      "    if items[mid] < target:",
+      "        return find(items, target, mid, high)",
+      "    return find(items, target, low, mid - 1)",
+      "",
+      "print(find([2, 4, 6, 8, 10], 10, 0, 4))"
+    ],
+    "needDef": "find",
+    "probes": [
+      {
+        "fn": "find",
+        "args": [
+          [1, 3, 5, 7],
+          7,
+          0,
+          3
+        ],
+        "expect": "3"
+      },
+      {
+        "fn": "find",
+        "args": [
+          [1, 3, 5, 7],
+          4,
+          0,
+          3
+        ],
+        "expect": "-1"
+      }
+    ],
+    "why": "When mid is too small, the next search must start after it (mid + 1). Starting at mid repeats the same range forever.",
+    "hint": [
+      "Trace find(..., 3, 4) by hand. What is mid, and what range comes next?",
+      "In the \"too small\" branch use low = mid + 1."
+    ]
+  },
+  {
+    "id": "a-recursion-leaves",
+    "category": "Recursion",
+    "level": "ADVANCED",
+    "title": "{obj} Dust Boxes",
+    "story": "The {obj} empties dust boxes that can hold numbers or smaller boxes (lists). Adding [1, [2, 3], [4, [5]]] should give 15, but it crashes. Fix the code and run it.",
+    "file": "{objfile}_dust_boxes.py",
+    "status": "type_mismatch",
+    "badge": "RECURSION FAULT",
+    "bug": [3],
+    "expect": "15",
+    "code": [
+      "def total_leaves(box):",
+      "    total = 0",
+      "    for item in box:",
+      "        total += total_leaves(item)",
+      "    return total",
+      "",
+      "print(total_leaves([1, [2, 3], [4, [5]]]))"
+    ],
+    "needDef": "total_leaves",
+    "probes": [
+      {
+        "fn": "total_leaves",
+        "args": [
+          [
+            [1],
+            [
+              2,
+              [3]
+            ]
+          ]
+        ],
+        "expect": "6"
+      },
+      {
+        "fn": "total_leaves",
+        "args": [
+          []
+        ],
+        "expect": "0"
+      }
+    ],
+    "why": "The function called itself on plain numbers too, but a number is not a box. A number is the base case: add it. A list is the recursive case.",
+    "hint": [
+      "What happens when item is the number 1 and the function loops over it?",
+      "Check the type: if isinstance(item, list): recurse, else add item."
+    ]
+  },
+  {
+    "id": "a-scope-jar",
+    "category": "Scope",
+    "level": "ADVANCED",
+    "title": "{obj} Alarm Memory",
+    "story": "Each call should make a fresh alarm list for the {obj}. The second call should print ['09:00'] but it remembers the first alarm. Fix the code and run it.",
+    "file": "{objfile}_alarm_memory.py",
+    "status": "shared_state",
+    "badge": "SCOPE FAULT",
+    "bug": [0],
+    "expect": "['07:00']\n['09:00']",
+    "code": [
+      "def add_alarm(alarm, alarms=[]):",
+      "    alarms.append(alarm)",
+      "    return alarms",
+      "",
+      "print(add_alarm(\"07:00\"))",
+      "print(add_alarm(\"09:00\"))"
+    ],
+    "needDef": "add_alarm",
+    "probes": [
+      {
+        "fn": "add_alarm",
+        "args": [
+          "06:30"
+        ],
+        "expect": "['06:30']"
+      }
+    ],
+    "why": "A default list is created once and shared by every call. Use None as the default and make a new list inside the function.",
+    "hint": [
+      "The list alarms=[] is made only one time. Who shares it?",
+      "Use alarms=None, then: if alarms is None: alarms = []"
+    ]
+  },
+  {
+    "id": "a-scope-hands",
+    "category": "Scope",
+    "level": "ADVANCED",
+    "title": "{obj} Clock Hands",
+    "story": "The clock widget on the {obj} gives each hand its own number, so the program should print [0, 1, 2]. Instead every hand shows the same number. Fix the code and run it.",
+    "file": "{objfile}_clock_hands.py",
+    "status": "shared_state",
+    "badge": "SCOPE FAULT",
+    "bug": [2],
+    "expect": "[0, 1, 2]",
+    "code": [
+      "hands = []",
+      "for h in range(3):",
+      "    hands.append(lambda: h)",
+      "print([f() for f in hands])"
+    ],
+    "variant": {
+      "re": "range\\(3\\)",
+      "to": "range(2)",
+      "expect": "[0, 1]"
+    },
+    "why": "Every lambda looks up h when it is called, after the loop has finished, so they all see the last value. Give each lambda its own copy: lambda h=h: h.",
+    "hint": [
+      "When does each lambda read h: while the loop runs, or after it ends?",
+      "Capture the value now with a default argument: lambda h=h: h."
+    ]
+  }
+]

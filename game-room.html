@@ -478,7 +478,7 @@ const L = m.split('\n'), i = L.findIndex(l => l.includes('<exec>'));
 return (i < 0 ? m.trim() : 'Traceback (most recent call last):\n' + L.slice(i).join('\n').trim()).replace(/<exec>/g, 'main.py');
 };
 
-/* ---------- The 4 spots in the room. Each spot gets one puzzle from the bank (js/puzzles.js) ---------- */
+/* ---------- The 4 spots in the room. Each spot gets one puzzle from the bank (js/puzzles.json) ---------- */
 const SPOTS = {
 window: { icon:'✦', name:'Window', reward:['🌠','Star Map'] },
 fridge: { icon:'🔒', name:'Refrigerator', reward:['🗝️','Silver Key'] },
@@ -487,8 +487,8 @@ clock: { icon:'🕰️', name:'Wall Clock', reward:['⚙️','Clock Gear'] }
 };
 const P = {}, META = {};   // filled by buildRoom(): spot -> puzzle
 let roomReady = false, roomLevel = 'BEGINNER', roomAdaptive = true, roomPuzzleIds = [];
-// Each object is tied to one category (SPOT_CATEGORY, from js/puzzles.js) and every puzzle of that category
-// is themed on that object. buildRoom() assigns puzzles to spots by category match.
+// Each object is tied to one category (SPOT_CATEGORY, from js/puzzles.js). Puzzles are written with {obj} and
+// themePuzzle() fills in the object of the room being played. buildRoom() assigns puzzles to spots by category match.
 function buildRoom(picked){
 const used = new Set(), assigned = {};
 // pass 1: exact category match
@@ -503,8 +503,9 @@ let li = 0;
 PUZ.forEach(k => { if (!assigned[k]) assigned[k] = leftovers[li++]; });
 PUZ.forEach(k => {
 const p = assigned[k];
-P[k] = { ...SPOTS[k], ...p, pid: p.id };
-META[k] = { file:p.file, status:p.status, badge:p.badge, bug:p.bug };
+const t = themePuzzle(p, SPOTS[k].name);   // {obj} / {objfile} -> the object of THIS room, so any puzzle fits any room
+P[k] = { ...SPOTS[k], ...t, pid: p.id };
+META[k] = { file:t.file, status:t.status, badge:t.badge, bug:t.bug };
 });
 roomPuzzleIds = PUZ.map(k => assigned[k].id);
 }
@@ -617,13 +618,13 @@ let level = 'BEGINNER', weak = [], lastIds = [];
 try {
 const prof = await getProfile(user.id);
 if (prof) { if (LEVELS.includes(prof.difficulty)) level = prof.difficulty; roomAdaptive = prof.adaptive !== false; }
-const r1 = await db.from('game_sessions').select('level,next_level,puzzle_ids').order('created_at', { ascending:false }).limit(10);
+const r1 = await db.from('game_sessions').select('level,next_level,puzzle_ids').eq('user_id', user.id).order('created_at', { ascending:false }).limit(10);
 const rows = r1.data || [];
 const lastRoom = rows.find(x => x.puzzle_ids); if (lastRoom) lastIds = lastRoom.puzzle_ids;
 if (roomAdaptive) {
 // only finished games write next_level; skip any in_progress row
 const carried = rows.find(x => x.next_level); if (carried) level = carried.next_level;
-const r2 = await db.from('submissions').select('category,is_correct,kind').eq('kind', 'submit').not('category', 'is', null).order('id', { ascending:false }).limit(RULES.historyAttempts);
+const r2 = await db.from('submissions').select('category,is_correct,kind').eq('user_id', user.id).eq('kind', 'submit').not('category', 'is', null).order('id', { ascending:false }).limit(RULES.historyAttempts);
 weak = weakCategories(r2.data || []);
 }
 } catch (e) { console.error(e); }   // offline: start at the safe default, the game still works
@@ -998,7 +999,7 @@ toast(`Wall clock icon position: top:${y}%;left:${x}%`); clearTimeout(toastT);
 
 renderHints(); applyTimerVis();
 (async () => {
-try { const u = await requireLogin(); if (!u) return; await setupRoom(u); startTs = Date.now(); await ensureSession(); guard.start(); renderShields(); }
+try { await loadPuzzleBank(); const u = await requireLogin(); if (!u) return; await setupRoom(u); startTs = Date.now(); await ensureSession(); guard.start(); renderShields(); }
 catch (e) { console.error(e); }
 finally { $('stage').classList.add('ready'); }
 })();
