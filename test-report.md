@@ -1,16 +1,16 @@
 # REMEDIATE test report
 
-Run: 2026-11-27 12:57:23 UTC  
+Run: 2026-11-27 14:58:51 UTC  
 Command: `node tools/run-tests.js`
 
 ## Summary
 
 | Level | What it checks | Tests | Passed | Failed | Skipped |
 | --- | --- | ---: | ---: | ---: | ---: |
-| Unit | one function or module at a time (scoring, adaptive rules, anti-cheat, analytics, lesson gate rules) | 56 | 56 | 0 | 0 |
+| Unit | one function or module at a time (scoring, adaptive rules, anti-cheat, analytics, lesson gate rules, login form rules) | 76 | 76 | 0 | 0 |
 | Integration | modules working together (account + level + lecture gate, puzzle bank + rules + scoring) | 21 | 21 | 0 | 0 |
 | System | the whole site end to end without a browser (pages, files, links, full player journey, real Python puzzle check) | 36 | 36 | 0 | 0 |
-| **Total** | | **113** | **113** | **0** | **0** |
+| **Total** | | **133** | **133** | **0** | **0** |
 
 ## Unit tests
 
@@ -72,6 +72,26 @@ Command: `node tools/run-tests.js`
 | UNI-054 | wiring: game room reads the saved level and enforces the gate; Play buttons use it | progress.test.js | PASS |
 | UNI-055 | sql: migration-06 adds both columns, the sync trigger and the sign-up level | progress.test.js | PASS |
 | UNI-056 | lessons: one module per level, every lesson complete | progress.test.js | PASS |
+| UNI-057 | UT-L1 empty email: "Email is required" with different wording for log in and create | login.test.js | PASS |
+| UNI-058 | UT-L2 email length: 50 passes, 51 is too long | login.test.js | PASS |
+| UNI-059 | UT-L3 email format: bad shapes rejected, padded valid email passes | login.test.js | PASS |
+| UNI-060 | UT-L4 create password length: 7 rejected, 8 and 32 pass, 33 rejected | login.test.js | PASS |
+| UNI-061 | UT-L5 create or reset password needs a letter and a number | login.test.js | PASS |
+| UNI-062 | UT-L6 log in: any non-empty password passes, empty is required | login.test.js | PASS |
+| UNI-063 | UT-L7 player name length: 2 rejected, 3 and 20 pass, 21 rejected | login.test.js | PASS |
+| UNI-064 | UT-L8 player name characters: letters, numbers, underscore only | login.test.js | PASS |
+| UNI-065 | UT-L9 wiring: login.html loads validate.js before login.js; login.js calls all three rules | login.test.js | PASS |
+| UNI-066 | UT-S5 full matrix: 3 levels x 4 seen values, due only when level rank > seen rank | lesson-extra.test.js | PASS |
+| UNI-067 | UT-S6 unknown, empty or lower-case level counts as BEGINNER, no crash | lesson-extra.test.js | PASS |
+| UNI-068 | LEVEL_ORDER is Beginner, Intermediate, Advanced and levelRank follows it | lesson-extra.test.js | PASS |
+| UNI-069 | UT-S7 higherLevel gives the higher level in either argument order, ignores null | lesson-extra.test.js | PASS |
+| UNI-070 | UT-A1 helpers are null-safe: empty or all-null input gives null, not NaN | analytics-extra.test.js | PASS |
+| UNI-071 | UT-A5 empty data: zero KPIs, an insights list and a CSV string, no crash | analytics-extra.test.js | PASS |
+| UNI-072 | UT-A6 only unfinished games: 0 rooms counted | analytics-extra.test.js | PASS |
+| UNI-073 | UT-A3 parseCSV reads Windows CRLF line endings | analytics-extra.test.js | PASS |
+| UNI-074 | UT-A3 parseCSV: header only gives no rows, empty text gives no rows | analytics-extra.test.js | PASS |
+| UNI-075 | UT-A4 level filter narrows every number | analytics-extra.test.js | PASS |
+| UNI-076 | UT-A8 same seed gives same data; analysis and report run end to end | analytics-extra.test.js | PASS |
 
 ## Integration tests
 
