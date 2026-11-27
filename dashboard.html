@@ -94,6 +94,7 @@
 <script src="js/progress.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/score.js"></script>
+<script src="js/puzzles.js"></script>
 <script src="js/ambient-music.js"></script>
 <script src="js/shared-settings.js"></script>
 <script>
@@ -121,7 +122,7 @@
   }
   const [sRes, subRes] = await Promise.all([
     fetchAll(() => db.from('game_sessions').select('*').eq('user_id', u.id).order('created_at', { ascending: true }).order('id', { ascending: true })),
-    fetchAll(() => db.from('submissions').select('session_id,puzzle,kind,is_correct,mistake_tag').eq('user_id', u.id).order('id', { ascending: true }))
+    fetchAll(() => db.from('submissions').select('session_id,puzzle,puzzle_id,kind,is_correct,mistake_tag').eq('user_id', u.id).order('id', { ascending: true }))
   ]);
   $('loading').classList.add('hidden');
 
@@ -131,6 +132,8 @@
     return;
   }
   const sessions = sRes.data || [], allSubs = subRes.data || [];
+  try { await loadPuzzleBank(); } catch (e) { console.error(e); }   // plain puzzle names for the accuracy bars
+  const titleOf = Object.fromEntries(PUZZLE_BANK.map(p => [p.id, plainTitle(p)]));
   if (!sessions.length) { $('empty').classList.remove('hidden'); return; }
   $('content').classList.remove('hidden');
 
@@ -142,16 +145,26 @@
     return { s, n: i + 1, score, rank: RANKS.find(r => score >= r[0])[1], took: s.elapsed_sec };
   });
 
+  // A game that is still 'in_progress' (tab closed before it ended) has no result yet: keep it in the history,
+  // but leave it out of every number, or it counts as 0 solved / 0 points and drags the averages down.
+  const done = rows.filter(r => r.s.result !== 'in_progress');
+  if (!done.length) {
+    $('content').classList.add('hidden');
+    const e = $('empty'); e.classList.remove('hidden');
+    e.querySelector('p').textContent = 'No finished games yet. Escape the room (or leave it) to fill this dashboard.';
+    return;
+  }
+
   /* ----- KPIs ----- */
-  const wins = rows.filter(r => r.s.result === 'won');
+  const wins = done.filter(r => r.s.result === 'won');
   const subm = submitsOf(allSubs);   // accuracy = submits only
   const good = subm.filter(x => x.is_correct).length;
-  const best = rows.reduce((a, b) => (b.score > a.score ? b : a));
+  const best = done.reduce((a, b) => (b.score > a.score ? b : a));
   const avgTime = wins.length ? wins.reduce((a, r) => a + r.took, 0) / wins.length : null;
-  $('kGames').textContent = rows.length;
-  $('kGamesSub').textContent = rows.filter(r => r.s.result === 'left').length + ' left early';
+  $('kGames').textContent = done.length;
+  $('kGamesSub').textContent = done.filter(r => r.s.result === 'left').length + ' left early';
   $('kWins').textContent = wins.length;
-  $('kWinsSub').textContent = pct(wins.length, rows.length) + '% win rate';
+  $('kWinsSub').textContent = pct(wins.length, done.length) + '% win rate';
   $('kBest').textContent = best.score;
   $('kBestSub').textContent = 'Rank ' + best.rank + ' · game #' + best.n;
   $('kAcc').textContent = subm.length ? pct(good, subm.length) + '%' : '--';
@@ -161,7 +174,7 @@
 
   /* ----- score trend (inline SVG) ----- */
   (function () {
-    const last = rows.slice(-20), W = 560, H = 220, L = 34, R = 12, T = 12, B = 28;
+    const last = done.slice(-20), W = 560, H = 220, L = 34, R = 12, T = 12, B = 28;
     const x = i => last.length === 1 ? (L + W - R) / 2 : L + i * (W - L - R) / (last.length - 1);
     const y = v => T + (H - T - B) * (1 - v / 100);
     let g = '';
@@ -174,16 +187,22 @@
 
   /* ----- per puzzle accuracy ----- */
   const puz = {};
-  subm.forEach(x => { const o = puz[x.puzzle] = puz[x.puzzle] || { t: 0, ok: 0 }; o.t++; if (x.is_correct) o.ok++; });
-  const pk = Object.keys(puz).sort();
+  // group by puzzle id: the saved title carries the object name ("Cactus Star Tags", "Computer Star Tags"),
+  // so the same puzzle played on different objects would be split into separate bars
+  subm.forEach(x => {
+    const k = x.puzzle_id || x.puzzle;
+    const o = puz[k] = puz[k] || { t: 0, ok: 0, name: titleOf[x.puzzle_id] || x.puzzle };
+    o.t++; if (x.is_correct) o.ok++;
+  });
+  const pk = Object.keys(puz).sort((a, b) => puz[a].name.localeCompare(puz[b].name));
   $('puzzleBars').innerHTML = pk.length ? pk.map(k => `
-    <div><div class="bar__head"><span class="bar__name">${esc(k)}</span><span class="bar__val">${pct(puz[k].ok, puz[k].t)}% · ${puz[k].ok}/${puz[k].t}</span></div>
+    <div><div class="bar__head"><span class="bar__name">${esc(puz[k].name)}</span><span class="bar__val">${pct(puz[k].ok, puz[k].t)}% · ${puz[k].ok}/${puz[k].t}</span></div>
     <div class="bar__track"><div class="bar__fill bar__fill--lav" style="width:${pct(puz[k].ok, puz[k].t)}%"></div></div></div>`).join('')
     : '<p class="empty-note">No submissions yet.</p>';
 
   /* ----- mistakes ----- */
   const tags = {};
-  allSubs.filter(x => !x.is_correct).forEach(x => { const k = x.mistake_tag || 'Other'; tags[k] = (tags[k] || 0) + 1; });
+  subm.filter(x => !x.is_correct).forEach(x => { const k = x.mistake_tag || 'Other'; tags[k] = (tags[k] || 0) + 1; });
   const tk = Object.keys(tags).sort((a, b) => tags[b] - tags[a]), tmax = Math.max(1, ...tk.map(k => tags[k]));
   $('mistakeBars').innerHTML = tk.length ? tk.map(k => `
     <div><div class="bar__head"><span class="bar__name">${esc(k)}</span><span class="bar__val bar__val--bad">${tags[k]} ${tags[k] === 1 ? 'hit' : 'hits'}</span></div>
@@ -191,10 +210,10 @@
     : '<p class="empty-note">No mistakes logged. Clean runs.</p>';
 
   /* ----- progress check ----- */
-  const half = Math.ceil(rows.length / 2), first = rows.slice(0, half), second = rows.slice(half);
+  const half = Math.ceil(done.length / 2), first = done.slice(0, half), second = done.slice(half);
   const avg = a => a.length ? a.reduce((x, r) => x + r.score, 0) / a.length : 0;
-  const avgHints = rows.reduce((a, r) => a + r.s.hints_used, 0) / rows.length;
-  const avgSolved = rows.reduce((a, r) => a + r.s.solved_count, 0) / rows.length;
+  const avgHints = done.reduce((a, r) => a + r.s.hints_used, 0) / done.length;
+  const avgSolved = done.reduce((a, r) => a + r.s.solved_count, 0) / done.length;
   let trendLine = 'Play more games to see a trend.';
   if (second.length) { const d = Math.round(avg(second) - avg(first)); trendLine = (d >= 0 ? '+' : '') + d + ' pts vs your earlier games'; }
   $('insights').innerHTML = `

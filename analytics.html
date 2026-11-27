@@ -334,8 +334,8 @@
     say('Loading from the database...');
     try {
       const [s, a] = await Promise.all([
-        fetchAll(() => db.from('research_sessions').select('*').order('created_at', { ascending: true })),
-        fetchAll(() => db.from('research_attempts').select('*').order('created_at', { ascending: true }))
+        fetchAll(() => db.from('research_sessions').select('*').order('created_at', { ascending: true }).order('session_id', { ascending: true })),
+        fetchAll(() => db.from('research_attempts').select('*').order('created_at', { ascending: true }).order('session_id', { ascending: true }).order('puzzle_id', { ascending: true }).order('attempt_no', { ascending: true }))
       ]);
       let ig = [], igNote = '';
       try { ig = await fetchAll(() => db.from('research_integrity').select('*').order('created_at', { ascending: true })); }

@@ -125,7 +125,7 @@ function analyze(sessionsIn, attemptsIn, opts = {}, integrityIn = []) {
   sessions = sessions.filter((s) => !flagged(s));
   const dropped = before - sessions.length;
   const keep = new Set(sessions.map(key));
-  const attempts = (lv || st || cut) ? attemptsIn.filter((a) => keep.has(key(a))) : attemptsIn;
+  const attempts = attemptsIn.filter((a) => keep.has(key(a)));   // always: submits of unfinished games must not leak into topic / puzzle charts
 
   const pg = perGameFromAttempts(attempts);
   const rows = sessions.map((s) => ({ ...s, ...(pg[key(s)] || { firstTry: null, attemptsPer: null }) }));
