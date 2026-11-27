@@ -1,16 +1,16 @@
 # REMEDIATE test report
 
-Run: 2026-11-27 12:37:25 UTC  
+Run: 2026-11-27 12:51:47 UTC  
 Command: `node tools/run-tests.js`
 
 ## Summary
 
 | Level | What it checks | Tests | Passed | Failed | Skipped |
 | --- | --- | ---: | ---: | ---: | ---: |
-| Unit | one function or module at a time (scoring, adaptive rules, anti-cheat, analytics, lesson gate rules) | 56 | 56 | 0 | 0 |
+| Unit | one function or module at a time (scoring, adaptive rules, anti-cheat, analytics, lesson gate rules) | 56 | 55 | 1 | 0 |
 | Integration | modules working together (account + level + lecture gate, puzzle bank + rules + scoring) | 21 | 21 | 0 | 0 |
 | System | the whole site end to end without a browser (pages, files, links, full player journey, real Python puzzle check) | 36 | 36 | 0 | 0 |
-| **Total** | | **113** | **113** | **0** | **0** |
+| **Total** | | **113** | **112** | **1** | **0** |
 
 ## Unit tests
 
@@ -71,7 +71,7 @@ Command: `node tools/run-tests.js`
 | UNI-053 | unknown level counts as BEGINNER; higherLevel ignores missing values | progress.test.js | PASS |
 | UNI-054 | wiring: game room reads the saved level and enforces the gate; Play buttons use it | progress.test.js | PASS |
 | UNI-055 | sql: migration-06 adds both columns, the sync trigger and the sign-up level | progress.test.js | PASS |
-| UNI-056 | lessons: one module per level, every lesson complete | progress.test.js | PASS |
+| UNI-056 | lessons: one module per level, every lesson complete | progress.test.js | FAIL |
 
 ## Integration tests
 
