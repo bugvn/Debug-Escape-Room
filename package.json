@@ -2,9 +2,9 @@
   "private": true,
   "scripts": {
     "test": "node --test",
-    "check": "node --check js/puzzles.js && node --check js/adaptive.js && node --check js/progress.js && node --check js/integrity.js && node --check js/analytics.js && node --check js/score.js && node --check js/pyrunner.js && node --check js/settings.js && node --check js/shared-settings.js && node --check js/ambient-music.js && node --check js/site-header.js && node --check js/starfield.js && node --check js/login.js && node --check js/supabase-config.js && node --test && python tools/verify_bank.py",
+    "check": "node --check js/puzzles.js && node --check js/adaptive.js && node --check js/progress.js && node --check js/integrity.js && node --check js/analytics.js && node --check js/score.js && node --check js/pyrunner.js && node --check js/settings.js && node --check js/shared-settings.js && node --check js/ambient-music.js && node --check js/site-header.js && node --check js/starfield.js && node --check js/validate.js && node --check js/login.js && node --check js/supabase-config.js && node --test && python tools/verify_bank.py",
     "serve": "python -m http.server 4173",
-    "test:unit": "node --test tests/adaptive.test.js tests/score.test.js tests/integrity.test.js tests/analytics.test.js tests/progress.test.js",
+    "test:unit": "node --test tests/adaptive.test.js tests/score.test.js tests/integrity.test.js tests/analytics.test.js tests/progress.test.js tests/login.test.js tests/lesson-extra.test.js tests/analytics-extra.test.js",
     "test:integration": "node --test \"tests/integration/*.test.js\"",
     "test:system": "node --test tests/project.test.js \"tests/system/*.test.js\"",
     "test:report": "node tools/run-tests.js"

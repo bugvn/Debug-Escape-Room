@@ -9,8 +9,8 @@ const ROOT = path.join(__dirname, '..');
 const T = (d) => fs.readdirSync(path.join(ROOT, d)).filter((f) => f.endsWith('.test.js')).map((f) => d + '/' + f);
 
 const GROUPS = [
-  { name: 'Unit', what: 'one function or module at a time (scoring, adaptive rules, anti-cheat, analytics, lesson gate rules)',
-    files: ['tests/adaptive.test.js', 'tests/score.test.js', 'tests/integrity.test.js', 'tests/analytics.test.js', 'tests/progress.test.js'] },
+  { name: 'Unit', what: 'one function or module at a time (scoring, adaptive rules, anti-cheat, analytics, lesson gate rules, login form rules)',
+    files: ['tests/adaptive.test.js', 'tests/score.test.js', 'tests/integrity.test.js', 'tests/analytics.test.js', 'tests/progress.test.js', 'tests/login.test.js', 'tests/lesson-extra.test.js', 'tests/analytics-extra.test.js'] },
   { name: 'Integration', what: 'modules working together (account + level + lecture gate, puzzle bank + rules + scoring)', files: T('tests/integration') },
   { name: 'System', what: 'the whole site end to end without a browser (pages, files, links, full player journey, real Python puzzle check)',
     files: ['tests/project.test.js', ...T('tests/system')] }
