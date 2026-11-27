@@ -54,7 +54,7 @@ UNI-052,Unit,"moving down a level does not repeat a lesson they already finished
 UNI-053,Unit,"unknown level counts as BEGINNER; higherLevel ignores missing values",progress.test.js,PASS
 UNI-054,Unit,"wiring: game room reads the saved level and enforces the gate; Play buttons use it",progress.test.js,PASS
 UNI-055,Unit,"sql: migration-06 adds both columns, the sync trigger and the sign-up level",progress.test.js,PASS
-UNI-056,Unit,"lessons: one module per level, every lesson complete",progress.test.js,FAIL
+UNI-056,Unit,"lessons: one module per level, every lesson complete",progress.test.js,PASS
 INT-001,Integration,"INT-01 brand-new account must see the lecture before the first game",integration/account-flow.test.js,PASS
 INT-002,Integration,"INT-02 after finishing the lecture, the same level goes straight to the game",integration/account-flow.test.js,PASS
 INT-003,Integration,"INT-03 old account (already played, lesson marked seen by migration) is not forced to take the lecture",integration/account-flow.test.js,PASS
