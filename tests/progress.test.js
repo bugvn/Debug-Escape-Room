@@ -56,7 +56,7 @@ test('sql: migration-06 adds both columns, the sync trigger and the sign-up leve
 });
 
 test('lessons: one module per level, every lesson complete', () => {
-  const h = read('lesson.html');
+  const h = read('lesson.html').replace(/\r\n/g, '\n');
   const a = h.indexOf('const TOPICS = ['), b = h.indexOf('\n];\n', a) + 3;
   const TOPICS = eval(h.slice(a + 'const TOPICS = '.length, b).replace(/;$/, ''));
   assert.strictEqual(TOPICS.length, 5, 'Basics + 4 bug types');
