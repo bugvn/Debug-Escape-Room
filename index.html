@@ -262,6 +262,7 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/progress.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/ambient-music.js"></script>
 <script>
@@ -528,7 +529,7 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
   function startLoading(destination) {
     if (launching) return;
     launching = true;
-    const goingToLessons = destination === 'lesson.html';
+    const goingToLessons = destination.startsWith('lesson.html');
     const msgs = goingToLessons
       ? ['Initializing...', 'Loading lesson assets...', 'Lighting the stars...', 'Almost there...']
       : ['Initializing...', 'Loading room assets...', 'Lighting the stars...', 'Almost there...'];
@@ -576,11 +577,7 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
         setTimeout(() => { location.href = 'login.html'; }, 1200);
         return;
       }
-      let destination = 'lesson.html';
-      try {
-        const { data: sessions, error } = await db.from('game_sessions').select('id').limit(1);
-        if (!error && sessions && sessions.length) destination = 'game-room.html';
-      } catch (e) { console.error(e); }
+      const destination = await playRoute(user.id);   // lesson first for new accounts and after a level-up
       launching = false;
       startLoading(destination);
     }, 150);

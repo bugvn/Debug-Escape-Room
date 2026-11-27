@@ -134,5 +134,51 @@ async function getProfile(uid) {
 async function logout() {
   await db.auth.signOut();
   sessionStorage.removeItem('lastSessionId');
+  sessionStorage.removeItem(LESSON_SEEN_KEY);
   location.href = 'index.html';
+}
+
+/* ---------- Level + lesson gate (pure rules are in js/progress.js) ---------- */
+
+// The level the player is at right now. One source of truth: profiles.current_level, which the database
+// updates by itself every time a finished game picks the next level (sql/migration-06.sql).
+// Fallbacks keep older data working: latest finished game's next_level, then the level picked at sign-up.
+async function resolvePlayerLevel(uid, prof) {
+  prof = prof || await getProfile(uid);
+  const ok = (l) => LEVEL_ORDER.includes(l);
+  if (!prof) return 'BEGINNER';
+  if (prof.adaptive === false) return ok(prof.difficulty) ? prof.difficulty : 'BEGINNER';   // fixed-level group
+  if (ok(prof.current_level)) return prof.current_level;
+  try {
+    const { data } = await db.from('game_sessions').select('next_level').eq('user_id', uid)
+      .not('next_level', 'is', null).order('created_at', { ascending: false }).order('id', { ascending: false }).limit(1);
+    if (data && data[0] && ok(data[0].next_level)) return data[0].next_level;
+  } catch (e) { console.error(e); }
+  return ok(prof.difficulty) ? prof.difficulty : 'BEGINNER';
+}
+
+// Backup for when saving "lesson finished" to the account fails (offline): remember it in this tab so the
+// player is not sent back to the lesson in a loop. Stored as "<user id>|<level>".
+const LESSON_SEEN_KEY = 'remediate.lessonSeen';
+function lessonSeenLocally(uid) {
+  const v = (sessionStorage.getItem(LESSON_SEEN_KEY) || '').split('|');
+  return v[0] === uid ? v[1] : null;
+}
+
+// Where Play should go: 'lesson.html?gate=1' (lesson first) or 'game-room.html'.
+async function playRoute(uid) {
+  try {
+    const prof = await getProfile(uid);
+    if (!prof || !('lesson_seen_level' in prof)) return 'game-room.html';   // cannot tell (or migration-06 not run): never block
+    const level = await resolvePlayerLevel(uid, prof);
+    const seen = higherLevel(prof.lesson_seen_level, lessonSeenLocally(uid));
+    if (lessonDue(level, seen)) return 'lesson.html?gate=1';
+  } catch (e) { console.error(e); }
+  return 'game-room.html';
+}
+
+// Play buttons on dashboard / report / landing page all use this
+async function goPlay() {
+  const u = await getUser();
+  location.href = u ? await playRoute(u.id) : 'login.html';
 }

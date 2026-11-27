@@ -90,6 +90,8 @@
       </div>
 
       <!-- content -->
+      <div id="gateNote" class="hidden mx-4 sm:mx-8 mt-4 border-2 border-[#ffd166]/60 bg-[#ffd166]/10 p-3 font-pixel text-[8px] leading-relaxed tracking-widest text-[#ffd166]"></div>
+      <div id="levelTabs" class="hidden px-4 sm:px-8 pt-4 flex flex-wrap gap-2" role="tablist" aria-label="Lesson level"></div>
       <div id="lessonBody" class="px-4 sm:px-8 py-6 anim-pop" aria-live="polite"></div>
 
       <!-- nav -->
@@ -107,6 +109,7 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/progress.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/starfield.js"></script>
 <script src="js/ambient-music.js"></script>
@@ -125,8 +128,10 @@ try { requireLogin().catch(e => console.error(e)); } catch (e) { console.error(e
 /* ---------- Lesson content ---------- */
 // Each lesson teaches one topic of the room (not the room's exact puzzles).
 // code blocks: [style, html]. style: '' | 'bad' | 'good'
-// more: extra "level up" sections. They open automatically for players at that level or higher.
-const LESSONS = [
+// Each topic has a BEGINNER lesson (the fields below) and, in `more`, a full INTERMEDIATE and ADVANCED lesson
+// (title, intro, points, code, note, tryit, refs). LESSON_SETS (below) turns that into one module per level,
+// so a player only gets the module for the level they are at.
+const TOPICS = [
 {
   tag: 'BASICS', title: 'How to Read a Bug',
   intro: 'Every bug in the room shows up as an error message or as the wrong output. Both tell you where to look.',
@@ -179,7 +184,11 @@ i = 0
     i += 1
 <span class="er">IndexError: list index out of range</span>`],
         ['good', `<span class="kw">while</span> i &lt; len(cups):     <span class="cm"># stops at the last index</span>`]
-      ] },
+      ],
+      intro: "In a while loop you manage the index yourself. You get more control, and more ways to go one step too far. These are the Index puzzles at Intermediate level.",
+      note: "Watch for: a loop test that uses <= with len(), a missing i += 1, and a counter that starts at the wrong number.",
+      tryit: {"task": "Run it. It prints the cups, then crashes on the last round. Fix the loop test so it prints 2, 4 and 6 and stops cleanly.", "goal": "2\n4\n6", "code": "cups = [2, 4, 6]\ni = 0\nwhile i <= len(cups):\n    print(cups[i])\n    i += 1"},
+      refs: [["The while statement", "https://docs.python.org/3/reference/compound_stmts.html#the-while-statement"], ["range() (Built-in Types)", "https://docs.python.org/3/library/stdtypes.html#range"], ["IndexError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#IndexError"]] },
     { level: 'ADVANCED', title: 'Neighbours and grids',
       points: [
         'When you read <b>items[i + 1]</b>, the last i has no neighbour. Stop one early: <b>range(len(items) - 1)</b>.',
@@ -193,7 +202,11 @@ i = 0
 
 board = [[1, 2], [3, 4]]
 print(board[1][1])   <span class="cm"># 4: row 1, column 1 are the last indexes</span>`]
-      ] }
+      ],
+      intro: "Advanced index bugs hide at the edges: the last neighbour, the last row, the last column. These are the Index puzzles at Advanced level.",
+      note: "Before you run, trace the first and the last round of the loop by hand. Write down the index values.",
+      tryit: {"task": "Run it. It prints the first difference, then crashes. Fix the loop so it prints 3 and -2.", "goal": "3\n-2", "code": "temps = [5, 8, 6]\nfor i in range(len(temps)):\n    print(temps[i + 1] - temps[i])"},
+      refs: [["Lists (Python Tutorial)", "https://docs.python.org/3/tutorial/introduction.html#lists"], ["range() (Built-in Types)", "https://docs.python.org/3/library/stdtypes.html#range"], ["IndexError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#IndexError"]] }
   ],
   tryit: { task: "Run it. It crashes. Fix it so it prints the last letter, d.", goal: "d", code: "letters = [\"a\", \"b\", \"c\", \"d\"]\nprint(letters[4])" },
   refs: [["Lists (Python Tutorial)", "https://docs.python.org/3/tutorial/introduction.html#lists"], ["for Statements (Python Tutorial)", "https://docs.python.org/3/tutorial/controlflow.html#for-statements"], ["The while statement", "https://docs.python.org/3/reference/compound_stmts.html#the-while-statement"], ["IndexError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#IndexError"]]
@@ -229,7 +242,11 @@ print("Level: " + level)
         ['good', `print("Level: " + str(level))
 print(f"Level: {level}")
 print(float("4.5") &lt; 5)   <span class="cm"># True</span>`]
-      ] },
+      ],
+      intro: "Type errors get sneakier once you build messages and compare values. Python still refuses to mix text and numbers, in joins and in comparisons. These are the Type puzzles at Intermediate level.",
+      note: "Rule of thumb: text with text, numbers with numbers. Convert one side before you join or compare.",
+      tryit: {"task": "Run it and read the error. Then fix it so it prints Level: 3.", "goal": "Level: 3", "code": "level = 3\nprint(\"Level: \" + level)"},
+      refs: [["Formatted string literals", "https://docs.python.org/3/tutorial/inputoutput.html#formatted-string-literals"], ["str() (Built-in Types)", "https://docs.python.org/3/library/stdtypes.html#str"], ["float() (Built-in Functions)", "https://docs.python.org/3/library/functions.html#float"], ["TypeError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#TypeError"]] },
     { level: 'ADVANCED', title: 'Mixed data',
       points: [
         'Data that comes from outside (a file, a form, a feed) is often text, or a mix of text and numbers.',
@@ -243,7 +260,11 @@ total = 0
 <span class="kw">for</span> key, value <span class="kw">in</span> data.items():
     total += int(value)    <span class="cm"># works for "2" and for 3</span>
 print(total)               <span class="cm"># 5</span>`]
-      ] }
+      ],
+      intro: "Real data is messy: some values are text, some are numbers. Advanced type bugs show up inside loops and dictionaries. These are the Type puzzles at Advanced level.",
+      note: "Convert the value, not the key, and do it at the moment you use it.",
+      tryit: {"task": "Run it and read the error. Then fix it so it prints 5.", "goal": "5", "code": "data = {\"a\": \"2\", \"b\": 3}\ntotal = 0\nfor key, value in data.items():\n    total += value\nprint(total)"},
+      refs: [["Dictionaries (Python Tutorial)", "https://docs.python.org/3/tutorial/datastructures.html#dictionaries"], ["int() (Built-in Functions)", "https://docs.python.org/3/library/functions.html#int"], ["type() (Built-in Functions)", "https://docs.python.org/3/library/functions.html#type"], ["TypeError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#TypeError"]] }
   ],
   tryit: { task: "Run it and read the error. Then fix it so it prints 95.", goal: "95", code: "score = \"90\"\nbonus = 5\nprint(score + bonus)" },
   refs: [["Text Sequence Type: str", "https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str"], ["int() (Built-in Functions)", "https://docs.python.org/3/library/functions.html#int"], ["float() (Built-in Functions)", "https://docs.python.org/3/library/functions.html#float"], ["Formatted string literals", "https://docs.python.org/3/tutorial/inputoutput.html#formatted-string-literals"], ["TypeError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#TypeError"]]
@@ -284,7 +305,11 @@ print(total)               <span class="cm"># 5</span>`]
 
 print(product(3))            <span class="cm"># None</span>`],
         ['good', `    <span class="kw">return</span> n * product(n - 1)  <span class="cm"># product(3) is 6</span>`]
-      ] },
+      ],
+      intro: "Most recursive functions build their answer on the way back up. That makes the return statement and the starting value matter. These are the Recursion puzzles at Intermediate level.",
+      note: "Check three things: the base case returns the right starting value, the call moves toward it, and every call is returned.",
+      tryit: {"task": "Run it and read the error: the answer is never passed back up. Fix it so it prints 6 (3 + 2 + 1).", "goal": "6", "code": "def total(n):\n    if n == 0:\n        return 0\n    n + total(n - 1)\n\nprint(total(3))"},
+      refs: [["Defining Functions (Python Tutorial)", "https://docs.python.org/3/tutorial/controlflow.html#defining-functions"], ["The return Statement (Language Reference)", "https://docs.python.org/3/reference/simple_stmts.html#return"], ["RecursionError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#RecursionError"]] },
     { level: 'ADVANCED', title: 'Shrinking the problem',
       points: [
         'The problem must get smaller every call: n - 1, half of a range, or one part of a list.',
@@ -302,7 +327,11 @@ print(product(3))            <span class="cm"># None</span>`],
     <span class="kw">return</span> deepest + 1
 
 print(depth([1, [2, [3]]]))    <span class="cm"># 3</span>`]
-      ] }
+      ],
+      intro: "Advanced recursion bugs are about making the problem smaller: the right part of a list, the right half of a range. These are the Recursion puzzles at Advanced level.",
+      note: "Trace two or three calls and write down the arguments. If two calls have the same arguments, you found the loop.",
+      tryit: {"task": "Run it and wait for the error. Then fix it so it prints 2 (how deep the lists nest).", "goal": "2", "code": "def depth(item):\n    if not isinstance(item, list):\n        return 0\n    deepest = 0\n    for part in item:\n        deepest = max(deepest, depth(item))\n    return deepest + 1\n\nprint(depth([1, [2]]))"},
+      refs: [["Defining Functions (Python Tutorial)", "https://docs.python.org/3/tutorial/controlflow.html#defining-functions"], ["isinstance() (Built-in Functions)", "https://docs.python.org/3/library/functions.html#isinstance"], ["RecursionError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#RecursionError"]] }
   ],
   tryit: { task: "Run it and wait for the error. Then make n move toward 3 so it prints done.", goal: "done", code: "def count_up(n):\n    if n == 3:\n        return \"done\"\n    return count_up(n - 1)\n\nprint(count_up(0))" },
   refs: [["Defining Functions (Python Tutorial)", "https://docs.python.org/3/tutorial/controlflow.html#defining-functions"], ["RecursionError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#RecursionError"]]
@@ -349,7 +378,11 @@ win()
         ['good', `<span class="kw">def</span> win():
     <span class="kw">global</span> score          <span class="cm"># use the outer score</span>
     score = score + 10`]
-      ] },
+      ],
+      intro: "Reading an outer variable from inside a function works. Changing it does not, unless you tell Python. These are the Scope puzzles at Intermediate level.",
+      note: "If a function assigns to a name, that name is local to the function. Use global, or better, pass the value in and return the new one.",
+      tryit: {"task": "Run it and read the error. Then fix it so it prints 10.", "goal": "10", "code": "score = 0\n\ndef win():\n    score = score + 10\n\nwin()\nprint(score)"},
+      refs: [["Python Scopes and Namespaces (Python Tutorial)", "https://docs.python.org/3/tutorial/classes.html#python-scopes-and-namespaces"], ["The global statement", "https://docs.python.org/3/reference/simple_stmts.html#the-global-statement"], ["UnboundLocalError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#UnboundLocalError"]] },
     { level: 'ADVANCED', title: 'Shared and remembered state',
       points: [
         'A default value like <b>bag=[]</b> is created once, when the function is defined, and shared by every call.',
@@ -368,7 +401,11 @@ print(add(2))    <span class="cm"># [1, 2]  the old list is remembered</span>`],
         bag = []             <span class="cm"># a new list every call</span>
     bag.append(x)
     <span class="kw">return</span> bag`]
-      ] }
+      ],
+      intro: "Advanced scope bugs come from state that is shared or remembered when you did not expect it: default arguments and inner functions. These are the Scope puzzles at Advanced level.",
+      note: "Defaults are built once, when the function is defined. For lists and dictionaries, use None and build a fresh one inside.",
+      tryit: {"task": "Run it. The second call remembers the first. Fix it so each call starts fresh and it prints [1] then [2].", "goal": "[1]\n[2]", "code": "def add(x, bag=[]):\n    bag.append(x)\n    return bag\n\nprint(add(1))\nprint(add(2))"},
+      refs: [["Default Argument Values", "https://docs.python.org/3/tutorial/controlflow.html#default-argument-values"], ["Python Scopes and Namespaces (Python Tutorial)", "https://docs.python.org/3/tutorial/classes.html#python-scopes-and-namespaces"], ["Lambda Expressions", "https://docs.python.org/3/tutorial/controlflow.html#lambda-expressions"]] }
   ],
   tryit: { task: "Run it and read the error. Then catch the returned value so it prints HEY.", goal: "HEY", code: "def shout(word):\n    loud = word.upper()\n    return loud\n\nshout(\"hey\")\nprint(loud)" },
   refs: [["Python Scopes and Namespaces (Python Tutorial)", "https://docs.python.org/3/tutorial/classes.html#python-scopes-and-namespaces"], ["The return Statement (Language Reference)", "https://docs.python.org/3/reference/simple_stmts.html#return"], ["The global statement", "https://docs.python.org/3/reference/simple_stmts.html#the-global-statement"], ["Default Argument Values", "https://docs.python.org/3/tutorial/controlflow.html#default-argument-values"], ["NameError (Built-in Exceptions)", "https://docs.python.org/3/library/exceptions.html#NameError"]]
@@ -405,8 +442,39 @@ const cleanErr = m => {
 /* ---------- State + rendering ---------- */
 let i = 0;
 const drafts = {};
-const last = LESSONS.length - 1;
+// One module per level: BEGINNER = Basics + the 4 base lessons; INTERMEDIATE / ADVANCED = that level's lesson for each topic
+const LESSON_SETS = { BEGINNER: [], INTERMEDIATE: [], ADVANCED: [] };
+TOPICS.forEach(t => {
+  LESSON_SETS.BEGINNER.push(t);
+  ['INTERMEDIATE', 'ADVANCED'].forEach(lv => {
+    const m = (t.more || []).find(x => x.level === lv);
+    if (m) LESSON_SETS[lv].push({ tag: t.tag, title: m.title, intro: m.intro, points: m.points, code: m.code, note: m.note, tryit: m.tryit, refs: m.refs });
+  });
+});
+let LESSONS = LESSON_SETS.BEGINNER.slice(), activeLevel = 'BEGINNER', weakTags = new Set();
+let last = LESSONS.length - 1;
+const draftKey = () => activeLevel + ':' + i;
 
+// Lesson gate: game-room.html / the Play buttons send players here with ?gate=1 when they must read the module first
+const GATE = new URLSearchParams(location.search).get('gate') === '1';
+let lessonProfile = null, seenLevel = null;
+
+// Finishing the module saves "lesson seen at this level" to the account, then opens the game
+async function finishLessons(){
+  const btn = $('btnNext'); btn.disabled = true;
+  try {
+    const u = await getUser();
+    if (u) {
+      const keep = higherLevel(seenLevel, activeLevel);
+      const r = await db.from('profiles').update({ lesson_seen_level: keep }).eq('id', u.id);
+      if (r.error) throw r.error;
+    }
+  } catch (e) {
+    console.error('lesson seen not saved:', e);
+    try { const u = await getUser(); if (u) sessionStorage.setItem(LESSON_SEEN_KEY, u.id + '|' + activeLevel); } catch (e2) {}
+  }
+  goGame();
+}
 function goGame(){ location.href = 'game-room.html'; }
 
 function growEd(){ const e = $('ed'); if (!e) return; e.style.height = 'auto'; e.style.height = (e.scrollHeight + 2) + 'px'; }
@@ -415,18 +483,11 @@ function render(){
   const L = LESSONS[i];
   $('lessonCount').textContent = 'LESSON ' + (i + 1) + ' / ' + LESSONS.length;
   $('lessonTag').textContent = L.tag;
+  $('steps').style.gridTemplateColumns = 'repeat(' + LESSONS.length + ', minmax(0, 1fr))';
   $('steps').innerHTML = LESSONS.map((_, k) => '<div class="step ' + (k < i ? 'done' : k === i ? 'now' : '') + '"></div>').join('');
 
   const codes = L.code.map(c => '<pre class="code ' + c[0] + '">' + c[1] + '</pre>').join('<div class="h-2"></div>');
   const pts = L.points.map(p => '<li class="flex gap-3"><span class="text-cyan-300 font-pixel text-[9px] mt-1.5">▸</span><span>' + p + '</span></li>').join('');
-  const lvl = LEVELS.indexOf(playerLevel);
-  const more = (L.more || []).map(m => {
-    const mc = m.code.map(c => '<pre class="code ' + c[0] + '">' + c[1] + '</pre>').join('<div class="h-2"></div>');
-    const mp = m.points.map(p => '<li class="flex gap-3"><span class="text-purple-200 font-pixel text-[9px] mt-1.5">▸</span><span>' + p + '</span></li>').join('');
-    return '<details class="mt-5 border-2 border-purple-300/30 bg-[#0b2335]/50 p-4"' + (LEVELS.indexOf(m.level) <= lvl ? ' open' : '') + '>' +
-      '<summary class="cursor-pointer font-pixel text-[8px] leading-relaxed tracking-widest text-purple-200">LEVEL UP · ' + m.level + (m.level === playerLevel ? ' · YOUR LEVEL' : '') + ' · ' + m.title.toUpperCase() + '</summary>' +
-      '<ul class="mt-3 space-y-2 text-sm sm:text-[15px] text-slate-300 leading-relaxed">' + mp + '</ul><div class="mt-3">' + mc + '</div></details>';
-  }).join('');
   const refs = L.refs.map(r => '<li><a href="' + r[1] + '" target="_blank" rel="noopener noreferrer">' + esc(r[0]) + '</a></li>').join('');
 
   $('lessonBody').innerHTML =
@@ -435,7 +496,6 @@ function render(){
     '<ul class="mt-4 space-y-2 text-sm sm:text-[15px] text-slate-300 leading-relaxed">' + pts + '</ul>' +
     '<div class="mt-5">' + codes + '</div>' +
     '<p class="mt-4 text-sm text-purple-200 leading-relaxed border-l-4 border-[#a38fc2] pl-3">' + L.note + '</p>' +
-    more +
 
     '<div class="mt-6 border-2 border-cyan-400/30 bg-[#0b2335]/70 p-4">' +
       '<div class="flex items-center justify-between mb-2"><span class="font-pixel text-[8px] tracking-widest text-cyan-300">TRY IT YOURSELF</span><span class="tag sys">PYTHON 3</span></div>' +
@@ -460,13 +520,13 @@ function render(){
   const box = $('lessonBody'); box.classList.remove('anim-pop'); void box.offsetWidth; box.classList.add('anim-pop');
 
   const ed = $('ed');
-  ed.value = drafts[i] !== undefined ? drafts[i] : L.tryit.code; growEd();
-  ed.oninput = () => { drafts[i] = ed.value; growEd(); };
+  ed.value = drafts[draftKey()] !== undefined ? drafts[draftKey()] : L.tryit.code; growEd();
+  ed.oninput = () => { drafts[draftKey()] = ed.value; growEd(); };
   ed.onkeydown = e => {
     if (e.key === 'Tab') { e.preventDefault(); ed.setRangeText('    ', ed.selectionStart, ed.selectionEnd, 'end'); ed.oninput(); }
     e.stopPropagation(); // arrow keys stay for typing, not for changing lessons
   };
-  $('btnReset').onclick = () => { ed.value = L.tryit.code; drafts[i] = L.tryit.code; growEd(); setCon(null); ed.focus(); };
+  $('btnReset').onclick = () => { ed.value = L.tryit.code; drafts[draftKey()] = L.tryit.code; growEd(); setCon(null); ed.focus(); };
   $('btnRun').onclick = runExample;
   refreshRun();
 
@@ -502,28 +562,65 @@ async function runExample(){
 }
 
 $('btnBack').onclick = () => { if (i > 0) { i--; render(); } };
-$('btnNext').onclick = () => { if (i < last) { i++; render(); } else goGame(); };
+$('btnNext').onclick = () => { if (i < last) { i++; render(); } else finishLessons(); };
 $('skipTop').onclick = goGame;
+if (GATE) $('skipTop').classList.add('hidden');   // required reading: no skipping
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight') $('btnNext').click();
   else if (e.key === 'ArrowLeft' && i > 0) $('btnBack').click();
 });
 
 // Personalise the lessons for the logged-in player:
-//  - playerLevel decides which "level up" sections open (same level the game room will use).
-//  - adaptive group only: the lessons for the player's weakest topics come right after Basics.
+//  - the module is the one for the player's level (same saved level the game room uses).
+//  - review (not the required gate): tabs let the player open any level up to the highest they have reached.
+//  - adaptive group only: inside the module, the lessons for the player's weakest topics come first.
 //  - control group (profiles.adaptive = false): fixed order, so the study comparison stays clean.
 const CAT_TAG = { Index: 'INDEX FAULT', Type: 'TYPE FAULT', Recursion: 'RECURSION FAULT', Scope: 'SCOPE FAULT' };
 let playerLevel = 'BEGINNER';
+
+function showLevel(level, keepPage) {
+  activeLevel = level;
+  LESSONS = LESSON_SETS[level].slice();
+  if (weakTags.size) {
+    const basics = LESSONS.filter(l => l.tag === 'BASICS');
+    const front = LESSONS.filter(l => l.tag !== 'BASICS' && weakTags.has(l.tag));
+    const back = LESSONS.filter(l => l.tag !== 'BASICS' && !weakTags.has(l.tag));
+    LESSONS = [...basics, ...front, ...back];
+  }
+  last = LESSONS.length - 1;
+  if (!keepPage) i = 0;
+  renderTabs();
+  render();
+}
+
+function renderTabs() {
+  const box = $('levelTabs');
+  const top = LEVELS.indexOf(higherLevel(playerLevel, seenLevel));
+  if (GATE || top < 1) { box.classList.add('hidden'); return; }   // required reading shows one module, no tabs
+  box.innerHTML = LEVELS.slice(0, top + 1).map(lv =>
+    '<button type="button" role="tab" aria-selected="' + (lv === activeLevel) + '" data-lv="' + lv + '" class="btn pixel-btn-border ' + (lv === activeLevel ? 'btn-primary' : 'btn-ghost') + '">' + lv + '</button>').join('');
+  box.classList.remove('hidden');
+  box.onclick = e => { const b = e.target.closest('[data-lv]'); if (b && b.dataset.lv !== activeLevel) showLevel(b.dataset.lv); };
+}
+
 async function personalizeLessons() {
   try {
     const u = await requireLogin().catch(() => null);
     if (!u) return;
     const prof = await getProfile(u.id);
-    if (prof && LEVELS.includes(prof.difficulty)) playerLevel = prof.difficulty;
+    lessonProfile = prof;
+    seenLevel = higherLevel(prof && prof.lesson_seen_level, lessonSeenLocally(u.id));
+    playerLevel = await resolvePlayerLevel(u.id, prof);   // same saved level the game room will use
+    activeLevel = playerLevel;
+    if (GATE) {
+      const L = playerLevel.charAt(0) + playerLevel.slice(1).toLowerCase();
+      const n = $('gateNote');
+      n.textContent = LEVELS.indexOf(seenLevel) >= 0
+        ? 'NEW LEVEL: ' + L.toUpperCase() + '. THESE LESSONS COVER THE NEW ' + L.toUpperCase() + ' MATERIAL. READ THEM, THEN START THE GAME.'
+        : 'WELCOME! READ THE ' + L.toUpperCase() + ' LESSONS FIRST, THEN START THE GAME.';
+      n.classList.remove('hidden');
+    }
     if (prof && prof.adaptive === false) return;
-    const g = await db.from('game_sessions').select('next_level').not('next_level', 'is', null).order('created_at', { ascending: false }).limit(1);
-    if (g.data && g.data[0] && LEVELS.includes(g.data[0].next_level)) playerLevel = g.data[0].next_level;
     const r = await db.from('submissions')
       .select('category,is_correct,kind')
       .eq('kind', 'submit')
@@ -531,15 +628,10 @@ async function personalizeLessons() {
       .order('id', { ascending: false })
       .limit(RULES.historyAttempts);
     const weak = weakCategories(r.data || []);
-    if (!weak.length) return;
-    const weakTags = new Set(weak.map(([c]) => CAT_TAG[c]).filter(Boolean));
-    const basics = LESSONS.filter(l => l.tag === 'BASICS');
-    const front = LESSONS.filter(l => l.tag !== 'BASICS' && weakTags.has(l.tag));
-    const back = LESSONS.filter(l => l.tag !== 'BASICS' && !weakTags.has(l.tag));
-    LESSONS.splice(0, LESSONS.length, ...basics, ...front, ...back);
+    weakTags = new Set(weak.map(([c]) => CAT_TAG[c]).filter(Boolean));
   } catch (e) { console.error('lesson personalize:', e); }
 }
-personalizeLessons().then(() => render());
+personalizeLessons().then(() => showLevel(activeLevel));
 })();
 </script>
 </body></html>

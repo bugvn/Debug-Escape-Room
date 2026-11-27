@@ -6,6 +6,8 @@ create table public.profiles (
   difficulty text not null default 'BEGINNER' check (difficulty in ('BEGINNER','INTERMEDIATE','ADVANCED')),
   consented_at timestamptz,
   adaptive boolean not null default true,   -- true = adaptive game, false = fixed-level control group
+  current_level text check (current_level in ('BEGINNER','INTERMEDIATE','ADVANCED')),      -- level the player is at now (migration-06)
+  lesson_seen_level text check (lesson_seen_level in ('BEGINNER','INTERMEDIATE','ADVANCED')), -- highest lesson module finished; null = never
   created_at timestamptz not null default now()
 );
 
@@ -127,3 +129,5 @@ revoke all on public.research_sessions, public.research_attempts from anon, auth
 
 -- After this file, also run sql/migration-03.sql: it lets the analytics page read the views above
 -- (admin flag + grants) and adds the anti-cheat log table.
+
+-- Then run sql/migration-06.sql too: it keeps profiles.current_level in sync with finished games and updates the sign-up trigger.

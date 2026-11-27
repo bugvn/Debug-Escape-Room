@@ -391,6 +391,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #22d3ee;outline-offse
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/progress.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/starfield.js"></script>
 <script src="js/settings.js"></script>
@@ -705,13 +706,12 @@ try { const nm = (user.user_metadata && (user.user_metadata.username || user.use
 let level = 'BEGINNER', weak = [], lastIds = [];
 try {
 const prof = await getProfile(user.id);
-if (prof) { if (LEVELS.includes(prof.difficulty)) level = prof.difficulty; roomAdaptive = prof.adaptive !== false; }
+if (prof) roomAdaptive = prof.adaptive !== false;
+level = await resolvePlayerLevel(user.id, prof);   // saved level (profiles.current_level), not the sign-up pick
 const r1 = await db.from('game_sessions').select('level,next_level,puzzle_ids').eq('user_id', user.id).order('created_at', { ascending:false }).limit(10);
 const rows = r1.data || [];
 const lastRoom = rows.find(x => x.puzzle_ids); if (lastRoom) lastIds = lastRoom.puzzle_ids;
 if (roomAdaptive) {
-// only finished games write next_level; skip any in_progress row
-const carried = rows.find(x => x.next_level); if (carried) level = carried.next_level;
 const r2 = await db.from('submissions').select('category,is_correct,kind').eq('user_id', user.id).eq('kind', 'submit').not('category', 'is', null).order('id', { ascending:false }).limit(RULES.historyAttempts);
 weak = weakCategories(r2.data || []);
 }
@@ -1176,7 +1176,7 @@ toast(`Wall clock icon position: top:${y}%;left:${x}%`); clearTimeout(toastT);
 
 renderHints(); applyTimerVis();
 (async () => {
-try { await loadPuzzleBank(); const u = await requireLogin(); if (!u) return; await setupRoom(u); startTs = Date.now(); await ensureSession(); guard.start(); renderShields(); }
+try { await loadPuzzleBank(); const u = await requireLogin(); if (!u) return; const route = await playRoute(u.id); if (route !== 'game-room.html') { location.replace(route); return; } await setupRoom(u); startTs = Date.now(); await ensureSession(); guard.start(); renderShields(); }
 catch (e) { console.error(e); }
 finally { $('stage').classList.add('ready'); }
 })();

@@ -94,6 +94,9 @@ test('package.json "check" script lists real files', () => {
 
 test('every id a page script asks for exists in that page (or in the shared header)', () => {
   const HEADER_IDS = new Set(['logoutBtn', 'playerName', 'skipTop', 'navAnalytics', 'shPlayer']); // injected by js/site-header.js
+  // ids the code looks up on purpose even though this page has no such element:
+  //   game-room.html guards sf-time / sf-prog / sf-keys with "if (element)", and reads #rulesModal out of index.html
+  const OPTIONAL_IDS = { 'game-room.html': new Set(['sf-time', 'sf-prog', 'sf-keys', 'rulesModal']) };
   const bad = [];
   for (const page of PAGES) {
     const html = read(page);
@@ -102,7 +105,7 @@ test('every id a page script asks for exists in that page (or in the shared head
       ...[...html.matchAll(/getElementById\('([^']+)'\)/g)].map((m) => m[1]),
       ...[...html.matchAll(/\$\('([A-Za-z][\w-]*)'\)/g)].map((m) => m[1])
     ]);
-    for (const id of used) if (!have.has(id) && !HEADER_IDS.has(id)) bad.push(`${page}: #${id}`);
+    for (const id of used) if (!have.has(id) && !HEADER_IDS.has(id) && !(OPTIONAL_IDS[page] && OPTIONAL_IDS[page].has(id))) bad.push(`${page}: #${id}`);
   }
   assert.deepStrictEqual(bad, []);
 });
