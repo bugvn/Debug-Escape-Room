@@ -1,3 +1,4 @@
+
 /* One header for every page.
    Usage:  <header id="siteHeader"></header>
            <script src="js/site-header.js"></script>
@@ -6,7 +7,7 @@
    data-title    no longer shown. The top left is always just "Remediate".
    Layout:
      signed out   Rules, Login / Register   (login page: mute button only)
-     signed in    user menu: profile, Dashboard, Analytics (admin), Review Lessons, Rules, Settings, Log out
+     signed in    user menu: profile, Main Menu, Dashboard, Analytics (admin), Review Lessons, Rules, Settings, Log out
                   on the index page, Rules sits beside the menu instead of inside it
    The lesson page header is sticky.
    Keeps the ids older page scripts rely on: navAnalytics, playerName, logoutBtn, skipTop,
@@ -63,6 +64,7 @@
     '.sh-who__name{display:block;font:1.25rem/1.4rem "VT323",monospace;color:#fff;overflow-wrap:anywhere}',
     '.sh-who__role{display:block;font:1rem/1.1rem "VT323",monospace;color:#a594f9;text-transform:uppercase}',
     '.sh-menu a,.sh-menu button{display:block;width:100%;margin:0;text-align:left;padding:.35rem .6rem;font:1.125rem/1.5rem "VT323",monospace;color:#cbd5e1;text-transform:uppercase;text-decoration:none;background:none;border:0;cursor:pointer}',
+    '.sh-menu a.sh-menu__main-menu{text-transform:none}',
     '.sh-menu a:hover,.sh-menu button:hover{background:#161b33;color:#fff}',
     '.sh-menu .on{color:#38e1ff}',
     '.sh-menu #logoutBtn:hover{color:#ff5c8a}',
@@ -101,12 +103,13 @@
             '<div class="sh-who" role="presentation"><span class="sh-av"><b id="shWhoInitial" style="font-weight:400">?</b></span>' +
               '<div><span class="sh-who__name" id="shWhoName">Player</span><span class="sh-who__role" id="shWhoRole">Player</span></div></div>' +
             '<hr>' +
-            item('dashboard', 'Dashboard') +                                    /* 2 */
-            item('analytics', 'Analytics', 'navAnalytics', 'hidden') +          /* 3, admin only */
-            item('lesson', 'Review Lessons') +                                  /* 4 */
-            (isIndex ? '' : panelButton('rules', 'Rules')) +                    /* 5 */
-            panelButton('settings', 'Settings') +                               /* 6 */
-            '<hr><button role="menuitem" id="logoutBtn" type="button">Log out</button>' + /* 7 */
+            (isIndex ? '' : item('index', 'Main Menu', null, 'sh-menu__main-menu')) +
+            item('dashboard', 'Dashboard') +
+            item('analytics', 'Analytics', 'navAnalytics', 'hidden') +
+            item('lesson', 'Review Lessons') +
+            (isIndex ? '' : panelButton('rules', 'Rules')) +
+            panelButton('settings', 'Settings') +
+            '<hr><button role="menuitem" id="logoutBtn" type="button">Log out</button>' +
           '</div>' +
         '</div>' +
         (isLogin ? '' : '<a class="sh-link sh-link--in" id="authBtn" href="login.html">Login / Register</a>') +
