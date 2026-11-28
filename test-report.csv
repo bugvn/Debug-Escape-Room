@@ -105,7 +105,7 @@ SYS-006,System,"every inline <script> in every page compiles",project.test.js,PA
 SYS-007,System,"every local src= and href= in every page points to a real file",project.test.js,PASS
 SYS-008,System,"require() paths inside js/ and tests/ resolve",project.test.js,PASS
 SYS-009,System,"package.json ""check"" script lists real files",project.test.js,PASS
-SYS-010,System,"every id a page script asks for exists in that page (or in the shared header)",project.test.js,PASS
+SYS-010,System,"every id a page script asks for exists in that page (or in the shared header)",project.test.js,FAIL
 SYS-011,System,"no secret keys in the code (only the public Supabase key may be in the repo)",project.test.js,PASS
 SYS-012,System,"puzzle ids are unique",project.test.js,PASS
 SYS-013,System,"every puzzle has all its fields",project.test.js,PASS

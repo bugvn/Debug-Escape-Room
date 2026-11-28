@@ -1,6 +1,6 @@
 # REMEDIATE test report
 
-Run: 2026-11-27 14:58:51 UTC  
+Run: 2026-11-28 10:14:36 UTC  
 Command: `node tools/run-tests.js`
 
 ## Summary
@@ -9,8 +9,8 @@ Command: `node tools/run-tests.js`
 | --- | --- | ---: | ---: | ---: | ---: |
 | Unit | one function or module at a time (scoring, adaptive rules, anti-cheat, analytics, lesson gate rules, login form rules) | 76 | 76 | 0 | 0 |
 | Integration | modules working together (account + level + lecture gate, puzzle bank + rules + scoring) | 21 | 21 | 0 | 0 |
-| System | the whole site end to end without a browser (pages, files, links, full player journey, real Python puzzle check) | 36 | 36 | 0 | 0 |
-| **Total** | | **133** | **133** | **0** | **0** |
+| System | the whole site end to end without a browser (pages, files, links, full player journey, real Python puzzle check) | 36 | 35 | 1 | 0 |
+| **Total** | | **133** | **132** | **1** | **0** |
 
 ## Unit tests
 
@@ -132,7 +132,7 @@ Command: `node tools/run-tests.js`
 | SYS-007 | every local src= and href= in every page points to a real file | project.test.js | PASS |
 | SYS-008 | require() paths inside js/ and tests/ resolve | project.test.js | PASS |
 | SYS-009 | package.json "check" script lists real files | project.test.js | PASS |
-| SYS-010 | every id a page script asks for exists in that page (or in the shared header) | project.test.js | PASS |
+| SYS-010 | every id a page script asks for exists in that page (or in the shared header) | project.test.js | FAIL |
 | SYS-011 | no secret keys in the code (only the public Supabase key may be in the repo) | project.test.js | PASS |
 | SYS-012 | puzzle ids are unique | project.test.js | PASS |
 | SYS-013 | every puzzle has all its fields | project.test.js | PASS |
