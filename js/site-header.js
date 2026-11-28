@@ -103,7 +103,7 @@
             '<div class="sh-who" role="presentation"><span class="sh-av"><b id="shWhoInitial" style="font-weight:400">?</b></span>' +
               '<div><span class="sh-who__name" id="shWhoName">Player</span><span class="sh-who__role" id="shWhoRole">Player</span></div></div>' +
             '<hr>' +
-            (isIndex ? '' : item('index', 'Main Menu', null, 'sh-menu__main-menu')) +
+            (isIndex ? '' : item('index', 'MAIN MENU', null, 'sh-menu__main-menu')) +
             item('dashboard', 'Dashboard') +
             item('analytics', 'Analytics', 'navAnalytics', 'hidden') +
             item('lesson', 'Review Lessons') +
