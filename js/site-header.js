@@ -1,49 +1,37 @@
 
-/* One header for every page.
-   Usage:  <header id="siteHeader"></header>
-           <script src="js/site-header.js"></script>
-   data-actions  optional extra buttons: music (mute, login page), skip
-   data-title    no longer shown. The top left is always just "Remediate".
-   Signed-in navigation: fixed left sidebar (Dashboard, Review Lessons, Rules).
-   Top-right account menu: Analytics (admin), Settings, Log out only.
-   Signed-out users see Login / Register in the main header.
-   Keeps the ids older page scripts rely on: navAnalytics, playerName, logoutBtn, skipTop,
-   audio-toggle-btn, settings-toggle-btn. */
+/* REMEDIATE shared site header
+   - Logged-out users: no Rules button and no Login/Register button in the header.
+   - The index page's PLAY NOW button becomes LOG IN / REGISTER.
+   - Logged-in users are redirected from index.html straight to dashboard.html.
+   - Logged-in sidebar: Dashboard, Review Lessons, Rules.
+   - Account popup: Analytics (admins), Settings, Log Out.
+*/
 (function () {
+  'use strict';
+
   var host = document.getElementById('siteHeader');
   if (!host) return;
 
-  var page = (location.pathname.split('/').pop() || 'index').toLowerCase().replace(/\.html$/, '');
-  var isIndex = page === 'index', isLogin = page === 'login', isLesson = page === 'lesson';
+  var page = (location.pathname.split('/').pop() || 'index')
+    .toLowerCase().replace(/\.html$/, '');
 
-  var ACTIONS = {
-    music: '<button class="sh-mute music-btn" id="audio-toggle-btn" type="button" data-icon="🔊" title="Mute / unmute music" aria-label="Mute music">' +
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-2.5-2.23l-5.5 5h-4v12h4l5.5 5v-22z"/></svg>' +
-      '<span>MUSIC ON</span></button>',
-    settings: isLogin ? '<button class="hidden" id="settings-toggle-btn" type="button" tabindex="-1"></button>' : '',
-    skip: isLesson ? '' : '<button class="sh-link sh-link--go" id="skipTop" type="button">Skip to game</button>'
-  };
+  var isIndex = page === 'index';
+  var isLogin = page === 'login';
+  var isLesson = page === 'lesson';
 
   var css = [
-    '.sh{box-sizing:border-box;position:relative;z-index:20;width:100%;padding:.75rem 1rem;border-bottom:2px solid rgba(34,211,238,.4);background:rgba(8,27,42,.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-family:"VT323",monospace}',
-    '.sh.sh--sticky{position:-webkit-sticky;position:sticky;top:0;z-index:100}',
+    '.sh{box-sizing:border-box;position:relative;z-index:20;width:100%;padding:.75rem 1rem;border-bottom:2px solid rgba(34,211,238,.4);background:rgba(8,27,42,.96);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-family:"VT323",monospace}',
+    '.sh.sh--sticky{position:sticky;top:0;z-index:100}',
     '.sh *,.sh *::before,.sh *::after{box-sizing:border-box}',
     '.sh__in{max-width:80rem;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem}',
     '.sh__brand{flex-shrink:0;display:flex;align-items:center;gap:.75rem;color:inherit;text-decoration:none}',
     '.sh__mark{width:1.75rem;height:1.75rem;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(56,225,255,.2);border:2px solid #38e1ff;color:#38e1ff;font:.75rem/1rem "Press Start 2P",monospace;box-shadow:0 0 8px rgba(56,225,255,.6)}',
     '.sh__name{font:10px "Press Start 2P",monospace;letter-spacing:.05em;text-transform:uppercase;color:#38e1ff;filter:drop-shadow(0 0 5px rgba(56,225,255,.5))}',
-    '.sh__nav{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:.375rem;margin-left:auto}',
-    '.sh .sh-link{display:inline-flex;align-items:center;margin:0;padding:.3rem .6rem;font:1.125rem/1.5rem "VT323",monospace;letter-spacing:normal;color:#cbd5e1;text-transform:uppercase;text-decoration:none;cursor:pointer;background:rgba(10,13,26,.9);border:1px solid #232a4e;border-radius:0;box-shadow:none;transition:border-color .15s,color .15s}',
+    '.sh__nav{display:flex;align-items:center;justify-content:flex-end;gap:.375rem;margin-left:auto}',
+    '.sh .sh-link{display:inline-flex;align-items:center;margin:0;padding:.3rem .6rem;font:1.125rem/1.5rem "VT323",monospace;color:#cbd5e1;text-transform:uppercase;text-decoration:none;cursor:pointer;background:rgba(10,13,26,.9);border:1px solid #232a4e}',
     '.sh .sh-link:hover{border-color:#38e1ff;color:#fff}',
-    '.sh button.sh-mute{display:inline-flex;align-items:center;justify-content:center;min-width:55px;height:35px;margin:0;padding:0 12px;font-size:0;line-height:1;background:rgba(34,45,90,.95);border:2px solid rgba(148,163,184,.38);border-radius:4px;box-shadow:0 0 6px rgba(148,163,184,.18),inset 0 0 0 1px rgba(255,255,255,.04);cursor:pointer;transition:background .15s}',
-    '.sh button.sh-mute:hover{background:rgba(30,27,75,.8)}',
-    '.sh button.sh-mute>*{display:none!important}',
-    '.sh button.sh-mute::before{content:attr(data-icon);font-size:20px;line-height:1;color:#cbd5e1}',
-    '.sh .sh-link--go{border-color:rgba(255,209,102,.6);color:#ffd166}',
-    '.sh .sh-link--in{background:#38e1ff;color:#061d29;border-color:#a5f3fc}',
-    '.sh .sh-link--in:hover{color:#061d29;filter:brightness(1.1)}',
     '.sh-um{position:relative}',
-    '.sh-player{display:inline-flex;align-items:center;gap:.5rem;max-width:9.5rem;padding:.3rem .6rem;background:rgba(10,13,26,.9);border:1px solid #232a4e;color:#cbd5e1;font:1.125rem/1.5rem "VT323",monospace;cursor:pointer;transition:border-color .15s}',
+    '.sh-player{display:inline-flex;align-items:center;gap:.5rem;max-width:9.5rem;padding:.3rem .6rem;background:rgba(10,13,26,.9);border:1px solid #232a4e;color:#cbd5e1;font:1.125rem/1.5rem "VT323",monospace;cursor:pointer}',
     '.sh-player #playerName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
     '.sh-player::after{content:"";flex-shrink:0;margin-left:.25rem;border:4px solid transparent;border-top-color:#a594f9;border-bottom:0}',
     '.sh-player:hover{border-color:#a594f9}',
@@ -55,222 +43,67 @@
     '.sh-menu a,.sh-menu button{display:block;width:100%;margin:0;text-align:left;padding:.35rem .6rem;font:1.125rem/1.5rem "VT323",monospace;color:#cbd5e1;text-transform:uppercase;text-decoration:none;background:none;border:0;cursor:pointer}',
     '.sh-menu a:hover,.sh-menu button:hover{background:#161b33;color:#fff}',
     '.sh-menu .on{color:#38e1ff}',
-    '.sh-sidebar{position:fixed;z-index:19;left:0;top:0;bottom:0;width:68px;padding:78px 8px 16px;background:rgba(8,27,42,.96);border-right:1px solid rgba(56,225,255,.25);display:none;flex-direction:column;align-items:center;gap:10px;box-shadow:4px 0 18px rgba(0,0,0,.22)}',
-    '.sh-sidebar a,.sh-sidebar button{width:48px;min-height:46px;display:flex;align-items:center;justify-content:center;margin:0;padding:6px;border:1px solid transparent;background:transparent;color:#8fa8b8;text-decoration:none;cursor:pointer;font:20px VT323,monospace;position:relative}',
-    '.sh-sidebar a:hover,.sh-sidebar button:hover,.sh-sidebar .on{color:#38e1ff;background:rgba(56,225,255,.1);border-color:rgba(56,225,255,.25)}',
-    '.sh-sidebar a span,.sh-sidebar button span{position:absolute;left:58px;top:50%;transform:translateY(-50%);display:none;white-space:nowrap;padding:5px 9px;background:#0a0d1a;border:1px solid #38e1ff;color:#e6faff;font:18px VT323,monospace}',
-    '.sh-sidebar a:hover span,.sh-sidebar button:hover span{display:block}',
-    '.sh-sidebar.sh-sidebar--visible{display:flex}',
-    'body.sh-has-sidebar{padding-left:68px}',
-    '@media(max-width:639px){.sh-sidebar{width:54px;padding-left:3px;padding-right:3px}.sh-sidebar a,.sh-sidebar button{width:42px}body.sh-has-sidebar{padding-left:54px}}',
     '.sh-menu #logoutBtn:hover{color:#ff5c8a}',
     '.sh-menu hr{height:0;margin:.25rem 0;border:0;border-top:1px solid #232a4e}',
+
+    /* Permanent left navigation */
+    '.sh-sidebar{position:fixed!important;z-index:95!important;left:0!important;top:0!important;bottom:0!important;width:60px!important;height:100vh!important;height:100dvh!important;margin:0!important;padding:78px 0 16px!important;background:#081b2b!important;border-right:1px solid rgba(56,225,255,.3)!important;display:none;flex-direction:column;align-items:stretch!important;gap:8px!important;box-shadow:3px 0 16px rgba(0,0,0,.3)!important}',
+    '.sh-sidebar.sh-sidebar--visible{display:flex!important}',
+    '.sh-sidebar a,.sh-sidebar button{position:relative!important;display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-width:0!important;height:48px!important;min-height:48px!important;margin:0!important;padding:0!important;border:0!important;border-left:3px solid transparent!important;border-radius:0!important;background:transparent!important;color:#9aafbd!important;text-decoration:none!important;cursor:pointer!important;font:22px/1 "VT323",monospace!important;box-shadow:none!important}',
+    '.sh-sidebar a:hover,.sh-sidebar button:hover{background:rgba(56,225,255,.12)!important;color:#38e1ff!important}',
+    '.sh-sidebar a.on,.sh-sidebar button.on{background:rgba(56,225,255,.13)!important;color:#38e1ff!important;border-left-color:#38e1ff!important}',
+    '.sh-sidebar a span,.sh-sidebar button span{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);display:none;white-space:nowrap;padding:5px 9px;background:#0a0d1a;border:1px solid #38e1ff;color:#e6faff;font:18px VT323,monospace;z-index:110}',
+    '.sh-sidebar a:hover span,.sh-sidebar button:hover span{display:block}',
+    'body.sh-has-sidebar{padding-left:60px!important}',
     '.sh .hidden{display:none!important}',
-    '@media(min-width:640px){.sh{padding-left:2rem;padding-right:2rem}.sh__name{font-size:.75rem;line-height:1rem}}',
-    '@media(max-width:639px){.sh .sh-link{padding:.3rem .55rem}}'
+    '@media(max-width:639px){.sh-sidebar{width:54px!important}.sh-sidebar a,.sh-sidebar button{width:100%!important}body.sh-has-sidebar{padding-left:54px!important}}'
   ].join('');
 
-  var st = document.createElement('style');
-  st.textContent = css;
-  document.head.appendChild(st);
-
-  var actions = (host.getAttribute('data-actions') || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-  var acts = actions.map(function (a) { return ACTIONS[a] || ''; }).join('');
-
-  function item(name, label, id, extra) {
-    var on = name === page;
-    var cls = [on ? 'on' : '', extra || ''].join(' ').trim();
-    return '<a role="menuitem" href="' + name + '.html"' + (id ? ' id="' + id + '"' : '') +
-      (cls ? ' class="' + cls + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + label + '</a>';
-  }
-
-  function panelButton(name, label) {
-    return '<button role="menuitem" type="button" data-panel="' + name + '">' + label + '</button>';
-  }
+  var style = document.createElement('style');
+  style.id = 'remediateSharedHeaderStyles';
+  style.textContent = css;
+  document.head.appendChild(style);
 
   host.className = 'sh' + (isLesson ? ' sh--sticky' : '');
+
   host.innerHTML =
     '<div class="sh__in">' +
-      '<a class="sh__brand" href="index.html"><div class="sh__mark">&lt;&gt;</div><span class="sh__name">Remediate</span></a>' +
-      '<nav class="sh__nav" aria-label="Main">' + acts +
+      '<a class="sh__brand" href="index.html">' +
+        '<div class="sh__mark">&lt;&gt;</div>' +
+        '<span class="sh__name">Remediate</span>' +
+      '</a>' +
+      '<nav class="sh__nav" aria-label="Account">' +
         '<div class="sh-um hidden" id="shUser">' +
-          '<button class="sh-player" id="shPlayer" type="button" aria-haspopup="true" aria-expanded="false"><span class="sh-av"><b id="shInitial" style="font-weight:400">?</b><i></i></span><span id="playerName">Player</span></button>' +
+          '<button class="sh-player" id="shPlayer" type="button" aria-haspopup="true" aria-expanded="false">' +
+            '<span class="sh-av"><b id="shInitial" style="font-weight:400">?</b><i></i></span>' +
+            '<span id="playerName">Player</span>' +
+          '</button>' +
           '<div class="sh-menu" id="shMenu" role="menu">' +
-            item('analytics', 'Analytics', 'navAnalytics', 'hidden') +
-            panelButton('settings', 'Settings') +
-            '<hr><button role="menuitem" id="logoutBtn" type="button">Log out</button>' +
+            '<a role="menuitem" href="analytics.html" id="navAnalytics" class="hidden">Analytics</a>' +
+            '<button role="menuitem" type="button" data-panel="settings">Settings</button>' +
+            '<hr>' +
+            '<button role="menuitem" id="logoutBtn" type="button">Log Out</button>' +
           '</div>' +
         '</div>' +
-        (isLogin ? '' : '<a class="sh-link sh-link--in" id="authBtn" href="login.html">LOG IN / REGISTER</a>') +
       '</nav>' +
     '</div>' +
-    '<nav class="sh-sidebar" id="shSidebar" aria-label="Main menu">' +
+
+    '<nav class="sh-sidebar" id="shSidebar" aria-label="Main navigation">' +
       '<a href="dashboard.html" data-side="dashboard" aria-label="Dashboard">▦<span>Dashboard</span></a>' +
       '<a href="lesson.html" data-side="lesson" aria-label="Review Lessons">▤<span>Review Lessons</span></a>' +
       '<button type="button" data-panel="rules" aria-label="Rules">♧<span>Rules</span></button>' +
     '</nav>';
 
-  var mute = host.querySelector('.sh-mute');
-  if (mute) {
-    var syncMute = function () {
-      if (typeof RemediateAmbient === 'undefined') return;
-      var off = RemediateAmbient.getMuted();
-      mute.setAttribute('data-icon', off ? '🔇' : '🔊');
-      mute.setAttribute('aria-label', off ? 'Unmute music' : 'Mute music');
-    };
-    window.addEventListener('load', syncMute);
-    document.addEventListener('click', function () { setTimeout(syncMute, 0); }, true);
+  var um = document.getElementById('shUser');
+  var playerButton = document.getElementById('shPlayer');
+  var sidebar = document.getElementById('shSidebar');
+
+  function setOpen(open) {
+    um.classList.toggle('sh-um--open', open);
+    playerButton.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
 
-  var um = document.getElementById('shUser'), pb = document.getElementById('shPlayer');
-
-  function setOpen(o) {
-    um.classList.toggle('sh-um--open', o);
-    pb.setAttribute('aria-expanded', o ? 'true' : 'false');
-  }
-
-  var rulesCss = [
-    '.shr{position:fixed;top:0;right:0;bottom:0;left:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,.75);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}',
-    '.shr *{box-sizing:border-box}',
-    '.shr__box{position:relative;width:100%;max-width:522px;max-height:100%;overflow-y:auto;padding:38px 35px 36px;background:#071b29;border:2px solid #4cc3da;box-shadow:0 0 22px rgba(56,225,255,.2);text-align:left;scrollbar-width:thin;scrollbar-color:rgba(122,232,255,.4) transparent}',
-    '.shr h2{margin:0 0 20px;padding:0 40px 0 4px;font:14px/1.5 "Press Start 2P",monospace;color:#67e8f9}',
-    '.shr__body{font:400 14px/1.625 "Nunito",sans-serif;color:#cbd5e1}',
-    '.shr__body p{margin:0 0 16px}',
-    '.shr__body p:last-child{margin-bottom:0}',
-    '.shr__body b,.shr__body strong{font-weight:800;color:#fff}',
-    '.shr .shr__x{position:absolute;top:20px;right:20px;width:36px;height:36px;margin:0;padding:0;background:none;border:0;color:#22d3ee;font:20px/1 sans-serif;cursor:pointer}',
-    '.shr .shr__x:hover{color:#fff}',
-    '.shr__foot{display:flex;justify-content:flex-end;margin-top:24px;padding-top:20px;border-top:1px solid rgba(148,163,184,.2)}',
-    '.shr .shr__ok{min-width:94px;height:42px;margin:0;padding:0 17px;font:10px "Press Start 2P",monospace;text-transform:uppercase;background:#7ae8ff;color:#061d29;border:0;cursor:pointer;box-shadow:inset -3px -3px 0 rgba(0,0,0,.5),inset 3px 3px 0 rgba(255,255,255,.25)}',
-    '.shr .shr__ok:hover{filter:brightness(1.12)}'
-  ].join('');
-
-  function loadRules() {
-    return fetch('index.html').then(function (res) {
-      if (!res.ok) throw new Error('index.html returned ' + res.status);
-      return res.text();
-    }).then(function (text) {
-      var src = new DOMParser().parseFromString(text, 'text/html').getElementById('rulesModal');
-      if (!src) throw new Error('rulesModal not found in index.html');
-      var rules = Array.prototype.filter.call(src.querySelectorAll('p'), function (p) {
-        return p.textContent.trim();
-      });
-      if (!rules.length) throw new Error('no rule paragraphs in rulesModal');
-      return rules.map(function (p) {
-        Array.prototype.forEach.call(p.querySelectorAll('script,style,button,input,img,svg,iframe'), function (el) {
-          el.remove();
-        });
-        [p].concat(Array.prototype.slice.call(p.querySelectorAll('*'))).forEach(function (el) {
-          Array.prototype.slice.call(el.attributes).forEach(function (a) {
-            el.removeAttribute(a.name);
-          });
-        });
-        return p.outerHTML;
-      }).join('');
-    });
-  }
-
-  function showRules() {
-    if (document.getElementById('shRulesPop')) return;
-    if (!document.getElementById('shRulesCss')) {
-      var font = document.createElement('link');
-      font.rel = 'stylesheet';
-      font.href = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;800&display=swap';
-      var style = document.createElement('style');
-      style.id = 'shRulesCss';
-      style.textContent = rulesCss;
-      document.head.appendChild(font);
-      document.head.appendChild(style);
-    }
-
-    var pop = document.createElement('div');
-    pop.className = 'shr';
-    pop.id = 'shRulesPop';
-    pop.innerHTML =
-      '<div class="shr__box" role="dialog" aria-modal="true" aria-labelledby="shRulesTitle">' +
-        '<button class="shr__x" type="button" aria-label="Close">✕</button>' +
-        '<h2 id="shRulesTitle">📜 GAME RULES</h2>' +
-        '<div class="shr__body">Loading rules...</div>' +
-        '<div class="shr__foot"><button class="shr__ok" type="button">Got it</button></div>' +
-      '</div>';
-
-    document.body.appendChild(pop);
-
-    var box = pop.firstChild;
-    var x = pop.querySelector('.shr__x');
-    var ok = pop.querySelector('.shr__ok');
-    var body = pop.querySelector('.shr__body');
-    var back = document.activeElement;
-    var overflow = document.body.style.overflow;
-
-    document.body.style.overflow = 'hidden';
-
-    function close() {
-      document.removeEventListener('keydown', keys, true);
-      document.body.style.overflow = overflow;
-      pop.remove();
-      if (back && back.focus) back.focus();
-    }
-
-    function keys(e) {
-      e.stopPropagation();
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        close();
-      } else if (e.key === 'Tab') {
-        e.preventDefault();
-        (document.activeElement === ok ? x : ok).focus();
-      }
-    }
-
-    document.addEventListener('keydown', keys, true);
-    x.onclick = ok.onclick = close;
-
-    pop.addEventListener('click', function (e) {
-      e.stopPropagation();
-      if (e.target === pop) close();
-    });
-
-    ok.focus({ preventScroll: true });
-
-    loadRules().then(function (html) {
-      body.innerHTML = html;
-    }).catch(function (e) {
-      console.error(e);
-      body.textContent = 'The rules could not be loaded. Close this and try again.';
-    }).then(function () {
-      box.scrollTop = 0;
-    });
-  }
-
-  function openPanel(name) {
-    if (name === 'rules') {
-      if (typeof openModal === 'function' && document.getElementById('rulesModal')) {
-        return openModal('rulesModal');
-      }
-      return showRules();
-    }
-
-    if (typeof openSettings === 'function') return openSettings();
-    if (typeof openRemediateSettings === 'function') return openRemediateSettings();
-    if (!isIndex) location.href = 'index.html#settings';
-  }
-
-  Array.prototype.forEach.call(host.querySelectorAll('[data-panel]'), function (b) {
-    b.addEventListener('click', function () {
-      setOpen(false);
-      openPanel(b.getAttribute('data-panel'));
-    });
-  });
-
-  if (isIndex && location.hash === '#settings') {
-    window.addEventListener('load', function () {
-      history.replaceState(null, '', location.pathname + location.search);
-      openPanel('settings');
-    });
-  }
-
-  pb.addEventListener('click', function (e) {
+  playerButton.addEventListener('click', function (e) {
     e.stopPropagation();
     setOpen(!um.classList.contains('sh-um--open'));
   });
@@ -282,55 +115,214 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && um.classList.contains('sh-um--open')) {
       setOpen(false);
-      pb.focus();
+      playerButton.focus();
     }
   });
 
-  function showName(name) {
-    var initial = name.charAt(0).toUpperCase();
-    document.getElementById('playerName').textContent = name;
-    document.getElementById('shInitial').textContent = initial;
+  function openRules() {
+    if (typeof openModal === 'function' && document.getElementById('rulesModal')) {
+      openModal('rulesModal');
+      return;
+    }
+
+    if (document.getElementById('shRulesPop')) return;
+
+    var css = document.createElement('style');
+    css.textContent =
+      '.shr{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,.78);backdrop-filter:blur(4px)}' +
+      '.shr__box{position:relative;width:100%;max-width:522px;max-height:90vh;overflow-y:auto;padding:36px;background:#071b29;border:2px solid #4cc3da;box-shadow:0 0 22px rgba(56,225,255,.2)}' +
+      '.shr h2{margin:0 0 20px;font:14px/1.5 "Press Start 2P",monospace;color:#67e8f9}' +
+      '.shr__body{font:14px/1.625 sans-serif;color:#cbd5e1}' +
+      '.shr__body p{margin:0 0 16px}' +
+      '.shr__body strong{color:white}' +
+      '.shr__x{position:absolute;top:12px;right:14px;background:none;border:0;color:#22d3ee;font-size:22px;cursor:pointer}' +
+      '.shr__ok{margin-top:20px;padding:12px 18px;background:#7ae8ff;color:#061d29;border:0;cursor:pointer;font-weight:bold}';
+
+    if (!document.getElementById('shRulesStyle')) {
+      css.id = 'shRulesStyle';
+      document.head.appendChild(css);
+    }
+
+    var pop = document.createElement('div');
+    pop.className = 'shr';
+    pop.id = 'shRulesPop';
+    pop.innerHTML =
+      '<div class="shr__box" role="dialog" aria-modal="true">' +
+        '<button class="shr__x" type="button" aria-label="Close">✕</button>' +
+        '<h2>GAME RULES</h2>' +
+        '<div class="shr__body">Loading rules...</div>' +
+        '<button class="shr__ok" type="button">GOT IT</button>' +
+      '</div>';
+
+    document.body.appendChild(pop);
+
+    var body = pop.querySelector('.shr__body');
+
+    function close() {
+      pop.remove();
+      document.removeEventListener('keydown', onKey, true);
+    }
+
+    function onKey(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close();
+      }
+    }
+
+    pop.querySelector('.shr__x').onclick = close;
+    pop.querySelector('.shr__ok').onclick = close;
+    pop.addEventListener('click', function (e) {
+      if (e.target === pop) close();
+    });
+    document.addEventListener('keydown', onKey, true);
+
+    fetch('index.html').then(function (r) {
+      if (!r.ok) throw new Error('Could not load rules');
+      return r.text();
+    }).then(function (html) {
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var source = doc.getElementById('rulesModal');
+      if (!source) throw new Error('Rules not found');
+
+      var paragraphs = Array.prototype.slice.call(source.querySelectorAll('p'));
+      body.innerHTML = paragraphs.map(function (p) {
+        return p.outerHTML;
+      }).join('');
+    }).catch(function (err) {
+      console.error(err);
+      body.textContent = 'The rules could not be loaded.';
+    });
+  }
+
+  function openSettings() {
+    if (typeof openSettingsModal === 'function') {
+      openSettingsModal();
+      return;
+    }
+    if (typeof openSettings === 'function') {
+      openSettings();
+      return;
+    }
+    if (typeof openRemediateSettings === 'function') {
+      openRemediateSettings();
+      return;
+    }
+    if (!isIndex) {
+      location.href = 'index.html#settings';
+    }
+  }
+
+  Array.prototype.forEach.call(host.querySelectorAll('[data-panel]'), function (button) {
+    button.addEventListener('click', function () {
+      setOpen(false);
+      if (button.getAttribute('data-panel') === 'rules') {
+        openRules();
+      } else {
+        openSettings();
+      }
+    });
+  });
+
+  if (isIndex && location.hash === '#settings') {
+    window.addEventListener('load', function () {
+      history.replaceState(null, '', location.pathname + location.search);
+      openSettings();
+    });
+  }
+
+  function setPlayerName(name) {
+    var playerName = document.getElementById('playerName');
+    var initial = document.getElementById('shInitial');
+    if (playerName) playerName.textContent = name;
+    if (initial) initial.textContent = (name || 'P').charAt(0).toUpperCase();
+  }
+
+  /* Convert the main-menu PLAY NOW action into a login/register link. */
+  function configureLoggedOutMainMenu() {
+    if (!isIndex) return;
+
+    var button = document.getElementById('playNowBtn');
+    if (!button) return;
+
+    button.removeAttribute('onclick');
+    button.onclick = function () {
+      location.href = 'login.html';
+    };
+
+    var label = button.querySelector('span span');
+    if (label) {
+      label.textContent = 'LOG IN / REGISTER';
+    } else {
+      button.textContent = 'LOG IN / REGISTER';
+    }
+
+    var icon = button.querySelector('svg');
+    if (icon) icon.style.display = 'none';
+
+    var hint = document.getElementById('launchHint');
+    if (hint) hint.textContent = 'CREATE AN ACCOUNT OR LOG IN TO CONTINUE';
+
+    var review = document.getElementById('reviewLessonsBtn');
+    if (review) review.classList.add('hidden');
   }
 
   function hydrate() {
-    if (typeof db === 'undefined' || typeof getUser !== 'function') return;
+    if (typeof getUser !== 'function') {
+      configureLoggedOutMainMenu();
+      return;
+    }
 
-    document.getElementById('logoutBtn').onclick = function () {
-      if (typeof logout === 'function') logout();
-    };
+    getUser().then(function (user) {
+      if (!user) {
+        configureLoggedOutMainMenu();
+        return;
+      }
 
-    getUser().then(function (u) {
-      if (!u) return;
-
-      var auth = document.getElementById('authBtn');
-      if (auth) auth.classList.add('hidden');
+      /* The main menu is not shown after login. Go straight to the dashboard. */
+      if (isIndex) {
+        location.replace('dashboard.html');
+        return;
+      }
 
       um.classList.remove('hidden');
+      sidebar.classList.add('sh-sidebar--visible');
+      document.body.classList.add('sh-has-sidebar');
 
-      var sidebar = document.getElementById('shSidebar');
-      if (sidebar) {
-        sidebar.classList.add('sh-sidebar--visible');
-        document.body.classList.add('sh-has-sidebar');
+      var current = sidebar.querySelector('[data-side="' + page + '"]');
+      if (current) current.classList.add('on');
 
-        var current = sidebar.querySelector('[data-side="' + (page === 'index' ? 'dashboard' : page) + '"]');
-        if (current) current.classList.add('on');
+      var logoutButton = document.getElementById('logoutBtn');
+      if (logoutButton) {
+        logoutButton.addEventListener('click', function () {
+          if (typeof logout === 'function') {
+            logout();
+          }
+        });
       }
 
-      if (page === 'analytics') {
-        document.getElementById('navAnalytics').classList.remove('hidden');
-      }
+      var profilePromise = typeof getProfile === 'function'
+        ? getProfile(user.id)
+        : Promise.resolve(null);
 
-      return getProfile(u.id).then(function (p) {
-        if (!p) return;
+      return profilePromise.then(function (profile) {
+        if (profile) {
+          setPlayerName(profile.player_name || 'Player');
 
-        showName(p.player_name || 'Player');
+          if (profile.is_admin) {
+            var analytics = document.getElementById('navAnalytics');
+            if (analytics) analytics.classList.remove('hidden');
+          }
+        }
 
-        if (p.is_admin) {
-          document.getElementById('navAnalytics').classList.remove('hidden');
+        if (page === 'analytics') {
+          var analyticsLink = document.getElementById('navAnalytics');
+          if (analyticsLink) analyticsLink.classList.remove('hidden');
         }
       });
-    }).catch(function (e) {
-      console.error(e);
+    }).catch(function (error) {
+      console.error('Header authentication check failed:', error);
+      configureLoggedOutMainMenu();
     });
   }
 
