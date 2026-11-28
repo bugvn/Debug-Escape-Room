@@ -40,6 +40,7 @@
 :root{--cy:#7ae8ff;--ln:rgba(122,232,255,.25)}
 #crtOverlay{background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0,rgba(0,0,0,.28) 1px,transparent 1px,transparent 3px)}
 #siteHeader{position:relative;z-index:91}
+#vignette{z-index:92}
 #rulesModal,#settingsModal,#confirmModal,#loadingOverlay,#shRulesPop{z-index:96}
 #vignette{background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.65) 100%)}
 .reduce-motion *,.reduce-motion *::before,.reduce-motion *::after{animation:none!important;transition:none!important}
@@ -295,6 +296,7 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
       <button class="text-slate-400 hover:text-white text-xs" aria-label="Dismiss">✕</button>`;
     const remove = () => { el.classList.add('leaving'); setTimeout(() => el.remove(), 250); };
     el.querySelector('button').onclick = remove;
+    { const hd = document.getElementById('siteHeader'); $('toastRoot').style.top = (Math.max(0, hd ? hd.getBoundingClientRect().bottom : 64) + 12) + 'px'; }
     $('toastRoot').appendChild(el);
     setTimeout(remove, ms);
   }
