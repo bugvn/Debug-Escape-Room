@@ -33,7 +33,7 @@
 
   var css = [
     '.sh{box-sizing:border-box;position:relative;z-index:20;width:100%;padding:.75rem 1rem;border-bottom:2px solid rgba(34,211,238,.4);background:rgba(8,27,42,.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-family:"VT323",monospace}',
-    '.sh.sh--sticky{position:-webkit-sticky;position:sticky;top:0;z-index:50}',
+    '.sh.sh--sticky{position:-webkit-sticky;position:sticky;top:0;z-index:100}',
     '.sh *,.sh *::before,.sh *::after{box-sizing:border-box}',
     '.sh__in{max-width:80rem;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.75rem}',
     '.sh__brand{flex-shrink:0;display:flex;align-items:center;gap:.75rem;color:inherit;text-decoration:none}',
