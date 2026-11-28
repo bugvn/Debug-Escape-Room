@@ -3,31 +3,24 @@
    Usage:  <header id="siteHeader"></header>
            <script src="js/site-header.js"></script>
    data-actions  optional extra buttons: music (mute, login page), skip
-                 "rules" and "settings" need no attribute: signed-in players get them in the user menu.
    data-title    no longer shown. The top left is always just "Remediate".
-   Layout:
-     signed out   Rules, Login / Register   (login page: mute button only)
-     signed in    user menu: profile, Main Menu, Dashboard, Analytics (admin), Review Lessons, Rules, Settings, Log out
-                  on the index page, Rules sits beside the menu instead of inside it
-   The lesson page header is sticky.
+   Signed-in navigation: fixed left sidebar (Dashboard, Review Lessons, Rules).
+   Top-right account menu: Analytics (admin), Settings, Log out only.
+   Signed-out users see Login / Register in the main header.
    Keeps the ids older page scripts rely on: navAnalytics, playerName, logoutBtn, skipTop,
    audio-toggle-btn, settings-toggle-btn. */
 (function () {
   var host = document.getElementById('siteHeader');
   if (!host) return;
 
-  /* page name without ".html", so /dashboard and /dashboard.html both work */
   var page = (location.pathname.split('/').pop() || 'index').toLowerCase().replace(/\.html$/, '');
   var isIndex = page === 'index', isLogin = page === 'login', isLesson = page === 'lesson';
 
   var ACTIONS = {
-    /* icon-only mute button, same look as the game room. The svg and span stay in the page (hidden by CSS) for older scripts */
     music: '<button class="sh-mute music-btn" id="audio-toggle-btn" type="button" data-icon="🔊" title="Mute / unmute music" aria-label="Mute music">' +
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-2.5-2.23l-5.5 5h-4v12h4l5.5 5v-22z"/></svg>' +
       '<span>MUSIC ON</span></button>',
-    /* login page only: never visible, kept so scripts that look up this id don't crash */
     settings: isLogin ? '<button class="hidden" id="settings-toggle-btn" type="button" tabindex="-1"></button>' : '',
-    /* the lesson page has its own skip button beside Back / Next */
     skip: isLesson ? '' : '<button class="sh-link sh-link--go" id="skipTop" type="button">Skip to game</button>'
   };
 
@@ -59,20 +52,24 @@
     '.sh-av i{position:absolute;right:-2px;bottom:-2px;width:.375rem;height:.375rem;background:#ffd166;border:1px solid #070a14}',
     '.sh-menu{position:absolute;right:0;top:calc(100% + .375rem);min-width:13rem;max-width:calc(100vw - 2rem);padding:.25rem;background:#0a0d1a;border:1px solid #a594f9;box-shadow:0 8px 24px rgba(0,0,0,.7);display:none;z-index:30}',
     '.sh-um--open .sh-menu{display:block}',
-    '.sh-who{display:flex;align-items:center;gap:.625rem;padding:.4rem .6rem}',
-    '.sh-who>div{min-width:0}',
-    '.sh-who__name{display:block;font:1.25rem/1.4rem "VT323",monospace;color:#fff;overflow-wrap:anywhere}',
-    '.sh-who__role{display:block;font:1rem/1.1rem "VT323",monospace;color:#a594f9;text-transform:uppercase}',
     '.sh-menu a,.sh-menu button{display:block;width:100%;margin:0;text-align:left;padding:.35rem .6rem;font:1.125rem/1.5rem "VT323",monospace;color:#cbd5e1;text-transform:uppercase;text-decoration:none;background:none;border:0;cursor:pointer}',
-    '.sh-menu a.sh-menu__main-menu{text-transform:none}',
     '.sh-menu a:hover,.sh-menu button:hover{background:#161b33;color:#fff}',
     '.sh-menu .on{color:#38e1ff}',
+    '.sh-sidebar{position:fixed;z-index:19;left:0;top:0;bottom:0;width:68px;padding:78px 8px 16px;background:rgba(8,27,42,.96);border-right:1px solid rgba(56,225,255,.25);display:none;flex-direction:column;align-items:center;gap:10px;box-shadow:4px 0 18px rgba(0,0,0,.22)}',
+    '.sh-sidebar a,.sh-sidebar button{width:48px;min-height:46px;display:flex;align-items:center;justify-content:center;margin:0;padding:6px;border:1px solid transparent;background:transparent;color:#8fa8b8;text-decoration:none;cursor:pointer;font:20px VT323,monospace;position:relative}',
+    '.sh-sidebar a:hover,.sh-sidebar button:hover,.sh-sidebar .on{color:#38e1ff;background:rgba(56,225,255,.1);border-color:rgba(56,225,255,.25)}',
+    '.sh-sidebar a span,.sh-sidebar button span{position:absolute;left:58px;top:50%;transform:translateY(-50%);display:none;white-space:nowrap;padding:5px 9px;background:#0a0d1a;border:1px solid #38e1ff;color:#e6faff;font:18px VT323,monospace}',
+    '.sh-sidebar a:hover span,.sh-sidebar button:hover span{display:block}',
+    '.sh-sidebar.sh-sidebar--visible{display:flex}',
+    'body.sh-has-sidebar{padding-left:68px}',
+    '@media(max-width:639px){.sh-sidebar{width:54px;padding-left:3px;padding-right:3px}.sh-sidebar a,.sh-sidebar button{width:42px}body.sh-has-sidebar{padding-left:54px}}',
     '.sh-menu #logoutBtn:hover{color:#ff5c8a}',
     '.sh-menu hr{height:0;margin:.25rem 0;border:0;border-top:1px solid #232a4e}',
     '.sh .hidden{display:none!important}',
     '@media(min-width:640px){.sh{padding-left:2rem;padding-right:2rem}.sh__name{font-size:.75rem;line-height:1rem}}',
     '@media(max-width:639px){.sh .sh-link{padding:.3rem .55rem}}'
   ].join('');
+
   var st = document.createElement('style');
   st.textContent = css;
   document.head.appendChild(st);
@@ -86,6 +83,7 @@
     return '<a role="menuitem" href="' + name + '.html"' + (id ? ' id="' + id + '"' : '') +
       (cls ? ' class="' + cls + '"' : '') + (on ? ' aria-current="page"' : '') + '>' + label + '</a>';
   }
+
   function panelButton(name, label) {
     return '<button role="menuitem" type="button" data-panel="' + name + '">' + label + '</button>';
   }
@@ -95,28 +93,23 @@
     '<div class="sh__in">' +
       '<a class="sh__brand" href="index.html"><div class="sh__mark">&lt;&gt;</div><span class="sh__name">Remediate</span></a>' +
       '<nav class="sh__nav" aria-label="Main">' + acts +
-        (isLogin ? '' : '<button class="sh-link" id="shRules" type="button" data-panel="rules">Rules</button>') +
         '<div class="sh-um hidden" id="shUser">' +
           '<button class="sh-player" id="shPlayer" type="button" aria-haspopup="true" aria-expanded="false"><span class="sh-av"><b id="shInitial" style="font-weight:400">?</b><i></i></span><span id="playerName">Player</span></button>' +
           '<div class="sh-menu" id="shMenu" role="menu">' +
-            /* 1. user profile */
-            '<div class="sh-who" role="presentation"><span class="sh-av"><b id="shWhoInitial" style="font-weight:400">?</b></span>' +
-              '<div><span class="sh-who__name" id="shWhoName">Player</span><span class="sh-who__role" id="shWhoRole">Player</span></div></div>' +
-            '<hr>' +
-            (isIndex ? '' : item('index', 'MAIN MENU', null, 'sh-menu__main-menu')) +
-            item('dashboard', 'Dashboard') +
             item('analytics', 'Analytics', 'navAnalytics', 'hidden') +
-            item('lesson', 'Review Lessons') +
-            (isIndex ? '' : panelButton('rules', 'Rules')) +
             panelButton('settings', 'Settings') +
             '<hr><button role="menuitem" id="logoutBtn" type="button">Log out</button>' +
           '</div>' +
         '</div>' +
-        (isLogin ? '' : '<a class="sh-link sh-link--in" id="authBtn" href="login.html">Login / Register</a>') +
+        (isLogin ? '' : '<a class="sh-link sh-link--in" id="authBtn" href="login.html">LOG IN / REGISTER</a>') +
       '</nav>' +
-    '</div>';
+    '</div>' +
+    '<nav class="sh-sidebar" id="shSidebar" aria-label="Main menu">' +
+      '<a href="dashboard.html" data-side="dashboard" aria-label="Dashboard">▦<span>Dashboard</span></a>' +
+      '<a href="lesson.html" data-side="lesson" aria-label="Review Lessons">▤<span>Review Lessons</span></a>' +
+      '<button type="button" data-panel="rules" aria-label="Rules">♧<span>Rules</span></button>' +
+    '</nav>';
 
-  /* mute icon follows js/ambient-music.js; the click itself is handled by the page's own script */
   var mute = host.querySelector('.sh-mute');
   if (mute) {
     var syncMute = function () {
@@ -130,9 +123,12 @@
   }
 
   var um = document.getElementById('shUser'), pb = document.getElementById('shPlayer');
-  function setOpen(o) { um.classList.toggle('sh-um--open', o); pb.setAttribute('aria-expanded', o ? 'true' : 'false'); }
 
-  /* Rules pop-up for pages without their own: same text as the index page, shown on the current page */
+  function setOpen(o) {
+    um.classList.toggle('sh-um--open', o);
+    pb.setAttribute('aria-expanded', o ? 'true' : 'false');
+  }
+
   var rulesCss = [
     '.shr{position:fixed;top:0;right:0;bottom:0;left:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(0,0,0,.75);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}',
     '.shr *{box-sizing:border-box}',
@@ -156,13 +152,18 @@
     }).then(function (text) {
       var src = new DOMParser().parseFromString(text, 'text/html').getElementById('rulesModal');
       if (!src) throw new Error('rulesModal not found in index.html');
-      /* only the rule paragraphs, stripped of the index page's classes and handlers */
-      var rules = Array.prototype.filter.call(src.querySelectorAll('p'), function (p) { return p.textContent.trim(); });
+      var rules = Array.prototype.filter.call(src.querySelectorAll('p'), function (p) {
+        return p.textContent.trim();
+      });
       if (!rules.length) throw new Error('no rule paragraphs in rulesModal');
       return rules.map(function (p) {
-        Array.prototype.forEach.call(p.querySelectorAll('script,style,button,input,img,svg,iframe'), function (el) { el.remove(); });
+        Array.prototype.forEach.call(p.querySelectorAll('script,style,button,input,img,svg,iframe'), function (el) {
+          el.remove();
+        });
         [p].concat(Array.prototype.slice.call(p.querySelectorAll('*'))).forEach(function (el) {
-          Array.prototype.slice.call(el.attributes).forEach(function (a) { el.removeAttribute(a.name); });
+          Array.prototype.slice.call(el.attributes).forEach(function (a) {
+            el.removeAttribute(a.name);
+          });
         });
         return p.outerHTML;
       }).join('');
@@ -181,6 +182,7 @@
       document.head.appendChild(font);
       document.head.appendChild(style);
     }
+
     var pop = document.createElement('div');
     pop.className = 'shr';
     pop.id = 'shRulesPop';
@@ -191,47 +193,76 @@
         '<div class="shr__body">Loading rules...</div>' +
         '<div class="shr__foot"><button class="shr__ok" type="button">Got it</button></div>' +
       '</div>';
+
     document.body.appendChild(pop);
-    var box = pop.firstChild, x = pop.querySelector('.shr__x'), ok = pop.querySelector('.shr__ok'), body = pop.querySelector('.shr__body');
-    var back = document.activeElement, overflow = document.body.style.overflow;
+
+    var box = pop.firstChild;
+    var x = pop.querySelector('.shr__x');
+    var ok = pop.querySelector('.shr__ok');
+    var body = pop.querySelector('.shr__body');
+    var back = document.activeElement;
+    var overflow = document.body.style.overflow;
+
     document.body.style.overflow = 'hidden';
+
     function close() {
       document.removeEventListener('keydown', keys, true);
       document.body.style.overflow = overflow;
       pop.remove();
       if (back && back.focus) back.focus();
     }
-    /* while open, keys stay in the pop-up (so the lesson page's arrow keys don't change lessons) */
+
     function keys(e) {
       e.stopPropagation();
-      if (e.key === 'Escape') { e.preventDefault(); close(); }
-      else if (e.key === 'Tab') { e.preventDefault(); (document.activeElement === ok ? x : ok).focus(); }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close();
+      } else if (e.key === 'Tab') {
+        e.preventDefault();
+        (document.activeElement === ok ? x : ok).focus();
+      }
     }
+
     document.addEventListener('keydown', keys, true);
     x.onclick = ok.onclick = close;
-    pop.addEventListener('click', function (e) { e.stopPropagation(); if (e.target === pop) close(); });
+
+    pop.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (e.target === pop) close();
+    });
+
     ok.focus({ preventScroll: true });
-    loadRules().then(function (html) { body.innerHTML = html; }).catch(function (e) {
+
+    loadRules().then(function (html) {
+      body.innerHTML = html;
+    }).catch(function (e) {
       console.error(e);
       body.textContent = 'The rules could not be loaded. Close this and try again.';
-    }).then(function () { box.scrollTop = 0; });
+    }).then(function () {
+      box.scrollTop = 0;
+    });
   }
 
-  /* Rules always opens on the current page. Settings uses the page's own pop-up, or the index page's */
   function openPanel(name) {
     if (name === 'rules') {
-      if (typeof openModal === 'function' && document.getElementById('rulesModal')) return openModal('rulesModal');
+      if (typeof openModal === 'function' && document.getElementById('rulesModal')) {
+        return openModal('rulesModal');
+      }
       return showRules();
     }
+
     if (typeof openSettings === 'function') return openSettings();
     if (typeof openRemediateSettings === 'function') return openRemediateSettings();
     if (!isIndex) location.href = 'index.html#settings';
   }
+
   Array.prototype.forEach.call(host.querySelectorAll('[data-panel]'), function (b) {
-    b.addEventListener('click', function () { setOpen(false); openPanel(b.getAttribute('data-panel')); });
+    b.addEventListener('click', function () {
+      setOpen(false);
+      openPanel(b.getAttribute('data-panel'));
+    });
   });
 
-  /* arriving from another page as index.html#settings */
   if (isIndex && location.hash === '#settings') {
     window.addEventListener('load', function () {
       history.replaceState(null, '', location.pathname + location.search);
@@ -239,43 +270,73 @@
     });
   }
 
-  pb.addEventListener('click', function (e) { e.stopPropagation(); setOpen(!um.classList.contains('sh-um--open')); });
-  document.addEventListener('click', function (e) { if (!um.contains(e.target)) setOpen(false); });
+  pb.addEventListener('click', function (e) {
+    e.stopPropagation();
+    setOpen(!um.classList.contains('sh-um--open'));
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!um.contains(e.target)) setOpen(false);
+  });
+
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && um.classList.contains('sh-um--open')) { setOpen(false); pb.focus(); }
+    if (e.key === 'Escape' && um.classList.contains('sh-um--open')) {
+      setOpen(false);
+      pb.focus();
+    }
   });
 
   function showName(name) {
     var initial = name.charAt(0).toUpperCase();
     document.getElementById('playerName').textContent = name;
-    document.getElementById('shWhoName').textContent = name;
     document.getElementById('shInitial').textContent = initial;
-    document.getElementById('shWhoInitial').textContent = initial;
   }
 
-  /* signed-in state: runs once the page's own scripts (js/supabase-config.js) have loaded */
   function hydrate() {
     if (typeof db === 'undefined' || typeof getUser !== 'function') return;
-    document.getElementById('logoutBtn').onclick = function () { if (typeof logout === 'function') logout(); };
+
+    document.getElementById('logoutBtn').onclick = function () {
+      if (typeof logout === 'function') logout();
+    };
+
     getUser().then(function (u) {
       if (!u) return;
+
       var auth = document.getElementById('authBtn');
       if (auth) auth.classList.add('hidden');
-      /* signed in: Rules stays beside the menu on the index page only */
-      var rules = document.getElementById('shRules');
-      if (rules && !isIndex) rules.classList.add('hidden');
+
       um.classList.remove('hidden');
-      if (page === 'analytics') document.getElementById('navAnalytics').classList.remove('hidden');
+
+      var sidebar = document.getElementById('shSidebar');
+      if (sidebar) {
+        sidebar.classList.add('sh-sidebar--visible');
+        document.body.classList.add('sh-has-sidebar');
+
+        var current = sidebar.querySelector('[data-side="' + (page === 'index' ? 'dashboard' : page) + '"]');
+        if (current) current.classList.add('on');
+      }
+
+      if (page === 'analytics') {
+        document.getElementById('navAnalytics').classList.remove('hidden');
+      }
+
       return getProfile(u.id).then(function (p) {
         if (!p) return;
+
         showName(p.player_name || 'Player');
+
         if (p.is_admin) {
           document.getElementById('navAnalytics').classList.remove('hidden');
-          document.getElementById('shWhoRole').textContent = 'Admin';
         }
       });
-    }).catch(function (e) { console.error(e); });
+    }).catch(function (e) {
+      console.error(e);
+    });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hydrate);
-  else hydrate();
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', hydrate);
+  } else {
+    hydrate();
+  }
 })();
