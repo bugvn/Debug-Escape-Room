@@ -91,7 +91,7 @@
   host.className = 'sh' + (isLesson ? ' sh--sticky' : '');
   host.innerHTML =
     '<div class="sh__in">' +
-      '<a class="sh__brand" href="index.html"><div class="sh__mark" style="width:36px;height:44px;max-height:100%;border:none;background:transparent;padding:0;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><img src="media/R.png" alt="Remediate" style="width:100%;height:100%;object-fit:contain;display:block;"></div><span class="sh__name">Remediate</span></a>' +
+      '<a class="sh__brand" href="index.html"><div class="sh__mark" style="width:44px;height:48px;max-height:100%;border:none;background:transparent;padding:0;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><img src="media/R.png" alt="Remediate" style="width:100%;height:100%;object-fit:contain;display:block;transform:scale(1.35);filter:brightness(1.25) contrast(1.15);"></div><span class="sh__name">Remediate</span></a>' + +
       '<nav class="sh__nav" aria-label="Main">' + acts +
         (isLogin ? '' : '<button class="sh-link" id="shRules" type="button" data-panel="rules">Rules</button>') +
         '<div class="sh-um hidden" id="shUser">' +
