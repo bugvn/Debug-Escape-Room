@@ -69,7 +69,7 @@
   host.innerHTML =
     '<div class="sh__in">' +
       '<a class="sh__brand" href="index.html">' +
-        '<div class="sh__mark"><img src="media/R.png" alt="Remediate" style="width:100%;height:100%;object-fit:contain;display:block;"></div>' +
+        '<div class="sh__mark" style="width:44px;height:44px;border:none;background:transparent;padding:0;"><img src="media/R.png" alt="Remediate" style="width:100%;height:100%;object-fit:contain;display:block;"></div>' +
         '<span class="sh__name">Remediate</span>' +
       '</a>' +
       '<nav class="sh__nav" aria-label="Account">' +
