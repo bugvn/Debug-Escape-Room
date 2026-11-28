@@ -8,7 +8,7 @@ const RemediateSharedSettings = (() => {
   const reduced = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
   const DEF = {
     master: 100, bgm: 80, sfx: 95, uiSounds: true, quality: 'high',
-    crt: true, vignette: true, colorblind: 'off', reduceMotion: reduced,
+    crt: true, vignette: false, colorblind: 'off', reduceMotion: reduced,
     hints: true, timer: true, captions: true, textScale: 'medium', labels: false,
     keys: { interact: 'Space', hint: 'KeyH', inventory: 'KeyI' }
   };

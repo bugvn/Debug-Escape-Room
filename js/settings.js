@@ -6,7 +6,7 @@
 const RemediateSettings = (() => {
   const KEY = 'remediate.settings.v1';
   const DEF = {
-    master: 100, bgm: 80, sfx: 95, uiSounds: true, quality: 'high', crt: true, vignette: true,
+    master: 100, bgm: 80, sfx: 95, uiSounds: true, quality: 'high', crt: true, vignette: false,
     colorblind: 'off', reduceMotion: false, hints: true, timer: true, captions: true,
     keys: { interact: 'Space', hint: 'KeyH', inventory: 'KeyI' }
   };
