@@ -39,6 +39,7 @@
 <style id="cfg-css">
 :root{--cy:#7ae8ff;--ln:rgba(122,232,255,.25)}
 #crtOverlay{background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0,rgba(0,0,0,.28) 1px,transparent 1px,transparent 3px)}
+#siteHeader{position:relative;z-index:91}
 #vignette{background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.65) 100%)}
 .reduce-motion *,.reduce-motion *::before,.reduce-motion *::after{animation:none!important;transition:none!important}
 html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none}
@@ -303,7 +304,7 @@ html[data-quality=low] .fx-blob,html[data-quality=low] .cfg::before{display:none
                  Save -> saved=draft -> localStorage ; Back/Discard -> apply(saved)
      Other pages: read localStorage 'remediate.settings.v1' or listen for the 'remediate:settings' event. */
   const KEY = 'remediate.settings.v1';
-  const DEF = { master: 100, bgm: 80, sfx: 95, uiSounds: true, quality: 'high', crt: true, vignette: true, colorblind: 'off',
+  const DEF = { master: 100, bgm: 80, sfx: 95, uiSounds: true, quality: 'high', crt: true, vignette: false, colorblind: 'off',
     reduceMotion: matchMedia('(prefers-reduced-motion: reduce)').matches, hints: true, timer: true, captions: true,
     keys: { interact: 'Space', hint: 'KeyH', inventory: 'KeyI' } };
   const clone = o => JSON.parse(JSON.stringify(o));

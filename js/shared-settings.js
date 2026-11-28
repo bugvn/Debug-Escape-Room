@@ -90,9 +90,16 @@ const RemediateSharedSettings = (() => {
     r.dataset.quality = x.quality;
     r.classList.toggle('reduce-motion', !!x.reduceMotion);
     r.style.filter = x.colorblind === 'off' ? '' : 'url(#cb-' + x.colorblind + ')';
-    const crt = document.getElementById('rs-crt'), vg = document.getElementById('rs-vignette');
-    if (crt) crt.style.display = x.crt ? 'block' : 'none';
-    if (vg) vg.style.display = x.vignette ? 'block' : 'none';
+    /* CRT + vignette on EVERY page: page-local overlays (#crtOverlay, #vignette, .scanlines) and the shared ones (#rs-crt, #rs-vignette) all obey the setting; a page with none gets a shared one */
+    const grab = (ids, cls) => ids.map(i => document.getElementById(i)).filter(Boolean).concat(cls ? [...document.querySelectorAll(cls)] : []);
+    let crtEls = grab(['rs-crt', 'crtOverlay'], '.scanlines'), vgEls = grab(['rs-vignette', 'vignette']);
+    if (document.body && (!crtEls.length || !vgEls.length)) {
+      const mk = (id, z, bg) => { const d = document.createElement('div'); d.id = id; d.setAttribute('aria-hidden', 'true'); d.style.cssText = 'position:fixed;inset:0;z-index:' + z + ';pointer-events:none;background:' + bg; document.body.appendChild(d); return d; };
+      if (!crtEls.length) crtEls = [mk('rs-crt', 90, 'repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0,rgba(0,0,0,.28) 1px,transparent 1px,transparent 3px)')];
+      if (!vgEls.length) vgEls = [mk('rs-vignette', 89, 'radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.65) 100%)')];
+    }
+    crtEls.forEach(e => { e.style.display = x.crt ? 'block' : 'none'; });
+    vgEls.forEach(e => { e.style.display = x.vignette ? 'block' : 'none'; });
     document.dispatchEvent(new CustomEvent('remediate:settings', { detail: x }));
   }
 
