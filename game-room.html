@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>REMEDIATE: Cozy Starlight Escape Room</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box}
+:root{--ts:1}
+body{margin:0;height:100vh;width:100vw;overflow:hidden;background:#000;color:#f1f5f9;display:flex;justify-content:center;align-items:center;font-family:monospace}
+button{font-family:inherit}
+#hotspots,.hud{user-select:none}
+.hidden{display:none!important}
+.pix{font-family:'Press Start 2P',monospace}
+.dig{font-family:'VT323',monospace}
+#room{position:relative;width:100%;height:100%;max-width:1920px;max-height:1080px;margin:0 auto;overflow:hidden;background:#070d1b;display:flex;align-items:center;justify-content:center;container-type:size}
+/* image and hotspots share one 16:9 box, so the icons stay on their objects at any window size */
+#starfield-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#pixel-stars{position:absolute;top:0;left:0;pointer-events:none;image-rendering:pixelated;transition:opacity .4s}
+#room.pz-open #pixel-stars{opacity:.35} /* dimmed while the puzzle window is open */
+#stage{position:relative;flex:none;width:min(100cqw,calc(100cqh * 16 / 9));aspect-ratio:16/9}
+#stage>img{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 7%,#000 93%,transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 7%,#000 93%,transparent 100%)}
+/* wide windows: the room fills the whole screen like before (crops a little, more from the bottom so the window icon stays clear of the timer); icons live inside #stage so they scale with the picture */
+@media(min-width:768px){#room{align-items:flex-start}#stage{width:max(100cqw,calc(100cqh * 16 / 9));margin-top:calc((100cqh - max(100cqw * 9 / 16, 100cqh)) * .3)}#stage>img{-webkit-mask-image:none;mask-image:none}}
+.box{border:3px solid #6366f1;box-shadow:0 0 10px rgba(99,102,241,.4),inset 0 0 10px rgba(99,102,241,.2);backdrop-filter:blur(8px);background:rgba(10,15,30,.86)}
+.btn{font:12px 'Press Start 2P',monospace;padding:12px 16px;border-radius:4px;cursor:pointer;border:2px solid #a855f7;box-shadow:0 4px 0 #6b21a8;background:#6b21a8;color:#fde047;transition:all .1s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #6b21a8}
+.btn.sec{border-color:#64748b;box-shadow:0 4px 0 #334155;background:#1e293b;color:#e2e8f0}
+.btn.dan{border-color:#f87171;box-shadow:0 4px 0 #7f1d1d;background:#7f1d1d;color:#fee2e2}
+button:focus-visible,input:focus-visible{outline:3px solid #22d3ee;outline-offset:2px}
+
+/* hotspots */
+#hotspots{position:absolute;inset:0;z-index:10}
+.hs{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;cursor:pointer;background:none;border:0;padding:0}
+.hs .wrap{position:relative;display:flex;align-items:center;justify-content:center;width:34px;height:34px}
+.hs .ping{position:absolute;width:100%;height:100%;border-radius:50%;background:var(--ping);animation:pulse 2.2s infinite ease-in-out}
+.hs .core{position:relative;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--core);border:1px solid var(--bd);font-size:10px;color:#fff;font-weight:bold;box-shadow:0 0 10px var(--ping)}
+.tag{opacity:0;transform:translateY(4px);transition:all .2s;pointer-events:none;white-space:nowrap;margin-top:4px;padding:4px 8px;background:rgba(15,23,42,.9);border:1px solid var(--tagb);border-radius:4px;font:calc(10px * var(--ts)) 'Press Start 2P',monospace;color:var(--tag)}
+.hs:hover .tag,.hs:focus-visible .tag,.labels-on .tag{opacity:1;transform:none}
+.cyan{--ping:rgba(34,211,238,.4);--core:rgba(6,182,212,.9);--bd:#a5f3fc;--tag:#67e8f9;--tagb:rgba(34,211,238,.8)}
+.amber{--ping:rgba(251,191,36,.4);--core:rgba(245,158,11,.9);--bd:#fde68a;--tag:#fcd34d;--tagb:rgba(251,191,36,.8)}
+.emerald{--ping:rgba(52,211,153,.4);--core:rgba(16,185,129,.9);--bd:#a7f3d0;--tag:#6ee7b7;--tagb:rgba(52,211,153,.8)}
+.rose{--ping:rgba(244,63,94,.4);--core:rgba(225,29,72,.9);--bd:#fda4af;--tag:#fda4af;--tagb:rgba(244,63,94,.8)}
+@keyframes pulse{0%{transform:scale(.85);opacity:.9}50%{transform:scale(1.25);opacity:.4}100%{transform:scale(.85);opacity:.9}}
+@keyframes ping{75%,100%{transform:scale(2);opacity:0}}
+
+/* ---------- Living room (see LIVING in the script): one glow colour, objects light up under the mouse ---------- */
+#stage:not(.ready){opacity:0}
+#stage[data-room=living]>img.kitchen,#stage:not([data-room=living])>img.lr{display:none}
+#stage>img.lr{image-rendering:pixelated}
+#room.living{background:radial-gradient(ellipse at 50% 50%,#252e57 0%,#121830 45%,#05080f 100%)}
+@media(min-width:768px){#room.living{align-items:center}#room.living #stage{width:min(100cqw,calc(100cqh * 16 / 9));margin-top:0}}
+#stage[data-room=living]>.obj{--g:103,232,249}
+#stage[data-room=living]>.obj[data-k=door]{--g:239,68,68}
+@keyframes objglow{0%,100%{filter:drop-shadow(0 0 calc(var(--px,3px) * 1.5) rgba(var(--g),.45)) drop-shadow(0 0 calc(var(--px,3px) * .6) rgba(var(--g),.6)) brightness(1)}50%{filter:drop-shadow(0 0 calc(var(--px,3px) * 4) rgba(var(--g),1)) drop-shadow(0 0 calc(var(--px,3px) * 1.6) rgba(var(--g),1)) brightness(1.15)}}
+#stage[data-room=living]>.obj.hov{animation:none;filter:drop-shadow(var(--px,3px) 0 0 rgb(var(--g))) drop-shadow(calc(var(--px,3px) * -1) 0 0 rgb(var(--g))) drop-shadow(0 var(--px,3px) 0 rgb(var(--g))) drop-shadow(0 calc(var(--px,3px) * -1) 0 rgb(var(--g))) drop-shadow(0 0 calc(var(--px,3px) * 3) rgba(var(--g),.8)) brightness(1.12)}
+#stage[data-room=living]>.obj[data-k=door]:not(.ready).hov{animation:none;filter:drop-shadow(var(--px,3px) 0 0 rgb(var(--g))) drop-shadow(calc(var(--px,3px) * -1) 0 0 rgb(var(--g))) drop-shadow(0 var(--px,3px) 0 rgb(var(--g))) drop-shadow(0 calc(var(--px,3px) * -1) 0 rgb(var(--g))) drop-shadow(0 0 calc(var(--px,3px) * 7) rgba(var(--g),1)) drop-shadow(0 0 calc(var(--px,3px) * 16) rgba(var(--g),.85)) brightness(1.3)}
+#stage[data-room=living]>.obj.done{animation:none;filter:grayscale(1) brightness(.65) drop-shadow(0 0 2px rgba(148,163,184,.25));transition:filter .4s}
+#stage[data-room=living] .hs.hit{display:block;transform:none;pointer-events:none}
+.hs.hit .wrap{display:none}
+.hs.hit .tag{position:absolute;left:50%;bottom:100%;margin:0 0 6px;transform:translate(-50%,4px)}
+.hs.hit:focus-visible .tag,.hs.hit.show .tag,.labels-on .hs.hit .tag{opacity:1;transform:translate(-50%,0)}
+.hs.hit:focus-visible{outline:none}
+
+/* ================= HUD ================= */
+.hud{position:absolute;z-index:20}
+
+/* shared panel look: lighter navy fill, bright border in each panel's own colour (--ac), no blue glow */
+:root{--hud-bg:rgba(34,45,90,.95)}
+.hud.box,.hbtn.box,#menu-pop{background:var(--hud-bg);border:2px solid color-mix(in srgb,var(--ac,#94a3b8) 38%,transparent);box-shadow:0 0 6px color-mix(in srgb,var(--ac,#94a3b8) 18%,transparent),inset 0 0 0 1px rgba(255,255,255,.04)}
+#progress{--ac:#fbbf24;--acg:rgba(251,191,36,.45)}
+#integrity-hud{--ac:#4ade80;--acg:rgba(74,222,128,.4)}
+#hud-left #integrity-hud{width:calc(75% - 11px);align-self:flex-start;padding:7px 12px 8px;border-radius:4px}
+#integrity-hud .hrow{margin-bottom:9px}
+#integrity-hud .hlbl,#integrity-hud .hcnt{font-size:10px}
+#integrity-hud .gbar{gap:3px;padding:2px}
+#integrity-hud .gbar>*{height:8px}
+#timer-box{--ac:#22d3ee;--acg:rgba(34,211,238,.45)}
+#timer-box.hud.box{border:3px solid #22d3ee;box-shadow:0 0 14px rgba(34,211,238,.6),inset 0 0 0 1px rgba(255,255,255,.1)}
+
+/* top-left stack: two bars of the same width. PROGRESS fills gold as puzzles are solved, INTEGRITY starts full (green) and drains on strikes */
+#hud-left{top:24px;left:24px;display:flex;flex-direction:column;align-items:stretch;gap:10px;width:clamp(240px,22vw,320px);zoom:var(--ts)}
+#hud-left .hud{position:static}
+#progress,#integrity-hud{padding:10px 14px 12px;border-radius:6px;display:block}
+.hrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.hlbl,.hcnt{font:12px 'Press Start 2P',monospace;white-space:nowrap}
+.hlbl{letter-spacing:.06em}
+#progress .hlbl,#progress .hcnt{color:#fef08a;text-shadow:0 0 10px rgba(253,224,71,.9);font-size:13px}
+#integrity-hud .hlbl,#integrity-hud .hcnt{color:#bbf7d0;text-shadow:0 0 10px rgba(134,239,172,.9)}
+.gbar{display:flex;gap:4px;padding:3px;background:#0f172a;border:2px solid rgba(255,255,255,.55);border-radius:3px}
+.gbar>*{flex:1;height:16px;border-radius:1px;background:rgba(148,163,184,.32);transition:background .3s,box-shadow .3s}
+.gbar>.node.active{box-shadow:inset 0 0 0 2px rgba(253,224,71,.55)}
+.gbar>.node.solved{background:#fbbf24;box-shadow:0 0 10px rgba(251,191,36,.9)}
+.gbar>.seg{background:#4ade80;box-shadow:0 0 10px rgba(74,222,128,.8)}
+.gbar>.seg.warn{background:#fbbf24;box-shadow:0 0 10px rgba(251,191,36,.9)}
+.gbar>.seg.lost{background:rgba(148,163,184,.18);box-shadow:none}
+#progress .bar{display:none} /* kept in the HTML so the script that sets its width doesn't break */
+#ig-chip{display:none!important} /* js/integrity.js floating chip replaced by #integrity-hud */
+#ig-banner{top:auto!important;right:auto!important;bottom:18px!important;left:50%!important;transform:translateX(-50%)!important;max-width:min(92vw,520px)!important;text-align:center!important;pointer-events:none}
+
+#timer-box{top:24px;left:50%;transform:translateX(-50%);padding:10px 32px;border-radius:8px;display:flex;flex-direction:column;align-items:center}
+#timer-label{font-size:11px;color:#67e8f9;letter-spacing:.1em;margin-bottom:4px}
+#timer{font-size:calc(clamp(36px,4.5vw,60px) * var(--ts));letter-spacing:.1em;line-height:1;color:#22d3ee;text-shadow:0 0 8px rgba(34,211,238,.55)}
+
+/* top-right: mute button, then menu at the edge */
+#controls{top:24px;right:24px;display:flex;gap:8px;align-items:flex-start;zoom:var(--ts)}
+.hbtn{font:11px 'Press Start 2P',monospace;color:#cbd5e1;padding:8px 12px;border-radius:4px;cursor:pointer;transition:color .15s,background .15s}
+.hbtn:hover{background:rgba(30,27,75,.8);color:#67e8f9}
+#mute-ic{font-size:20px;line-height:11px;display:inline-block}
+#btn-mute{font-size:16px;line-height:1;padding:6px 10px;min-height:34px}
+#btn-menu:hover{color:#fcd34d}
+#menu-wrap{position:relative}
+#menu-pop{position:absolute;top:calc(100% + 8px);right:0;min-width:230px;padding:6px;border-radius:6px;display:flex;flex-direction:column;gap:2px}
+.mi{font:10px 'Press Start 2P',monospace;color:#cbd5e1;background:none;border:0;text-align:left;padding:10px 12px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%}
+.mi:hover{background:rgba(30,27,75,.8);color:#67e8f9}
+.mi.who{flex-direction:column;align-items:flex-start;gap:6px;cursor:default}
+.mi.who:hover{background:none;color:#cbd5e1}
+.mi.who small{color:#64748b;font-size:8px}
+.mi .car{margin-left:auto}
+.ei{font-size:18px;line-height:12px;display:inline-block;width:24px;text-align:center}
+.ei{font-size:18px;line-height:12px;display:inline-block;width:24px;text-align:center}
+.subs{display:flex;flex-direction:column;gap:2px;padding-left:14px}
+.mi.sub{color:#a5b4fc;padding:8px 12px}
+.mi.danger{color:#fca5a5;border-top:1px solid rgba(99,102,241,.4);margin-top:4px;padding-top:12px}
+.mi.danger:hover{background:rgba(127,29,29,.5);color:#fecaca}
+
+/* bottom-left: HINTS [bulb][bulb][bulb]  (violet panel, yellow pixel bulbs: lit = hint left, dark outline = used) */
+#hint-wrap{bottom:24px;left:24px;zoom:var(--ts)}
+#btn-hint{--ac:#a78bfa;--acg:rgba(167,139,250,.5);background:var(--hud-bg);height:70px;padding:0 16px;border-radius:6px;display:flex;align-items:center;gap:14px;letter-spacing:.05em;border:2px solid rgba(167,139,250,.45);box-shadow:0 0 8px rgba(167,139,250,.2)}
+#btn-hint:hover{border-color:rgba(167,139,250,.85);background:rgba(30,27,75,.95)}
+#btn-hint .hl{font:12px 'Press Start 2P',monospace;color:#ddd6fe}
+#hint-label{display:flex;gap:8px}
+.bulb{width:24px;height:24px;display:block}
+.bulb .o{fill:#92400e}.bulb .f{fill:#fde047}.bulb .h{fill:#fff9c4}.bulb .b{fill:#d6d3d1}
+.bulb.lit{filter:drop-shadow(0 0 5px rgba(253,224,71,.85))}
+.bulb.used .o{fill:#8b7fc9}.bulb.used .f{fill:#1e1b3a}.bulb.used .h{fill:none}.bulb.used .b{fill:#475569}
+
+/* bottom-right: inventory (slate panel, empty slots are plain boxes, a collected item glows gold) */
+#inv{--ac:#94a3b8;bottom:24px;right:24px;padding:10px 16px;border-radius:6px;display:flex;align-items:center;gap:12px;zoom:var(--ts)}
+#inv .lbl{font-size:11px;color:#e2e8f0;letter-spacing:.05em;margin-right:4px}
+.slot{width:48px;height:48px;background:rgba(148,163,184,.16);border:2px solid #94a3b8;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:26px;transition:box-shadow .3s,border-color .3s}
+.slot span{display:none}
+.slot.filled{background:rgba(251,191,36,.16);border-color:#fbbf24;box-shadow:0 0 12px rgba(251,191,36,.85),inset 0 0 8px rgba(251,191,36,.35)}
+[data-tip]{position:relative}
+[data-tip]::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);right:0;white-space:nowrap;opacity:0;pointer-events:none;background:rgba(15,23,42,.95);border:1px solid #67e8f9;color:#a5f3fc;font:10px 'Press Start 2P',monospace;padding:5px 8px;border-radius:4px;transition:opacity .15s}
+[data-tip].tip-top::after{top:auto;bottom:calc(100% + 8px);right:auto;left:0}
+[data-tip]:hover::after,[data-tip]:focus-visible::after{opacity:1}
+
+/* toast + dialogs (toast sits above the integrity notice so they never overlap) */
+#toast{position:absolute;bottom:84px;left:50%;transform:translateX(-50%);z-index:30;padding:12px 20px;border-radius:6px;font:calc(12px * var(--ts)) 'Press Start 2P',monospace;line-height:1.6;color:#a5f3fc;text-align:center;max-width:70%;pointer-events:none}
+#toast.warn{color:#fca5a5;border-color:#ef4444}
+#modal{position:absolute;inset:0;z-index:40;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center}
+.dialog{width:90%;max-width:448px;max-height:92%;overflow-y:auto;padding:24px;border-radius:8px;zoom:var(--ts)}
+.dialog.wide{max-width:680px}
+.dialog{position:relative}
+.dialog.center{max-width:460px;padding:32px 28px 26px;text-align:center}
+.dialog.center h2{font-size:16px;margin:6px 0 14px}
+.dialog.center .dbody{font-size:24px;line-height:1.25;color:#cbd5e1}
+.dialog.center #da{justify-content:stretch;gap:14px;margin-top:22px}
+.dialog.center #da .btn{flex:1}
+.dialog.center .btn.sec{background:transparent;box-shadow:none;border:2px solid #94a3b8;color:#e2e8f0}
+.dialog.center .btn.sec:hover{background:rgba(148,163,184,.14)}
+.dlg-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border:0;border-radius:50%;background:rgba(148,163,184,.16);color:#cbd5e1;font:13px 'Press Start 2P',monospace;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.dlg-x:hover{background:rgba(148,163,184,.32);color:#fff}
+/* ---- settings pop-ups: same look as the dashboard's System Settings (dark teal panel, cyan frame, toggle switches, slightly rounded) ---- */
+#modal:has(.dialog.set){backdrop-filter:blur(4px)}
+.dialog.set{max-width:560px;padding:22px 24px 20px;background:#071b29;border:2px solid #38e1ff;border-radius:8px;box-shadow:0 0 22px rgba(56,225,255,.28),inset 0 0 0 1px rgba(56,225,255,.08)}
+.dialog.set h2{margin:0 0 6px;padding-bottom:16px;border-bottom:1px solid rgba(56,225,255,.22);color:#f1f5f9;font-size:14px;letter-spacing:.06em}
+.dialog.set .st-desc{display:none}
+.dialog.set .st-row{display:grid;grid-template-columns:1fr auto;grid-template-areas:"nm ctl" "sd ctl";column-gap:20px;row-gap:4px;align-items:center;padding:14px 0;border:0;border-bottom:1px solid rgba(56,225,255,.16)}
+.dialog.set .st-row::before{display:none}
+.dialog.set .st-row .nm{grid-area:nm;padding:0;font:700 16px 'Space Mono',monospace;color:#f1f5f9}
+.dialog.set .st-row .sd{grid-area:sd;font:8px/1.5 'Press Start 2P',monospace;color:#94a3b8}
+.dialog.set .st-ctl{grid-area:ctl;padding-left:0;justify-content:flex-end}
+.dialog.set .st-ctl b{min-width:52px;text-align:right;font:12px 'Press Start 2P',monospace;color:#7ae8ff}
+.dialog.set .dbody input[type=range]{-webkit-appearance:none;appearance:none;flex:none;width:190px;height:8px;border-radius:4px;background:linear-gradient(to right,#7ae8ff var(--v,100%),rgba(122,232,255,.18) var(--v,100%));cursor:pointer}
+.dialog.set .dbody input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border:0;border-radius:50%;background:#7ae8ff;box-shadow:0 0 8px rgba(122,232,255,.7)}
+.dialog.set .dbody input[type=range]::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:#7ae8ff}
+.dialog.set .tgl{position:relative;display:block;width:68px;height:32px;margin:0;cursor:pointer}
+.dialog.set .tgl input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.dialog.set .tgl-track{position:absolute;inset:0;border:1px solid #475569;border-radius:6px;background:#06141f;transition:border-color .2s}
+.dialog.set .tgl-knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:4px;background:#475569;transition:transform .2s,background .2s,box-shadow .2s}
+.dialog.set .tgl input:checked + .tgl-track{border-color:#7ae8ff}
+.dialog.set .tgl input:checked + .tgl-track .tgl-knob{transform:translateX(36px);background:#7ae8ff;box-shadow:0 0 8px rgba(122,232,255,.7)}
+.dialog.set .tgl input:focus-visible + .tgl-track{outline:3px solid #22d3ee;outline-offset:2px}
+.dialog.set .st-sel{min-width:150px;padding:8px 12px;font:700 14px 'Space Mono',monospace;background:#06141f;color:#f1f5f9;border:1px solid #7ae8ff;border-radius:6px}
+.dialog.set .btn{padding:12px 16px;font:10px 'Press Start 2P',monospace;letter-spacing:.04em;border:1px solid #7ae8ff;border-radius:6px;background:#7ae8ff;color:#061d29;box-shadow:none}
+.dialog.set .btn:hover{filter:brightness(1.08)}
+.dialog.set .btn.sec{background:transparent;color:#e2f7ff}
+.dialog.set .btn.sec:hover{background:rgba(122,232,255,.12)}
+.dialog.set .st-ctl .btn{padding:10px 14px;min-width:84px}
+.dialog.set #da{margin-top:20px;gap:10px}
+.dialog h2{font:14px/1.6 'Press Start 2P',monospace;color:#fcd34d;margin:0 0 16px}
+.dbody{font:24px/1.25 'VT323',monospace;color:#e2e8f0}
+.dbody p{margin:0 0 10px}
+.dbody label{display:flex;align-items:center;gap:12px;margin-bottom:12px;cursor:pointer}
+.dbody input[type=checkbox]{width:20px;height:20px;accent-color:#a855f7}
+.dbody input[type=range]{flex:1;accent-color:#a855f7;cursor:pointer}
+.dbody .rowv{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.dbody .rowv .nm{min-width:96px}
+.dbody .rowv b{min-width:48px;text-align:right;color:#fcd34d}
+.dbody .btn{padding:8px 12px;font-size:11px}
+#da{display:flex;justify-content:flex-end;gap:12px;margin-top:20px}
+.code{margin:0 0 8px;padding:10px 14px;background:#020617;border:1px solid #334155;border-radius:4px;font:22px/1.2 'VT323',monospace;color:#a5f3fc;white-space:pre;overflow-x:auto;user-select:text}
+.err{color:#fca5a5}
+.st-desc{font:20px/1.2 'VT323',monospace;color:#94a3b8;margin:0 0 12px}
+.st-row{position:relative;display:grid;grid-template-columns:1fr 270px;align-items:center;padding:12px 0;border-top:1px solid rgba(148,163,184,.3)}
+.st-row::before{content:'';position:absolute;top:-1px;bottom:0;right:270px;width:1px;background:rgba(148,163,184,.3)}
+.st-row .nm{font:24px 'VT323',monospace;color:#e2e8f0;padding-right:12px}
+.st-ctl{display:flex;align-items:center;gap:10px;padding-left:16px}
+.dbody .st-ctl input[type=range]{flex:none;width:180px}
+.dbody .st-ctl input[type=checkbox]{width:24px;height:24px;margin:0}
+.st-sel{font:22px 'VT323',monospace;background:#0f172a;color:#e2e8f0;border:2px solid #64748b;border-radius:4px;padding:4px 10px;min-width:150px;cursor:pointer}
+.st-sel option{background:#0f172a;color:#e2e8f0}
+.st-sel:focus-visible{outline:3px solid #22d3ee;outline-offset:2px}
+.opt{display:block;width:100%;text-align:left;margin-top:6px;padding:6px 10px;background:#1e1b4b;border:2px solid #6366f1;border-radius:4px;color:#e2e8f0;font:22px 'VT323',monospace;cursor:pointer}
+.opt:hover:not(:disabled){border-color:#22d3ee}
+.opt.bad{border-color:#ef4444;color:#fca5a5;opacity:.7}
+.opt.good{border-color:#4ade80;color:#bbf7d0}
+.fb{margin:10px 0 0;min-height:1.2em}
+.fb.ok{color:#86efac}.fb.no{color:#fca5a5}
+.orange{--ping:rgba(249,115,22,.55);--core:rgba(234,88,12,.95);--bd:#fed7aa;--tag:#fdba74;--tagb:rgba(251,146,60,.9)}
+.violet{--ping:rgba(167,139,250,.4);--core:rgba(139,92,246,.9);--bd:#ddd6fe;--tag:#c4b5fd;--tagb:rgba(167,139,250,.8)}
+.exp{color:#fcd34d}
+.editor{display:block;width:100%;background:#020617;border:2px solid #334155;border-radius:4px;padding:10px 14px;font:22px/1.2 'VT323',monospace;color:#a5f3fc;resize:none;user-select:text;tab-size:4;white-space:pre;overflow:auto}
+.editor:focus{border-color:#22d3ee;outline:none}
+.con{margin-top:8px;min-height:64px;padding:8px 14px;background:#0b1120;border:1px dashed #475569;border-radius:4px;font:22px/1.2 'VT323',monospace;white-space:pre-wrap;color:#e2e8f0;user-select:text}
+.con .ok{color:#86efac}
+.btn:disabled{opacity:.5;cursor:wait}
+
+
+/* ===== Puzzle pop-up (submission form): same look as the game's other boxes (indigo frame, Press Start 2P headings, VT323 text, purple buttons) ===== */
+#modal2{position:absolute;inset:0;z-index:45;background:rgba(4,6,16,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px}
+/* the room behind the puzzle stays visible but soft; the form sits below the timer (JS sets --pz-top) and the timer stays crisp above the blur */
+#modal.pz{--pz-gap:40px;background:rgba(4,6,16,.32);backdrop-filter:blur(3px);padding:var(--pz-top,150px) var(--pz-gap) var(--pz-gap)}
+#room.pz-open #timer-box{z-index:41}
+.sf{font-family:'VT323',monospace;color:#e2e8f0;user-select:text;position:relative;width:100%;transform-origin:center center;padding:22px 28px;background:rgba(10,15,30,.97);border:3px solid #6366f1;border-radius:10px;box-shadow:0 0 14px rgba(99,102,241,.45),inset 0 0 12px rgba(99,102,241,.18)}
+.sf.main{max-width:1280px}.sf.small{max-width:520px}
+.sf.pink{border-color:#f87171;box-shadow:0 0 14px rgba(248,113,113,.4),inset 0 0 12px rgba(248,113,113,.14)}
+.sf.violet{border-color:#a855f7;box-shadow:0 0 14px rgba(168,85,247,.4),inset 0 0 12px rgba(168,85,247,.16)}
+.sf .tbl,.sf .tbr{display:none}
+/* the puzzle form */
+.sf .pz-head{text-align:center;padding:0 48px}
+.sf .pz-no{font:10px 'Press Start 2P',monospace;letter-spacing:.14em;color:#a5b4fc;margin-bottom:10px}
+.sf .pz-title{font:18px/1.5 'Press Start 2P',monospace;color:#fcd34d;margin:0}
+.sf .rule{border:0;border-top:2px solid rgba(148,163,184,.28);margin:16px 0}
+.sf .pz-q{text-align:justify;text-align-last:left;font-size:26px;line-height:1.25;color:#e2e8f0;user-select:none}
+.sf .pz-out{display:flex;align-items:flex-start;gap:16px;margin-top:14px}
+.sf .pz-outl{flex:none;font-size:26px;line-height:36px;color:#cbd5e1;user-select:none}
+.sf .pz-outv{flex:1;min-width:0;margin:0;padding:5px 14px;font:16px/24px 'JetBrains Mono',Consolas,Menlo,'Courier New',monospace;font-variant-ligatures:none;color:#fcd34d;background:#161b22;border:1px solid #30363d;border-radius:6px;white-space:pre-wrap;word-break:break-word;user-select:none}
+.sf .edwrap{display:flex;background:#0d1117;border:1px solid #30363d;border-radius:8px;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.sf .edwrap:focus-within{border-color:#58a6ff;box-shadow:0 0 0 1px rgba(88,166,255,.35)}
+.sf #gut,.sf #hlpre,.sf textarea{font-family:'JetBrains Mono',Consolas,Menlo,'Courier New',monospace;font-size:17px;line-height:26px;font-variant-ligatures:none;tab-size:4;letter-spacing:0}
+.sf #gut{flex:none;min-width:54px;padding:14px 12px 14px 16px;color:#6e7681;text-align:right;white-space:pre;overflow:hidden;user-select:none;border-right:1px solid rgba(255,255,255,.09)}
+.sf .edbox{position:relative;flex:1;min-width:0}
+.sf #hlpre{position:absolute;inset:0;margin:0;padding:14px 18px;overflow:hidden;white-space:pre;color:#e6edf3;pointer-events:none;user-select:none}
+.sf #hlpre code{font:inherit}
+.sf #hlpre .kw{color:#c792ea}.sf #hlpre .fn{color:#82aaff}.sf #hlpre .st{color:#c3e88d}.sf #hlpre .nm{color:#f78c6c}.sf #hlpre .cm{color:#7f848e;font-style:italic}
+.sf textarea{position:relative;display:block;width:100%;min-height:156px;max-height:min(42vh,360px);background:transparent;border:0;color:transparent;caret-color:#fff;padding:14px 18px;resize:none;white-space:pre;overflow:auto;border-radius:0;scrollbar-width:thin;scrollbar-color:#484f58 transparent}
+.sf textarea::selection{background:rgba(88,166,255,.35)}
+.sf textarea:focus{outline:none}
+.sf .tip{margin-top:12px;font-size:22px;line-height:1.2;color:#cbd5e1}.sf .tip b{color:#fcd34d;font-weight:400}
+.sf .xbtn.close{position:absolute;top:14px;right:16px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:#1e293b;border:2px solid #64748b;border-radius:4px;color:#e2e8f0;font:18px 'Press Start 2P',monospace;cursor:pointer;padding:0}
+.sf .xbtn.close:hover{border-color:#f87171;color:#fca5a5}
+/* buttons + small pop-ups (hint, test result, confirm) share the same look */
+.sf .foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+.sf .btns{display:flex;gap:12px;flex-wrap:wrap}
+.sf .sb{font:12px 'Press Start 2P',monospace;padding:12px 16px;border-radius:4px;cursor:pointer;transition:all .1s}
+.sf .sb.go{border:2px solid #a855f7;box-shadow:0 4px 0 #6b21a8;background:#6b21a8;color:#fde047}
+.sf .sb.ghost{border:2px solid #64748b;box-shadow:0 4px 0 #334155;background:#1e293b;color:#e2e8f0}
+.sf .sb:hover:not(:disabled){filter:brightness(1.12)}
+.sf .sb:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.6)}
+.sf .sb.none{opacity:.55}
+.sf .sb:disabled{opacity:.5;cursor:wait}
+.sf button:focus-visible,.sf textarea:focus-visible{outline:3px solid #22d3ee;outline-offset:2px}
+.sf .head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.sf .title{display:flex;align-items:center;gap:10px;font:14px/1.5 'Press Start 2P',monospace;color:#fcd34d}
+.sf .sq{width:12px;height:12px;flex:none}.sf .sq.cyan{background:#22d3ee}.sf .sq.pink{background:#f87171}.sf .sq.violet{background:#a855f7}
+.sf .badge{font:10px 'Press Start 2P',monospace;border:2px solid;border-radius:4px;padding:6px 8px;white-space:nowrap}
+.sf .badge.pink{color:#fca5a5;border-color:#f87171;background:rgba(248,113,113,.1)}
+.sf .badge.violet{color:#d8b4fe;border-color:#a855f7;background:rgba(168,85,247,.12)}
+.sf .badge.cyan{color:#67e8f9;border-color:#22d3ee;background:rgba(34,211,238,.1)}
+.sf.small .eyebrow{display:none}
+.sf .mission{background:rgba(2,6,23,.6);border:2px solid #334155;border-left:4px solid #22d3ee;border-radius:4px;padding:12px 16px;font-size:24px;line-height:1.25}
+.sf .mission b{color:#fcd34d;font-weight:400}
+.sf .cc{background:#020617;border:2px solid #334155;border-left:4px solid #f87171;border-radius:4px;padding:12px 16px}
+.sf .msg{font-size:24px;line-height:1.25;white-space:pre-wrap}
+/* ----- small pop-ups: title, a line under it, plain text (no box), buttons on the right ----- */
+.sf.small .title{font-size:16px}
+.sf.small .head{margin-bottom:0}
+.sf.small .rule{margin:12px 0 16px}
+.sf.small .foot{margin-top:20px}
+.sf.pink .title{color:#fca5a5}
+.sf .sfmsg{font-size:26px;line-height:1.3;color:#cbd5e1}
+.sf .sfmsg b{color:#fcd34d;font-weight:400}
+.sf .sfmsg p{margin:0 0 10px}.sf .sfmsg p:last-child{margin-bottom:0}
+.sf .fnote{font:10px 'Press Start 2P',monospace;color:#a5b4fc;letter-spacing:.04em}
+/* hint: key words get a soft pale colour and a faint underline, not a coloured highlight */
+.sf .hk{color:#fde68a;text-decoration:underline;text-decoration-color:rgba(253,230,138,.35);text-decoration-thickness:1px;text-underline-offset:4px}
+.sf .hk.c{font-family:'JetBrains Mono',Consolas,Menlo,'Courier New',monospace;font-size:.72em;letter-spacing:0}
+/* a hint that is code (the answer itself) uses the same look as the code editor */
+.sf .hcode{margin:8px 0;padding:12px 16px;background:#0d1117;border:1px solid #30363d;border-radius:8px;font:16px/24px 'JetBrains Mono',Consolas,Menlo,'Courier New',monospace;font-variant-ligatures:none;color:#e6edf3;white-space:pre;overflow-x:auto;user-select:text}
+.sf .hcode code{font:inherit}
+.sf .hcode .kw{color:#c792ea}.sf .hcode .fn{color:#82aaff}.sf .hcode .st{color:#c3e88d}.sf .hcode .nm{color:#f78c6c}.sf .hcode .cm{color:#7f848e;font-style:italic}
+/* test error: standard Python console look. Text wraps inside the box, so nothing is cut off sideways */
+.sf .errbox{margin:0;padding:12px 16px;background:#0d1117;border:1px solid #30363d;border-left:4px solid #f85149;border-radius:6px;font:16px/24px 'JetBrains Mono',Consolas,Menlo,'Courier New',monospace;font-variant-ligatures:none;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;overflow-x:hidden;overflow-y:auto;max-height:min(40vh,280px);color:#c9d1d9;user-select:text}
+.sf .errbox .er-line{color:#79c0ff;margin-bottom:4px}
+.sf .errbox .er-msg{color:#ff7b72}
+.sf .errbox .er-msg b{font-weight:700}
+.sf .errbox .er-det{color:#c9d1d9;padding-left:2ch}
+@media(max-width:639px){.sf{padding:16px}.sf .pz-title{font-size:13px}.sf .pz-head{padding:0 40px}}
+
+@media(max-width:639px){
+#hud-left{top:16px;left:16px}
+#progress,#integrity-hud{padding:8px 12px}
+#timer-box{top:16px;padding:8px 24px}
+#controls{top:16px;right:16px}
+#hint-wrap{bottom:16px;left:16px}
+#inv{bottom:16px;right:16px}
+#inv .lbl{display:none}
+}
+@media(prefers-reduced-motion:reduce){.ping,.node.active,.dot{animation:none}}
+</style>
+</head>
+<body>
+<main id="room">
+<canvas id="starfield-canvas" aria-hidden="true"></canvas>
+<canvas id="pixel-stars" aria-hidden="true"></canvas>
+<div id="stage">
+<img class="kitchen" alt="Cozy starlit room with a window, refrigerator, kettle on the dining table and exit door" src="media/room_door_closed_no_girl.png"/>
+<!-- the room art (background + one transparent PNG per clickable object) is added here by applyRoomArt() in the script, one room per level -->
+
+<div id="hotspots">
+<button class="hs orange" data-hs="window" aria-label="Window puzzle" style="top:23%;left:49%"><div class="wrap"><span class="ping"></span><span class="core">✦</span></div><div id="tag-window" class="tag"></div></button>
+<button class="hs amber" data-hs="fridge" aria-label="Refrigerator puzzle" style="top:43%;left:43.5%"><div class="wrap"><span class="ping"></span><span class="core">🔒</span></div><div id="tag-fridge" class="tag"></div></button>
+<button class="hs emerald" data-hs="kettle" aria-label="Kettle puzzle" style="top:65%;left:46.5%"><div class="wrap"><span class="ping"></span><span class="core">☕</span></div><div id="tag-kettle" class="tag"></div></button>
+<button class="hs violet" data-hs="clock" aria-label="Wall clock puzzle" style="top:26%;left:39.5%"><div class="wrap"><span class="ping"></span><span class="core">🕰️</span></div><div id="tag-clock" class="tag"></div></button>
+<button class="hs rose" data-hs="door" aria-label="Exit door" style="top:47%;left:80%"><div class="wrap"><span class="ping"></span><span class="core">🔑</span></div><div id="tag-door" class="tag"></div></button>
+</div>
+</div>
+
+<!-- TOP LEFT: progress  (0/4) [ ][ ][ ][ ]   and, below it, integrity  (icon) [shield][shield][shield] -->
+<div id="hud-left" class="hud">
+<header id="progress" class="hud box" title="Room progress">
+<div class="hrow"><span class="hlbl">PROGRESS</span><span id="prog-text" class="hcnt">0 / 4</span></div>
+<div id="nodes" class="gbar"><span class="node" title="Window"></span><span class="node" title="Kettle"></span><span class="node" title="Refrigerator"></span><span class="node" title="Wall Clock"></span></div>
+<div class="bar"><div id="prog-bar"></div></div>
+</header>
+<div id="integrity-hud" class="hud box" role="status" title="Integrity: 3 of 3 left"></div>
+</div>
+
+<div id="timer-box" class="hud box" role="timer">
+<div id="timer-label" class="pix">TIME ELAPSED</div>
+<span id="timer" class="dig">00:00</span>
+</div>
+
+<!-- TOP RIGHT: quick mute, then MENU at the far edge -->
+<aside id="controls" class="hud">
+<button id="audio-toggle-btn" class="hbtn box" type="button" aria-label="Mute music" title="Mute / unmute music"><span id="mute-ic" aria-hidden="true">🔊</span></button>
+<div id="menu-wrap">
+<button id="btn-menu" class="hbtn box" aria-haspopup="true" aria-expanded="false">MENU ▾</button>
+<div id="menu-pop" class="box hidden" role="menu">
+<div class="mi who"><span><b id="menu-user">PLAYER</b></span><small>Participant</small></div>
+<button class="mi" id="mi-rules" role="menuitem">Rules</button>
+<button class="mi" id="mi-settings" role="menuitem">Settings</button>
+<button class="mi danger" id="mi-leave" role="menuitem">Leave Room</button>
+</div>
+</div>
+</aside>
+
+<!-- BOTTOM LEFT: HINTS [bulb][bulb][bulb] -->
+<div id="hint-wrap" class="hud">
+<button id="btn-hint" class="btn tip-top" data-tip="Ask for a hint"><span class="hl">HINTS</span><span id="hint-label"></span></button>
+</div>
+
+<footer id="inv" class="hud box">
+<span class="lbl pix">INVENTORY:</span>
+<div class="slot"><span class="pix">+</span></div><div class="slot"><span class="pix">+</span></div><div class="slot"><span class="pix">+</span></div><div class="slot"><span class="pix">+</span></div>
+</footer>
+
+<div id="toast" class="box hidden" role="status" aria-live="polite"></div>
+<div id="modal" class="hidden"></div>
+<div id="modal2" class="hidden"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/progress.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/starfield.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/ambient-music.js"></script>
+<script src="js/shared-settings.js"></script>
+<script src="js/pyrunner.js"></script>
+<script src="js/puzzles.js"></script>
+<script src="js/adaptive.js"></script>
+<script src="js/integrity.js"></script>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+sessionStorage.removeItem('lastSessionId');
+
+/* ---------- Settings helpers (audio, text size, labels, controls). Saved in localStorage so every room shares them ---------- */
+const LS_KEY = 'remediate.settings.v1', TS_KEY = 'remediate.textScale', LB_KEY = 'remediate.labels';
+const readLS = () => { try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch (e) { return {}; } };
+const cur = () => Object.assign({ master:100, bgm:80, timer:true, hints:true, keys:{ hint:'KeyH', inventory:'KeyI' } }, RemediateSettings.get(), readLS());
+function applyTimerVis(){ $('timer-box').classList.remove('hidden'); }
+function setS(patch){
+  try { localStorage.setItem(LS_KEY, JSON.stringify(Object.assign({}, readLS(), patch))); } catch (e) {}
+  if (typeof RemediateSettings.set === 'function') { try { RemediateSettings.set(patch); } catch (e) {} }
+  document.dispatchEvent(new Event('remediate:settings'));
+  applyTimerVis(); renderHints();
+}
+let textScale = parseFloat(localStorage.getItem(TS_KEY)) || 1;
+function applyScale(){ textScale = Math.min(1.4, Math.max(.8, Math.round(textScale * 10) / 10)); document.documentElement.style.setProperty('--ts', textScale); try { localStorage.setItem(TS_KEY, textScale); } catch (e) {} }
+let labelsOn = localStorage.getItem(LB_KEY) === 'true';
+function applyLabels(){ document.body.classList.toggle('labels-on', labelsOn); try { localStorage.setItem(LB_KEY, labelsOn); } catch (e) {} }
+applyScale(); applyLabels();
+
+/* quick mute button (top right) */
+const muteIcon = () => { $('mute-ic').textContent = RemediateAmbient.getMuted() ? '🔇' : '🔊'; $('audio-toggle-btn').setAttribute('aria-label', RemediateAmbient.getMuted() ? 'Unmute music' : 'Mute music'); };
+$('audio-toggle-btn').onclick = e => { e.stopPropagation(); RemediateAmbient.setMuted(!RemediateAmbient.getMuted()); if (!RemediateAmbient.getMuted()) RemediateAmbient.ensureStarted(); muteIcon(); };
+muteIcon();
+
+/* key re-binding: must run before every other key handler */
+let rebind = null;
+document.addEventListener('keydown', e => {
+  if (!rebind) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  if (e.code !== 'Escape') setS({ keys: Object.assign({}, cur().keys, { [rebind.k]: e.code }) });
+  const r = rebind; rebind = null; r.done();
+}, true);
+
+/* ---------- Timer (counts up from 00:00; keeps running while menus and dialogs are open) ---------- */
+const fmt = s => String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+let startTs = Date.now();
+let elapsed = 0;
+function tick(){ if (over) return; elapsed = Math.floor((Date.now() - startTs) / 1000); $('timer').textContent = fmt(elapsed); const t = $('sf-time'); if (t) t.textContent = fmt(elapsed); }
+setInterval(tick, 1000);
+
+/* ---------- State: items collected = puzzles solved ---------- */
+const PUZ = ['window', 'kettle', 'fridge', 'clock'];
+const got = []; // puzzle ids solved, in order (one inventory item each)
+const drafts = {}; // the player's unsaved edits per puzzle
+const hintTier = {}; let lastOpen = null;
+/* time spent inside each puzzle window (pauses while the window is closed) */
+const spent = {}, nTry = {}; let openId = null, openTs = 0;
+function pauseP(){ if (openId) { spent[openId] = (spent[openId] || 0) + Date.now() - openTs; openId = null; } }
+const spentMs = k => (spent[k] || 0) + (openId === k ? Date.now() - openTs : 0);
+let hints = 3, over = null, toastT, escFn = null;
+const count = () => got.length;
+
+/* ---------- Saving: the session row is made at start, each attempt is saved as it happens ---------- */
+const attempts = [];    // attempts not saved yet (kept and retried if a save fails)
+const integrityQueue = []; let integrityFails = 0; // anti-cheat events not saved yet (see js/integrity.js)
+const allAttempts = []; // every attempt of this game, used by the level rules at the end
+let sessionId = null, sessionMaking = null, saveWarned = false, saveChain = Promise.resolve();
+function timeCols(){
+elapsed = Math.floor((Date.now() - startTs) / 1000);
+return { elapsed_sec: elapsed };
+}
+function ensureSession(){
+if (sessionId) return Promise.resolve(sessionId);
+if (!sessionMaking) sessionMaking = (async () => {
+try {
+const { data, error } = await db.from('game_sessions').insert({ result:'in_progress', solved_count:0, hints_used:0, elapsed_sec:0, level: roomLevel, puzzle_ids: roomPuzzleIds }).select('id').single();
+if (error) throw error;
+sessionId = data.id; sessionStorage.setItem('lastSessionId', sessionId);
+} catch (e) { console.error(e); }
+sessionMaking = null; return sessionId;
+})();
+return sessionMaking;
+}
+async function saveAll(result){
+let ok = true;
+try {
+const sid = await ensureSession();
+if (!sid) throw new Error('no session');
+if (attempts.length) {
+const batch = attempts.splice(0);
+const r = await db.from('submissions').insert(batch.map(a => ({ ...a, session_id: sid })));
+if (r.error) { attempts.unshift(...batch); throw r.error; }
+}
+// anti-cheat log: saved on the side. If sql/migration-03.sql was not run yet this must never break saving the game
+if (integrityQueue.length && integrityFails < 3) {
+const ev = integrityQueue.splice(0);
+const r = await db.from('integrity_events').insert(ev.map(e => ({ ...e, session_id: sid })));
+if (r.error) { integrityFails++; console.warn('integrity_events not saved:', r.error.message); if (integrityFails < 3) integrityQueue.unshift(...ev); }
+}
+const u = await db.from('game_sessions').update({ ...(result ? { result, next_level: roomAdaptive ? nextLevel({ level: roomLevel, result, solved_count: count(), hints_used: 3 - hints, elapsed_sec: timeCols().elapsed_sec }, allAttempts) : roomLevel } : {}), solved_count: count(), hints_used: 3 - hints, ...timeCols() }).eq('id', sid);
+if (u.error) throw u.error;
+} catch (e) {
+ok = false; console.error(e);
+if (!saveWarned) { saveWarned = true; toast('Could not save your progress. Check connection.', true); }
+}
+return ok;
+}
+// saves run one after another, so the final result is never overwritten by an older save
+function queueSave(result){ return (saveChain = saveChain.then(() => saveAll(result))); }
+
+/* ---------- Anti-cheat (js/integrity.js): no copy/paste, no leaving the window, 3 strikes closes the room ---------- */
+const guard = createIntegrityGuard({
+  getPuzzleId: () => (typeof openId === 'string' && P[openId] ? P[openId].pid : null),
+  onEvent: ev => { integrityQueue.push(ev); queueSave(); renderShields(); },
+  onLimit: () => {
+    if (over) return;
+    over = 'left'; guard.stop(); closeDlg();
+    const saved = queueSave('left');
+    dlg({ icon:'🚫', title:'Room closed', body:'You reached 3 integrity strikes (copy/paste or leaving the game window). This room has ended and the game is marked as flagged for the researchers.',
+      actions:[{ l:'Open Dashboard', f: async () => { await saved; location.href = 'dashboard.html'; } }] });
+    escFn = null;
+  }
+});
+// top-left integrity bar: starts full (green); every strike drains one segment, the last one left turns amber
+function renderShields(){
+  const n = INTEGRITY.maxStrikes, s = Math.min(n, guard.strikes), left = n - s;
+  $('integrity-hud').innerHTML = `<div class="hrow"><span class="hlbl">INTEGRITY</span><span class="hcnt">${left} / ${n}</span></div><div class="gbar">` +
+    Array.from({ length:n }, (_, i) => `<span class="seg${i >= left ? ' lost' : (left === 1 ? ' warn' : '')}"></span>`).join('') + '</div>';
+  $('integrity-hud').title = `Integrity: ${left} of ${n} left. Copy/paste and leaving this window cost one.`;
+}
+renderShields();
+
+/* ---------- Real Python (Pyodide) in a Web Worker: see js/pyrunner.js ---------- */
+const py = createPyRunner({ onChange: () => refreshRun() });
+const runPy = code => py.run(code);
+function refreshRun(){
+const b = $('sf-run'); if (!b) return;
+b.disabled = !py.ready && !py.failed;
+b.textContent = py.failed ? 'PYTHON FAILED' : py.ready ? 'TEST' : 'LOADING PYTHON...';
+}
+const cleanErr = m => {
+const L = m.split('\n'), i = L.findIndex(l => l.includes('<exec>'));
+return (i < 0 ? m.trim() : 'Traceback (most recent call last):\n' + L.slice(i).join('\n').trim()).replace(/<exec>/g, 'main.py');
+};
+
+/* ---------- The 4 spots in the room. Each spot gets one puzzle from the bank (js/puzzles.json) ---------- */
+const SPOTS = {
+window: { icon:'✦', name:'Window', reward:['🌠','Star Map'] },
+fridge: { icon:'🔒', name:'Refrigerator', reward:['🗝️','Silver Key'] },
+kettle: { icon:'☕', name:'Kettle', reward:['📜','Cipher Note'] },
+clock: { icon:'🕰️', name:'Wall Clock', reward:['⚙️','Clock Gear'] }
+};
+const P = {}, META = {};   // filled by buildRoom(): spot -> puzzle
+let roomReady = false, roomLevel = 'BEGINNER', roomAdaptive = true, roomPuzzleIds = [];
+// Each object is tied to one category (SPOT_CATEGORY, from js/puzzles.js). Puzzles are written with {obj} and
+// themePuzzle() fills in the object of the room being played. buildRoom() assigns puzzles to spots by category match.
+function buildRoom(picked){
+const used = new Set(), assigned = {};
+// pass 1: exact category match
+PUZ.forEach(k => {
+const want = SPOT_CATEGORY[k];
+const match = picked.find(p => p.category === want && !used.has(p.id));
+if (match) { assigned[k] = match; used.add(match.id); }
+});
+// pass 2: fill unmatched spots with leftovers (keeps game working when bank is small)
+const leftovers = picked.filter(p => !used.has(p.id));
+let li = 0;
+PUZ.forEach(k => { if (!assigned[k]) assigned[k] = leftovers[li++]; });
+PUZ.forEach(k => {
+const p = assigned[k];
+const t = themePuzzle(p, SPOTS[k].name);   // {obj} / {objfile} -> the object of THIS room, so any puzzle fits any room
+P[k] = { ...SPOTS[k], ...t, pid: p.id };
+META[k] = { file:t.file, status:t.status, badge:t.badge, bug:t.bug };
+});
+roomPuzzleIds = PUZ.map(k => assigned[k].id);
+}
+// Level + puzzles for this game: the level carries over from the last finished game (js/adaptive.js rules),
+// categories the player keeps missing come back. Control group (profiles.adaptive = false): fixed start level, no targeting.
+/* ---------- Room art per level ----------
+   ROOMS[level] = the room drawn for that level: BEGINNER = bedroom, INTERMEDIATE = kitchen, ADVANCED = living room.
+   Each room is a 480x270 background plus one transparent PNG per clickable object, stacked in the same frame.
+   spots: puzzle spot -> the object that stands in for it (puzzle ids, categories and saved data are untouched).
+   stack: bottom to top, the same order the PNGs are drawn.  box: [x0,y0,x1,y1] in the 480x270 art (fallback hit area). */
+const ROOM_STARS = false;      // true = keep the twinkling starfield behind the rooms
+/* ---------- quiet pixel starfield behind the room (own canvas; sits under the room art, HUD and pop-ups) ---------- */
+(function pixelStars(){
+  const cv = $('pixel-stars'), room = $('room'); if (!cv || !room) return;
+  const g = cv.getContext('2d'), U = 2;                      // one star pixel = 2 screen pixels
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let seed = 7; const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const stars = [];
+  while (stars.length < 110) {
+    const x = rnd(), y = rnd(), dx = (x - .5) / .32, dy = (y - .52) / .42;
+    if (dx * dx + dy * dy < 1 && rnd() < .85) continue;     // keep the middle (where the room is) mostly empty
+    const big = stars.length % 12 === 0;                     // about 1 in 12 is a small four-point sparkle
+    stars.push({ x, y, big, a: big ? .6 : .18 + rnd() * .27, ph: rnd() * 6.28, sp: .35 + rnd() * .4, tw: big || rnd() < .15 });
+  }
+  let W = 0, H = 0;
+  function draw(t){
+    g.clearRect(0, 0, W, H);
+    for (const s of stars) {
+      const a = s.a * (!still && s.tw ? .55 + .45 * Math.sin(t / 1000 * s.sp + s.ph) : 1);
+      const x = Math.round(s.x * (W - 3)) + 1, y = Math.round(s.y * (H - 3)) + 1;
+      g.fillStyle = `rgba(190,205,240,${a})`; g.fillRect(x, y, 1, 1);
+      if (s.big) { g.fillStyle = `rgba(190,205,240,${a * .6})`; g.fillRect(x - 1, y, 1, 1); g.fillRect(x + 1, y, 1, 1); g.fillRect(x, y - 1, 1, 1); g.fillRect(x, y + 1, 1, 1); }
+    }
+  }
+  function size(){ W = Math.ceil(room.clientWidth / U); H = Math.ceil(room.clientHeight / U); cv.width = W; cv.height = H; cv.style.width = W * U + 'px'; cv.style.height = H * U + 'px'; draw(performance.now()); }
+  new ResizeObserver(size).observe(room); size();
+  if (!still) setInterval(() => { if (!document.hidden) draw(performance.now()); }, 180);   // slow, gentle twinkle only
+})();
+const ROOMS = {
+  BEGINNER: {
+    view: 'translateY(18%) scale(1.2)', dir: 'media/bedroom/', alt: 'Bedroom with a bed, desk and computer, wardrobe, air conditioner and a door',
+    spots: {
+      window: { img:'cactus',    name:'Cactus',          icon:'🌵' },
+      fridge: { img:'aircon',    name:'Air Conditioner', icon:'❄️' },
+      kettle: { img:'teddybear', name:'Teddy Bear',      icon:'🧸' },
+      clock:  { img:'computer',  name:'Computer',        icon:'💻' },
+      door:   { img:'door' }
+    },
+    stack: ['door', 'fridge', 'clock', 'kettle', 'window'],
+    box: { door:[147,64,177,142], aircon:[147,35,203,80], computer:[251,76,269,100], teddybear:[274,119,291,136], cactus:[222,38,238,60] }
+  },
+  INTERMEDIATE: {
+    dir: 'media/kitchen/', alt: 'Kitchen with a counter, dining table, cabinet, wall clock and a glass door',
+    spots: {
+      window: { img:'plant',   name:'Plant',      icon:'🪴' },
+      fridge: { img:'cabinet', name:'Cabinet',    icon:'🗄️' },
+      kettle: { img:'pan',     name:'Pan',        icon:'🍳' },
+      clock:  { img:'clock',   name:'Wall Clock', icon:'🕰️' },
+      door:   { img:'door' }
+    },
+    stack: ['kettle', 'clock', 'door', 'fridge', 'window'],
+    box: { pan:[269,78,280,92], clock:[337,105,362,132], door:[160,68,189,170], cabinet:[111,100,158,200], plant:[228,169,242,195] }
+  },
+  ADVANCED: {
+    dir: 'media/living_room/', alt: 'Living room with sofas, bookshelves, a rug, a plant and a window',
+    spots: {
+      window: { img:'tv',       name:'TV',        icon:'📺' },
+      fridge: { img:'greenbox', name:'Green Box', icon:'📦' },
+      kettle: { img:'roomba',   name:'Roomba',    icon:'🤖' },
+      clock:  { img:'laptop',   name:'Laptop',    icon:'💻' },
+      door:   { img:'door' }
+    },
+    stack: ['door', 'kettle', 'clock', 'window', 'fridge'],
+    box: { tv:[138,59,198,141], greenbox:[165,138,190,159], roomba:[279,137,305,160], laptop:[184,175,212,202], door:[344,81,380,184] }
+  }
+};
+let R = null, hoverKey = null;   // R = the room in use
+const masks = {};
+
+function applyRoomArt(level){
+  R = ROOMS[level];
+  if (!R) return;                                   // unknown level: the old kitchen picture stays
+  const st = $('stage'), hs = $('hotspots');
+  st.dataset.room = 'living';                       // 'living' is the CSS name for "layered pixel room" mode, used by all three rooms
+  $('room').classList.add('living');
+  if (R.view) $('stage').style.transform = R.view;
+  if (!ROOM_STARS) $('starfield-canvas').style.display = 'none';
+  // draw the room: background first, then the clickable objects bottom to top
+  const mk = (file, k) => { const im = document.createElement('img'); im.className = 'lr' + (k ? ' obj' : ''); if (k) im.dataset.k = k; im.alt = k ? '' : R.alt; im.src = R.dir + file + '.png'; st.insertBefore(im, hs); };
+  mk('bg');
+  R.stack.forEach(k => mk(R.spots[k].img, k));
+  Object.entries(R.spots).forEach(([k, o]) => {
+    if (SPOTS[k] && o.name) { SPOTS[k].name = o.name; SPOTS[k].icon = o.icon; }
+    const [x0, y0, x1, y1] = R.box[o.img], b = document.querySelector(`[data-hs="${k}"]`);
+    Object.assign(b.style, { left:x0 / 4.8 + '%', top:y0 / 2.7 + '%', width:(x1 - x0) / 4.8 + '%', height:(y1 - y0) / 2.7 + '%' });
+    b.classList.add('hit');
+    // read the PNG's transparency so only the object's real pixels react (falls back to the box if the browser blocks it)
+    const im = new Image();
+    im.onload = () => { try { const c = document.createElement('canvas'); c.width = 480; c.height = 270; const g = c.getContext('2d'); g.drawImage(im, 0, 0); masks[o.img] = g.getImageData(0, 0, 480, 270).data; } catch (e) { console.warn('hover mask unavailable, using boxes', e); } };
+    im.src = R.dir + o.img + '.png';
+  });
+  const fit = () => st.style.setProperty('--px', st.clientWidth / 480 + 'px');   // one art pixel on screen = the glow's outline width
+  new ResizeObserver(fit).observe(st); fit();
+  hs.addEventListener('pointermove', e => setHover(keyAt(e.clientX, e.clientY)));
+  hs.addEventListener('pointerleave', () => setHover(null));
+  hs.addEventListener('focusin', e => { const b = e.target.closest('.hit'); if (b) setHover(b.dataset.hs); });
+  hs.addEventListener('focusout', () => setHover(null));
+  hs.addEventListener('click', e => {
+    if (e.target.closest('[data-hs]')) return;            // keyboard Enter on a button is handled by the normal listener
+    const k = keyAt(e.clientX, e.clientY); if (!k) return;
+    try { act(k); } catch (err) { console.error(err); toast('Error: ' + err.message, true); }
+  });
+}
+
+function keyAt(cx, cy){
+  if (!R) return null;
+  const r = $('stage').getBoundingClientRect();
+  const x = Math.floor((cx - r.left) / r.width * 480), y = Math.floor((cy - r.top) / r.height * 270);
+  if (x < 0 || y < 0 || x >= 480 || y >= 270) return null;
+  for (let i = R.stack.length - 1; i >= 0; i--) {     // top-most object first
+    const k = R.stack[i], img = R.spots[k].img, m = masks[img], b = R.box[img];
+    if (m ? m[(y * 480 + x) * 4 + 3] > 0 : (x >= b[0] && x < b[2] && y >= b[1] && y < b[3])) return k;
+  }
+  return null;
+}
+
+function setHover(k){
+  if (k === hoverKey) return; hoverKey = k;
+  document.querySelectorAll('#stage .obj').forEach(i => i.classList.toggle('hov', i.dataset.k === k));
+  document.querySelectorAll('#hotspots .hit').forEach(b => b.classList.toggle('show', b.dataset.hs === k));
+  $('hotspots').style.cursor = k ? 'pointer' : '';
+}
+
+async function setupRoom(user){
+try { const nm = (user.user_metadata && (user.user_metadata.username || user.user_metadata.name)) || (user.email || '').split('@')[0]; if (nm) $('menu-user').textContent = nm.toUpperCase(); } catch (e) {}
+let level = 'BEGINNER', weak = [], lastIds = [];
+try {
+const prof = await getProfile(user.id);
+if (prof) roomAdaptive = prof.adaptive !== false;
+level = await resolvePlayerLevel(user.id, prof);   // saved level (profiles.current_level), not the sign-up pick
+const r1 = await db.from('game_sessions').select('level,next_level,puzzle_ids').eq('user_id', user.id).order('created_at', { ascending:false }).limit(10);
+const rows = r1.data || [];
+const lastRoom = rows.find(x => x.puzzle_ids); if (lastRoom) lastIds = lastRoom.puzzle_ids;
+if (roomAdaptive) {
+const r2 = await db.from('submissions').select('category,is_correct,kind').eq('user_id', user.id).eq('kind', 'submit').not('category', 'is', null).order('id', { ascending:false }).limit(RULES.historyAttempts);
+weak = weakCategories(r2.data || []);
+}
+} catch (e) { console.error(e); }   // offline: start at the safe default, the game still works
+roomLevel = level;
+applyRoomArt(level);
+buildRoom(pickRoom({ level, weak: roomAdaptive ? weak : [], lastIds }));
+roomReady = true; renderAll();
+if (roomAdaptive) toast('Room level: ' + level.charAt(0) + level.slice(1).toLowerCase() + (weak.length ? ' · focus: ' + weak.slice(0, RULES.weakSlots).map(w => w[0]).join(', ') : ''));
+}
+
+/* ---------- Dialog manager ---------- */
+// while a dialog is open, everything behind it is inert: no focus, no keyboard, hidden from screen readers
+function syncInert(){
+const m1 = !$('modal').classList.contains('hidden'), m2 = !$('modal2').classList.contains('hidden');
+['stage','hud-left','timer-box','controls','hint-wrap','inv'].forEach(id => $(id).inert = m1 || m2);
+$('modal').inert = m2;
+}
+function closeDlg(){ pauseP(); $('modal').classList.add('hidden'); $('modal').classList.remove('pz'); $('room').classList.remove('pz-open'); $('modal').innerHTML = ''; $('modal2').classList.add('hidden'); $('modal2').innerHTML = ''; escFn = null; syncInert(); }
+function addBtn(a){
+const b = document.createElement('button');
+b.textContent = a.l; b.className = 'btn ' + (a.k || ''); b.disabled = !!a.dis;
+if (a.id) b.id = a.id;
+b.onclick = () => { if (!a.keep) closeDlg(); a.f && a.f(); };
+$('da').append(b); return b;
+}
+function dlg({ icon='', title, body, actions, wide, center, x, set }){
+$('modal').innerHTML = `<div class="box dialog${wide ? ' wide' : ''}${center ? ' center' : ''}${set ? ' set' : ''}" role="dialog" aria-modal="true" aria-labelledby="dt">
+${x ? '<button class="dlg-x" id="dlg-x" type="button" aria-label="Close" title="Close (Esc)">✕</button>' : ''}<h2 id="dt">${icon} ${title}</h2><div class="dbody">${body}</div><div id="da"></div></div>`;
+if (x) $('dlg-x').onclick = closeDlg;
+actions.forEach(addBtn);
+$('modal').classList.remove('hidden'); syncInert();
+escFn = closeDlg;
+$('da').lastElementChild.focus();
+}
+document.addEventListener('keydown', e => {
+const top = !$('modal2').classList.contains('hidden') ? $('modal2') : !$('modal').classList.contains('hidden') ? $('modal') : null;
+if (e.key === 'Escape') { if (top === $('modal2')) closeSf(); else if (escFn) escFn(); }
+if (e.key === 'Tab' && top && e.target.tagName !== 'TEXTAREA') {
+const f = [...top.querySelectorAll('button:not(:disabled),input,textarea')], i = f.indexOf(document.activeElement);
+if (!f.length) return;
+e.preventDefault(); f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+}
+});
+const OK = { l:'OK' };
+
+function toast(msg, warn){
+const t = $('toast');
+t.textContent = msg; t.className = 'box' + (warn ? ' warn' : '');
+clearTimeout(toastT); toastT = setTimeout(() => t.classList.add('hidden'), 4000);
+}
+
+/* ---------- Progress + inventory (both drawn from the same list: got) ---------- */
+function renderAll(){
+const n = count(), firstOpen = PUZ.findIndex(k => !got.includes(k));
+[...$('nodes').children].forEach((el, i) => el.className = 'node ' + (got.includes(PUZ[i]) ? 'solved' : i === firstOpen ? 'active' : ''));
+$('prog-text').textContent = `${n} / 4`;
+$('prog-bar').style.width = `${n * 25}%`;
+PUZ.forEach(k => {
+const done = got.includes(k), hs = document.querySelector(`[data-hs="${k}"]`);
+$('tag-' + k).textContent = P[k].name + (done ? ' Solved' : '');
+hs.querySelector('.core').textContent = done ? '✔' : P[k].icon;
+const oi = document.querySelector(`#stage .obj[data-k="${k}"]`); if (oi) oi.classList.toggle('done', done);
+hs.setAttribute('aria-label', P[k].name + ', ' + P[k].title + (done ? ', solved' : ', not solved'));
+});
+[...$('nodes').children].forEach((el, i) => el.title = P[PUZ[i]].title + (got.includes(PUZ[i]) ? ': solved' : ': not solved'));
+const di = document.querySelector('#stage .obj[data-k="door"]'); if (di) di.classList.toggle('ready', n === 4);
+$('tag-door').textContent = n === 4 ? 'Unlocked Exit Door' : 'Locked Exit Door';
+document.querySelectorAll('.slot').forEach((s, i) => {
+const k = got[i];
+if (k) { s.textContent = P[k].reward[0]; s.title = P[k].reward[1]; s.classList.add('filled'); }
+});
+}
+
+function act(id){
+if (!roomReady) return toast('Setting up the room...');
+if (over) return toast(over === 'won' ? 'You already escaped the room.' : 'You left the room.');
+if (id === 'door') return count() < 4 ? toast(`The door is locked. Fix all 4 puzzles to collect every item (${count()} / 4).`) : win();
+if (got.includes(id)) return toast(`Already solved. You have the ${P[id].reward[1]}.`);
+openPuzzle(id);
+}
+/* ---------- Puzzle pop-up = the submission form, one per puzzle ---------- */
+const MAX_CHARS = 500;
+const KW = /(#.*$)|("[^"]*"|'[^']*')|\b(def|return|for|in|if|else|elif|while|import|from|as|and|or|not|is|None|True|False|class|break|continue|pass|try|except|finally|raise|with|lambda)\b|\b([A-Za-z_]\w*)(?=\()|\b(\d+(?:\.\d+)?)\b/;
+function hl(line){
+let o = '', r = esc(line);
+while (r) {
+const m = KW.exec(r);
+if (!m) { o += r; break; }
+o += r.slice(0, m.index);
+o += m[1] ? `<span class="cm">${m[1]}</span>` : m[2] ? `<span class="st">${m[2]}</span>` : m[3] ? `<span class="kw">${m[3]}</span>` : m[4] ? `<span class="fn">${m[4]}</span>` : `<span class="nm">${m[5]}</span>`;
+r = r.slice(m.index + m[0].length);
+}
+return o;
+}
+function closeSf(){ $('modal2').classList.add('hidden'); $('modal2').innerHTML = ''; syncInert(); const e = $('ed'); if (e && !$('modal').classList.contains('hidden')) e.focus(); }
+// opts: tone (violet|cyan|pink), title, text (plain) | rich (html) | err (console html), note (small text bottom-left), buttons [{l, k, f}]
+function sfDlg(o){
+const body = o.err ? `<div class="errbox">${o.err}</div>` : `<div class="sfmsg">${o.rich || o.text}</div>`;
+$('modal2').innerHTML = `<div class="sf small ${o.tone === 'cyan' ? '' : o.tone}" role="dialog" aria-modal="true" aria-labelledby="sfdt"><span class="tbl"></span><span class="tbr"></span>
+<div class="head"><div class="title" id="sfdt"><span class="sq ${o.tone}"></span>${o.title}</div></div><hr class="rule">
+${body}<div class="foot"><div class="fnote">${o.note || ''}</div><div class="btns" id="sfb"></div></div></div>`;
+let last;
+(o.buttons || []).forEach(x => { const b = document.createElement('button'); b.className = 'sb ' + x.k; b.textContent = x.l; b.onclick = x.f; $('sfb').append(b); last = b; });
+$('modal2').classList.remove('hidden'); syncInert(); fitSf();
+if (last) last.focus();
+}
+// ----- hint text: prose gets soft emphasis on the important words; lines that are code (the answer itself) get the code-editor look
+const CODE_LINE = /^\s*(def\s|for\s.+\sin\s|if\s|elif\s|else:|while\s|return\b|print\(|import\s|from\s\S+\simport\s|[A-Za-z_][\w.\[\]]*\s*(?:[+\-*\/%]|\/\/|\*\*)?=(?!=)\s*\S)/;
+const HK = /\*\*([^*\n]+)\*\*|`([^`\n]+)`|"[^"\n]+"|(?<![A-Za-z])'[^'\n]+'(?![A-Za-z])|\b([A-Za-z_]\w*\([^()\n]*\))|\b([a-z]+(?:_[a-z0-9]+)+|[a-z]+[A-Z]\w*)\b|\b(?:return|print|range|len|def|elif|else|None|True|False|indent|indentation|colon)\b|\b\d+(?:\.\d+)?\b/g;
+function proseHtml(t){
+let o = '', last = 0, m; HK.lastIndex = 0;
+while ((m = HK.exec(t))) {
+o += esc(t.slice(last, m.index));
+o += `<span class="hk${m[2] !== undefined || m[3] !== undefined || m[4] !== undefined ? ' c' : ''}">${esc(m[1] ?? m[2] ?? m[0])}</span>`;
+last = m.index + m[0].length;
+}
+return o + esc(t.slice(last));
+}
+function hintHtml(t){
+const parts = []; let cur = null, fence = false;
+const push = (k, l) => { if (cur && cur.k === k) cur.l.push(l); else parts.push(cur = { k, l:[l] }); };
+String(t).replace(/\r/g, '').split('\n').forEach(l => {
+if (/^\s*```/.test(l)) { fence = !fence; cur = null; return; }
+if (fence || (CODE_LINE.test(l) && l.length < 100)) push('code', l);
+else if (l.trim() === '') cur = null;
+else push('text', l);
+});
+return parts.map(p => p.k === 'code' ? `<pre class="hcode"><code>${p.l.map(hl).join('\n')}</code></pre>` : `<p>${p.l.map(proseHtml).join(' ')}</p>`).join('');
+}
+// ----- test error: shows only the line, the error type and Python's standard message. Works for any puzzle (nothing here knows about a specific puzzle).
+const pyRepr = v => "'" + String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n') + "'";
+// Python 3.10+ adds advice to some messages ("Did you mean...", "Perhaps you forgot a comma?"). That is a hint, so it is cut off.
+const stripAdvice = m => m.replace(/[.?!]?\s*(?:Did you (?:forget|mean)|Perhaps you|Maybe you|Consider (?:using|adding))\b[\s\S]*$/i, '').trim();
+// raw = Python's own error text. nLines = how many lines the player's code has (the line number is only shown if it points inside the player's code)
+function parseErr(raw, nLines){
+const text = String(raw || '').replace(/\r/g, '');
+const L = text.split('\n');
+let ei = -1;
+for (let i = L.length - 1; i >= 0; i--) if (/^[A-Za-z_][\w.]*(?::|$)/.test(L[i]) && !/^(Traceback|File|During|The above)\b/.test(L[i])) { ei = i; break; }
+if (ei < 0) return null;
+const m = L.slice(ei).join('\n').trim().match(/^([A-Za-z_][\w.]*)(?::\s*([\s\S]*))?$/);
+if (!m) return null;
+const hits = [...text.matchAll(/File "<exec>", line (\d+)/g)];
+let line = hits.length ? +hits[hits.length - 1][1] : null;    // the last step inside the player's own code
+if (line !== null && (line < 1 || line > nLines)) line = null;
+return { type: m[1].split('.').pop(), msg: stripAdvice(m[2] || ''), line };
+}
+function errHtml(j){
+const row = (c, h) => `<div class="${c}">${h}</div>`;
+if (j.tag === 'Wrong Output') return row('er-msg', '<b>AssertionError</b>: output does not match') + row('er-det', esc('expected: ' + pyRepr(j.expect))) + row('er-det', esc('     got: ' + pyRepr(j.out)));
+if (j.tag === 'Hardcoded Answer') return row('er-msg', '<b>AssertionError</b>: hardcoded answer') + row('er-det', 'The output matches, but the code only works for this one case.');
+const e = parseErr(j.raw, j.codeLines) || { type: (j.tag || 'Error').replace(/\s+/g, ''), msg: '', line: null };
+return (e.line ? row('er-line', 'Line ' + e.line) : '') + row('er-msg', `<b>${esc(e.type)}</b>${e.msg ? ': ' + esc(e.msg) : ''}`);
+}
+function placePz(){
+const m = $('modal'); if (!m.classList.contains('pz')) return;
+const tb = $('timer-box'); let top = 14;
+if (tb && getComputedStyle(tb).display !== 'none') { const r = tb.getBoundingClientRect(), mr = m.getBoundingClientRect(); top = Math.max(14, Math.round(r.bottom - mr.top + 10)); }
+m.style.setProperty('--pz-top', top + 'px');
+}
+function fitSf(){
+placePz();
+document.querySelectorAll('.sf').forEach(el=>{
+const host=el.parentElement; el.style.transform='';
+const cs=getComputedStyle(host),h=el.offsetHeight,w=el.offsetWidth;
+const sc=Math.min(1,(host.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-8)/h,(host.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-8)/w);
+if(sc<1)el.style.transform='scale('+sc+')';
+});
+}
+function growEd(){ const e=$('ed'); if(!e)return; e.style.height='auto'; e.style.height=e.scrollHeight+2+'px';
+const g=$('gut'); if(g){ g.textContent=Array.from({length:e.value.split('\n').length},(_,i)=>i+1).join('\n'); g.scrollTop=e.scrollTop; }
+const c=$('hlcode'); if(c){ c.innerHTML=e.value.split('\n').map(hl).join('\n')+'\n'; const h=$('hlpre'); h.scrollTop=e.scrollTop; h.scrollLeft=e.scrollLeft; }
+fitSf(); }
+addEventListener('resize',fitSf);
+let mdT=null;
+$('modal').addEventListener('mousedown',e=>{mdT=e.target;});
+$('modal').addEventListener('click',e=>{
+if(e.target===$('modal')&&mdT===$('modal')&&$('modal').classList.contains('pz')&&$('modal2').classList.contains('hidden'))closeDlg();
+});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitSf);
+function openPuzzle(id){
+const p = P[id], m = META[id], no = String(PUZ.indexOf(id) + 1).padStart(2, '0'); lastOpen = id; pauseP(); openId = id; openTs = Date.now();
+const story = p.story.replace(/\s*Fix the code and run it\.$/, '');
+$('modal').innerHTML = `<div class="sf main" role="dialog" aria-modal="true" aria-labelledby="dt"><span class="tbl"></span><span class="tbr"></span>
+<button class="xbtn close" id="sf-close" type="button" aria-label="Close puzzle" title="Close (Esc)">✕</button>
+<div class="pz-head"><div class="pz-no">PUZZLE ${no}</div><h2 class="pz-title" id="dt">${esc(p.title.toUpperCase())}</h2></div>
+<hr class="rule">
+<div class="pz-q">${esc(story)}</div>
+<div class="pz-out"><span class="pz-outl">Expected output</span><pre class="pz-outv">${esc(p.expect)}</pre></div>
+<hr class="rule">
+<div class="edwrap"><div id="gut" aria-hidden="true"></div><div class="edbox"><pre id="hlpre" aria-hidden="true"><code id="hlcode"></code></pre><textarea id="ed" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" data-gramm="false" rows="5" aria-label="Python code editor"></textarea></div></div>
+<div class="tip"><b>TIP:</b> Fix the bug in the code. Typing the expected output directly will not pass.</div>
+<div class="foot"><div class="btns"><button class="sb ghost" id="sf-hints" type="button"></button><button class="sb ghost" id="sf-reset" type="button" title="Put the original code back">RESET</button></div>
+<div class="btns"><button class="sb ghost" id="sf-run" type="button">TEST</button><button class="sb go" id="sf-submit" type="button">SUBMIT</button></div></div></div>`;
+$('room').classList.add('pz-open');
+$('modal').classList.remove('hidden'); $('modal').classList.add('pz'); syncInert(); escFn = closeDlg; sfHud();
+const ed = $('ed'); ed.value = drafts[id] ?? p.code; growEd();
+ed.onscroll = () => { const g = $('gut'), h = $('hlpre'); if (g) g.scrollTop = ed.scrollTop; if (h) { h.scrollTop = ed.scrollTop; h.scrollLeft = ed.scrollLeft; } };
+ed.oninput = () => { drafts[id] = ed.value; growEd(); };
+ed.onkeydown = e => {
+if (e.key === 'Tab') { e.preventDefault(); ed.setRangeText('    ', ed.selectionStart, ed.selectionEnd, 'end'); ed.oninput(); }
+};
+const sfHints = () => { const b = $('sf-hints'); if (!b) return; const off = !hintsOn(), none = !hints; b.classList.toggle('none', off || none); b.textContent = off ? 'HINTS OFF' : none ? 'NO HINTS LEFT' : 'HINTS: ' + hints + ' LEFT'; };
+sfHints();
+$('sf-hints').onclick = () => {
+if (!hintsOn()) return sfDlg({ tone:'violet', title:'HINTS ARE OFF', badge:'HINTS', text:'Hints are turned off in Settings.', buttons:[{ l:'OK', k:'go', f:closeSf }] });
+if (!hints) return sfDlg({ tone:'violet', title:'NO HINTS LEFT', badge:'HINTS', text:'All 3 hints are used.', buttons:[{ l:'OK', k:'go', f:closeSf }] });
+if (!hintsLeftFor(id)) return sfDlg({ tone:'violet', title:'NO MORE HINTS HERE', badge:'HINTS', text:'You already saw every hint for this puzzle. No hint was used.', buttons:[{ l:'OK', k:'go', f:closeSf }] });
+sfDlg({ tone:'violet', title:'USE A HINT?', badge:'CONFIRM', eyebrow:'ACTION CONFIRMATION // PUZZLE ' + no, text:`<b>${hints} of 3</b> hints remaining. A used hint cannot be returned.`,
+buttons:[{ l:'CANCEL', k:'ghost', f:closeSf }, { l:'▶ USE HINT', k:'go', f:() => {
+const text = takeHint(id); sfHints();
+sfDlg({ tone:'violet', title:'HINT', rich:hintHtml(text), note:'HINTS LEFT: ' + hints, buttons:[{ l:'OK', k:'go', f:closeSf }] });
+} }] });
+};
+$('sf-close').onclick = closeDlg;
+$('sf-reset').onclick = () => { ed.value = p.code; drafts[id] = p.code; growEd(); ed.focus(); };
+$('sf-run').onclick = async () => {
+const bad = validate(id); if (bad) return showInvalid(bad);
+sfRunning(); const j = await evaluate(id, ed.value, 'run');
+if (j.ok) sfDlg({ tone:'cyan', title:'TEST PASSED', badge:'SUCCESS', eyebrow:'TEST RESULT // PUZZLE ' + no, text:'Your code gives the expected output. You can submit it when you are ready.', buttons:[{ l:'▶ OK', k:'go', f:closeSf }] });
+else showFail(id, j);
+};
+$('sf-submit').onclick = () => {
+const bad = validate(id); if (bad) return showInvalid(bad);
+sfDlg({ tone:'violet', title:'SUBMIT SOLUTION?', badge:'CONFIRM', eyebrow:'ACTION CONFIRMATION // PUZZLE ' + no,
+text:`You are about to submit your fix for Puzzle ${no}. You can still edit your code again if the test fails.`,
+buttons:[{ l:'CANCEL', k:'ghost', f:closeSf }, { l:'▶ YES, SUBMIT', k:'go', f:async () => {
+sfRunning(); const j = await evaluate(id, ed.value, 'submit');
+if (!j.ok) return showFail(id, j);
+pauseP(); got.push(id); renderAll(); sfHud(); queueSave(); 
+sfDlg({ tone:'cyan', title:esc(p.title.toUpperCase()) + ' SOLVED', badge:'SUCCESS', eyebrow:'TEST RESULT // PUZZLE ' + no,
+text:`${esc(p.why)}<br><br>Item unlocked: ${p.reward[0]} ${p.reward[1]}`,
+buttons:[{ l:'▶ OK, CONTINUE', k:'go', f:() => { closeSf(); closeDlg(); toast(`Item unlocked: ${p.reward[1]} (${count()} / 4)`); } }] });
+} }] });
+};
+ed.focus(); refreshRun();
+}
+function sfHud(){
+if (!$('sf-prog')) return; const n = count();
+$('sf-prog').textContent = 'CHAMBER ' + String(n).padStart(2, '0') + ' / 04'; $('sf-keys').textContent = n + ' / 4';
+document.querySelectorAll('#sf-dots i').forEach((d, i) => d.classList.toggle('on', i < n));
+}
+function sfRunning(){ sfDlg({ tone:'violet', title:'RUNNING TEST', badge:'PLEASE WAIT', text: py.ready ? 'Running your code in Python...' : 'Loading Python, please wait...', buttons:[] }); }
+// Validation: missing field, required structure, length
+function validate(id){
+const v = $('ed').value;
+if (v.trim() === '') return { title:'SUBMISSION IS EMPTY', badge:'REQUIRED FIELD', text:'Your submission is empty. Write your fix in the form before submitting.' };
+const nd = P[id].needDef;
+if (nd && !new RegExp('def\\s+' + nd + '\\s*\\(').test(v)) return { title:'FUNCTION NOT FOUND', badge:'INVALID FORMAT', text:'Your code must define the function, starting with: def ' + nd + '(' };
+if (v.length > MAX_CHARS) return { title:'CODE IS TOO LONG', badge:'LENGTH LIMIT', text:`Your code is ${v.length} characters. The limit is ${MAX_CHARS}.` };
+return null;
+}
+function showInvalid(v){ sfDlg({ tone:'pink', title:v.title, badge:v.badge, text:v.text, buttons:[{ l:'↻ OK, FIX IT', k:'ghost', f:closeSf }] }); }
+function showFail(id, j){
+if (j.sys) return sfDlg({ tone:'violet', title:'PYTHON UNAVAILABLE', badge:'SYSTEM', text:j.msg + '<br><br>This run was not counted against you.', buttons:[{ l:'CLOSE', k:'ghost', f:closeSf }, { l:'↻ RETRY LOADING', k:'go', f:() => { closeSf(); py.restart(); } }] });
+sfDlg({ tone:'pink', title: j.tag === 'Infinite Loop' ? 'CODE RUNS FOREVER' : 'TEST FAILED', err:errHtml(j), buttons:[{ l:'↻ OK, TRY AGAIN', k:'ghost', f:closeSf }] });
+}
+// Hidden checks, so a correct fix written a different way still passes but a hardcoded answer does not:
+// 1) same code on different data, 2) call the function with a new input, 3) the result must come from a real call.
+async function hardcoded(p, code){
+if (p.variant) {
+if (!new RegExp(p.variant.re).test(code)) return { bad:true };   // the original data was deleted
+const d = await runPy(applyVariant(code, p.variant));
+if (d.sys) return { sys:d.sys };
+if (d.err || (d.out || '').trim() !== p.variant.expect) return { bad:true };
+}
+for (const pr of (p.probes || [])) {
+const f = pr.fn;
+const d = await runPy(code + `\nimport inspect as _i\n_n = len(_i.signature(${f}).parameters)\nprint("@@PROBE@@" + str(${f}(*${pyLiteral(pr.args)}[:_n])))`);
+if (d.sys) return { sys:d.sys };
+const got = (d.out || '').split('@@PROBE@@')[1];
+if (d.err || got === undefined || got.trim() !== pr.expect) return { bad:true };
+}
+if (p.needCall) {
+const d = await runPy(`import ast
+src = ${JSON.stringify(code)}
+tree = ast.parse(src)
+par = {}
+for n in ast.walk(tree):
+    for c in ast.iter_child_nodes(n): par[c] = n
+ok = any(isinstance(n, ast.Call) and getattr(n.func, 'id', None) == ${JSON.stringify(p.needCall)} and not isinstance(par.get(n), ast.Expr) for n in ast.walk(tree))
+print("@@AST@@" + ("ok" if ok else "bad"))`);
+if (d.sys) return { sys:d.sys };
+if (d.err || !(d.out || '').includes('@@AST@@ok')) return { bad:true };
+}
+return {};
+}
+// Runs the code in Python and checks it against the puzzle. kind = 'run' (test button) or 'submit'.
+// Every real attempt is saved. Python failing to load is NOT an attempt and is never saved.
+async function evaluate(id, code, kind){
+const p = P[id];
+const d = await runPy(code);
+if (d.sys) return { ok:false, sys:true, msg:esc(d.sys) };
+const out = (d.out || '').trim();
+let tag = null, msg = '', raw = null;
+if (d.err) {
+const last = cleanErr(d.err).trim().split('\n').pop();
+const m = last.match(/^(\w*Error)/);
+tag = !m ? 'Runtime Error' : m[1] === 'TimeoutError' ? 'Infinite Loop' : m[1];
+msg = 'Python says: ' + esc(last); raw = d.err;
+} else if (out !== p.expect) { tag = 'Wrong Output'; msg = `It ran, but printed "${esc(out)}" instead of "${esc(p.expect)}".`; }
+else {
+const h = await hardcoded(p, code);
+if (h.sys) return { ok:false, sys:true, msg:esc(h.sys) };
+if (h.bad) { tag = 'Hardcoded Answer'; msg = 'The output matches, but the fix only works for this one case. Keep the original code and fix the actual bug.'; }
+}
+const row = { puzzle: p.title, kind, code: code.slice(0, 2000), is_correct: !tag, mistake_tag: tag,
+puzzle_id: p.pid, category: p.category, difficulty: p.level, attempt_no: nTry[id] = (nTry[id] || 0) + 1,
+hints_used: hintTier[id] || 0, elapsed_ms: Math.round(spentMs(id)), mistake_category: tag ? categoryOfTag(tag) : null };
+attempts.push(row); allAttempts.push(row);
+queueSave();
+return { ok: !tag, tag, msg, raw, codeLines: code.split('\n').length, out, expect: p.expect };
+}
+function win(){
+guard.stop(); over = 'won'; elapsed = Math.floor((Date.now() - startTs) / 1000); $('timer').textContent = fmt(elapsed);
+const savedP = queueSave('won');
+dlg({ icon:'🎉', title:'Door unlocked!', body:`You used all 4 items to unlock the door and escaped in <b>${fmt(elapsed)}</b>.`,
+actions:[{ l:'Continue', f:async () => { await savedP; location.href = 'test-summary.html'; } }] });
+}
+$('hotspots').addEventListener('click', e => {
+const b = e.target.closest('[data-hs]');
+if (!b) return;
+try { act(b.dataset.hs); } catch (err) { console.error(err); toast('Error: ' + err.message, true); }
+});
+
+/* ---------- Hints: one pool of 3 for the whole room; every puzzle has its own hint steps ---------- */
+const hintsOn = () => true;
+const hintsLeftFor = k => P[k].hint.length - (hintTier[k] || 0);   // steps this puzzle still has
+// the HUD button hints the puzzle the player opened last (if still unsolved), else the first unsolved one
+const hudTarget = () => lastOpen && !got.includes(lastOpen) ? lastOpen : PUZ.find(x => !got.includes(x));
+function takeHint(k){
+const t = hintTier[k] || 0; hintTier[k] = t + 1; hints--;
+renderHints(); queueSave();
+return P[k].hint[t];
+}
+// HINTS [bulb][bulb][bulb]: a used hint turns grey
+const BULB_ROWS = ['...ooooo...','..offfffo..','.offfffffo.','.ofhfffffo.','.offfffffo.','.offfffffo.','..offfffo..','...offfo...','...obbbo...','...obbbo...','....ooo....'];
+const bulbSvg = lit => { let r = ''; BULB_ROWS.forEach((row, y) => [...row].forEach((c, x) => { if (c !== '.') r += `<rect class="${c}" x="${x}" y="${y}" width="1" height="1"/>`; })); return `<svg class="bulb ${lit ? 'lit' : 'used'}" viewBox="0 0 11 11" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`; };
+function renderHints(){ $('hint-label').innerHTML = [0,1,2].map(i => bulbSvg(i < hints)).join(''); $('btn-hint').dataset.tip = `Ask for a hint (${hints} of 3 left)`; $('btn-hint').style.opacity = hints && hintsOn() ? 1 : .6; }
+$('btn-hint').onclick = () => {
+if (over) return toast('Hints are unavailable once the game has ended.');
+if (!hintsOn()) return toast('Hints are turned off in Settings.', true);
+if (!hints) return dlg({ icon:'💡', title:'No hints remaining', body:'All 3 hints have been used.', actions:[OK] });
+const k = hudTarget();
+if (!k) return dlg({ icon:'💡', title:'Hint', body:'You have all 4 items. Head to the exit door.', actions:[OK] });
+if (!hintsLeftFor(k)) return dlg({ icon:'💡', title:'No more hints here', body:`You already saw every hint for <b>${P[k].title}</b>. No hint was used.`, actions:[OK] });
+dlg({ icon:'💡', title:'Use a hint?', body:`This hint is for <b>${P[k].title}</b>.<br><b>${hints} of 3</b> hints remaining.<br>A used hint cannot be returned.`,
+actions:[ { l:'Cancel', k:'sec' }, { l:'Use Hint', f:() => {
+const text = takeHint(k);
+dlg({ icon:'💡', title:'Hint', body:`<b>${P[k].title}</b><p>${esc(text)}</p><p style="margin-top:12px;color:#fcd34d">Hints remaining: <b>${hints} of 3</b></p>`, actions:[OK] });
+} } ] });
+};
+
+/* ---------- Settings change from js/settings.js (if it broadcasts) ---------- */
+RemediateSettings.onChange(() => { applyTimerVis(); renderHints(); });
+document.addEventListener('keydown', e => {
+if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || /^(TEXTAREA|INPUT)$/.test(e.target.tagName)) return;
+if (!$('modal').classList.contains('hidden') || !$('modal2').classList.contains('hidden')) return;
+const k = cur().keys || {};
+if (e.code === k.hint) $('btn-hint').click();
+else if (e.code === k.inventory) toast(got.length ? 'Items: ' + got.map(x => P[x].reward.join(' ')).join(', ') : 'Your inventory is empty.');
+});
+
+/* ---------- Menu: [profile (view only)] [Settings > Audio / Text / Controls] [Leave Room] ---------- */
+const menuPop = $('menu-pop');
+function setMenu(open){ menuPop.classList.toggle('hidden', !open); $('btn-menu').setAttribute('aria-expanded', open); }
+$('btn-menu').onclick = e => { e.stopPropagation(); setMenu(menuPop.classList.contains('hidden')); };
+document.addEventListener('click', e => { if (!e.target.closest('#menu-wrap')) setMenu(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
+$('mi-settings').onclick = e => {
+  e.stopPropagation();
+  setMenu(false);
+  if (typeof window.openRemediateSettings === 'function') {
+    window.openRemediateSettings();
+  } else {
+    console.error('System Config is unavailable: js/shared-settings.js did not initialize.');
+    toast('Settings could not be opened. Please reload the game.', true);
+  }
+};
+$('mi-leave').onclick = () => { setMenu(false); confirmLeave(); };
+
+
+/* Rules: same text and look as the index page's rules pop-up, without leaving the room */
+const RULES_CSS = `@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;800&display=swap');
+#modal .dialog.rules{box-sizing:border-box;width:90%;max-width:522px;padding:38px 35px 36px;background:#071b29;border:2px solid #4cc3da;border-radius:0;box-shadow:0 0 22px rgba(56,225,255,.2);scrollbar-width:thin;scrollbar-color:rgba(122,232,255,.4) transparent}
+#modal .dialog.rules h2{margin:0 0 20px;padding:0 40px 0 4px;font:14px/1.5 'Press Start 2P',monospace;color:#67e8f9}
+#modal .dialog.rules .dbody{font:400 14px/1.625 'Nunito',sans-serif;color:#cbd5e1}
+#modal .dialog.rules .dbody p{margin:0 0 16px}
+#modal .dialog.rules .dbody p:last-child{margin-bottom:0}
+#modal .dialog.rules .dbody b,#modal .dialog.rules .dbody strong{font-weight:800;color:#fff}
+#modal .dialog.rules .dlg-x{top:20px;right:20px;background:none;border-radius:0;color:#22d3ee;font:20px/1 sans-serif}
+#modal .dialog.rules .dlg-x:hover{color:#fff}
+#modal .dialog.rules #da{margin-top:24px;padding-top:20px;border-top:1px solid rgba(148,163,184,.2)}
+#modal .dialog.rules #da .btn{min-width:94px;height:42px;padding:0 17px;font:10px 'Press Start 2P',monospace;text-transform:uppercase;background:#7ae8ff;color:#061d29;border:0;border-radius:0;box-shadow:inset -3px -3px 0 rgba(0,0,0,.5),inset 3px 3px 0 rgba(255,255,255,.25)}
+#modal .dialog.rules #da .btn:hover{filter:brightness(1.12)}`;
+
+async function openRules(){
+  dlg({ x:true, icon:'📜', title:'GAME RULES', actions:[{ l:'Got It' }], body:'<div id="rules-body">Loading rules...</div>' });
+  const box = $('rules-body'), d = box.closest('.dialog');
+  d.classList.add('rules');
+  d.insertAdjacentHTML('afterbegin', `<style>${RULES_CSS}</style>`);
+  try {
+    const res = await fetch('index.html');
+    if (!res.ok) throw new Error('index.html returned ' + res.status);
+    const src = new DOMParser().parseFromString(await res.text(), 'text/html').getElementById('rulesModal');
+    if (!src) throw new Error('rulesModal not found in index.html');
+    src.querySelectorAll('script,style,button,input,img,svg,iframe,[aria-hidden="true"]').forEach(el => el.remove());
+    src.querySelectorAll('*').forEach(el => [...el.attributes].forEach(a => el.removeAttribute(a.name)));
+    // only the rule paragraphs: the title, close button and "Got it" are drawn by this pop-up
+    const rules = [...src.querySelectorAll('p')].filter(p => p.textContent.trim());
+    if (!rules.length) throw new Error('no rule paragraphs in rulesModal');
+    box.innerHTML = rules.map(p => p.outerHTML).join('');
+  } catch (e) { console.error(e); box.textContent = 'The rules could not be loaded. Close this and try again.'; }
+  d.scrollTop = 0;
+}
+$('mi-rules').onclick = () => { setMenu(false); openRules(); };
+
+// each settings group opens in a popup in the middle of the screen (the timer keeps running)
+function openAudio(){
+  const s = cur();
+  dlg({ set:true, title:'AUDIO', actions:[{ l:'Done' }], body:
+    `<div class="st-row"><span class="nm">Music</span><small class="sd">Ambient cosmic soundtrack.</small><div class="st-ctl"><input id="a-b" type="range" min="0" max="100" step="5" value="${s.bgm ?? 80}" aria-label="Music volume"><b id="a-bv"></b></div></div>` });
+  const sync = () => { $('a-bv').textContent = $('a-b').value + '%'; $('a-b').style.setProperty('--v', $('a-b').value + '%'); };
+  sync();
+  $('a-b').oninput = () => { sync(); setS({ bgm:+$('a-b').value }); RemediateAmbient.ensureStarted(); };
+}
+function openText(){
+  const SIZES = [['Small', .9], ['Medium', 1], ['Large', 1.2]];
+  const pick = SIZES.reduce((a, b) => Math.abs(b[1] - textScale) < Math.abs(a[1] - textScale) ? b : a)[1];
+  dlg({ set:true, title:'TEXT', actions:[{ l:'Done' }], body:
+    `<div class="st-row"><span class="nm">Text Size</span><small class="sd">Labels, puzzle text and pop-ups.</small><div class="st-ctl"><select id="t-sz" class="st-sel" aria-label="Text size">${SIZES.map(([n, v]) => `<option value="${v}"${v === pick ? ' selected' : ''}>${n}</option>`).join('')}</select></div></div>
+     <div class="st-row"><span class="nm">Show Labels</span><small class="sd">Always show object names.</small><div class="st-ctl"><label class="tgl"><input id="t-lb" type="checkbox" aria-label="Show object labels"><span class="tgl-track"><span class="tgl-knob"></span></span></label></div></div>` });
+  $('t-sz').onchange = e => { textScale = parseFloat(e.target.value); applyScale(); };
+  $('t-lb').checked = labelsOn; $('t-lb').onchange = e => { labelsOn = e.target.checked; applyLabels(); };
+}
+function openControls(){
+  const keyName = c => String(c || '?').replace(/^Key/, '').replace(/^Digit/, '');
+  const draw = () => {
+    const k = cur().keys || {};
+    dlg({ set:true, title:'CONTROLS', actions:[{ l:'Done' }], body:
+      `<div class="st-row"><span class="nm">Hint Key</span><small class="sd">Shortcut for asking a hint.</small><div class="st-ctl"><button class="btn sec" id="k-hb" type="button">${keyName(k.hint)}</button></div></div>` });
+    $('k-hb').onclick = () => { $('k-hb').textContent = 'Press a key'; rebind = { k:'hint', done:draw }; };
+  };
+  draw();
+}
+
+function confirmLeave(){
+dlg({ center:true, x:true, title:"Are you sure you're leaving?", body:`If you leave now, your progress (<b>${count()} / 4</b> solved) will be lost.`,
+actions:[ { l:'Cancel', k:'sec' }, { l:'Leave', k:'dan', f:() => {
+over = 'left'; guard.stop();
+const savedLeave = queueSave('left'); // wait for the save so the dashboard shows this game
+dlg({ title:'You left the room', body:'Saving your result and opening your dashboard...', actions:[{ l:'Enter Again', f:async () => { await savedLeave; location.reload(); } }] });
+escFn = null;
+savedLeave.then(() => { location.href = 'dashboard.html'; });
+} } ] });
+}
+
+/* Placement helper: open room.html?place=1, then click the spot where the wall clock icon should be */
+if (new URLSearchParams(location.search).has('place')) {
+$('stage').addEventListener('click', e => {
+if (e.target.closest('[data-hs],.hud,#modal')) return;
+const r = $('stage').getBoundingClientRect();
+const x = ((e.clientX - r.left) / r.width * 100).toFixed(1), y = ((e.clientY - r.top) / r.height * 100).toFixed(1);
+const c = document.querySelector('[data-hs="clock"]'); c.style.left = x + '%'; c.style.top = y + '%';
+toast(`Wall clock icon position: top:${y}%;left:${x}%`); clearTimeout(toastT);
+});
+}
+
+renderHints(); applyTimerVis();
+(async () => {
+try { await loadPuzzleBank(); const u = await requireLogin(); if (!u) return; const route = await playRoute(u.id); if (route !== 'game-room.html') { location.replace(route); return; } await setupRoom(u); startTs = Date.now(); await ensureSession(); guard.start(); renderShields(); }
+catch (e) { console.error(e); }
+finally { $('stage').classList.add('ready'); }
+})();
+})();
+</script>
+</body></html>
